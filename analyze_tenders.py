@@ -33,7 +33,8 @@ FIELDS = (
     "tender_title", "tender_reference", "issuing_authority", "opportunity_type",
     "publication_date", "submission_deadline", "pre_bid_date", "submission_portal",
     "scope_summary", "technical_requirements", "eligibility_requirements",
-    "emd_requirements", "why_relevant_to_topic", "important_caveats",
+    "emd_requirements", "bid_validity", "rate_card_acceptance",
+    "why_relevant_to_topic", "important_caveats",
 )
 
 
@@ -42,8 +43,25 @@ def select_context(text: str, topic: str, max_chars: int = MAX_CONTEXT) -> str:
     if max_chars < 2000:
         raise ValueError("max_chars must be at least 2000")
     clean = text.replace("\x00", "")
-    excerpts: list[str] = [clean[:min(11000, max_chars // 2)]]
-    remaining = max_chars - len(excerpts[0])
+    # Preserve the actual schedule (PDF page 15), not just nearby keyword fragments.
+    excerpts: list[str] = [clean[:min(6500, max_chars // 3)]]
+    for start_marker, end_marker, cap in (
+        ("Section 2 - Important Dates and Submission Details", "2.1 Mode of Submission", 4500),
+        ("3.5  Functional Domains of Engagement", "Section 4 – Human Resource", 8500),
+        ("7.8 Bid Security / EMD", "7.9 Clarifications", 1000),
+    ):
+        # Ignore occurrences in the table of contents: require substantive section text.
+        starts = [m.start() for m in re.finditer(re.escape(start_marker), clean, re.I)]
+        actual = next((p for p in starts if p > 10000), None)
+        if actual is None:
+            continue
+        end = clean.find(end_marker, actual + len(start_marker))
+        block = clean[actual:(end if end > actual else actual + cap)]
+        excerpts.append("\n[DOCUMENT SECTION]\n" + block[:cap])
+    remaining = max_chars - len("\n".join(excerpts))
+    if remaining < 0:
+        excerpts = ["\n".join(excerpts)[:max_chars]]
+        remaining = 0
     # Retrieve evidence-sized windows from throughout the full PDF.
     patterns = [
         r"proposal\s+submission\s+deadline",
@@ -56,6 +74,8 @@ def select_context(text: str, topic: str, max_chars: int = MAX_CONTEXT) -> str:
         r"technical\s+evaluation",
         r"bid\s+security\s*/\s*emd",
         r"scope\s+of\s+work",
+        r"AI\s+agents\s+for\s+Government",
+        r"no\s+earnest\s+money\s+deposit",
         re.escape(topic),
     ]
     seen: set[int] = set()
@@ -84,10 +104,18 @@ Output a single JSON object with exactly these keys:
 tender_title, tender_reference, issuing_authority, opportunity_type,
 publication_date, submission_deadline, pre_bid_date, submission_portal,
 scope_summary, technical_requirements, eligibility_requirements,
-emd_requirements, why_relevant_to_topic, important_caveats, evidence.
+emd_requirements, bid_validity, rate_card_acceptance,
+why_relevant_to_topic, important_caveats, evidence.
 Dates must be YYYY-MM-DD when clearly known, else null.
 Use null for missing scalar facts and [] for missing list facts.
 technical_requirements, eligibility_requirements, important_caveats are arrays of strings.
+emd_requirements, bid_validity, rate_card_acceptance are short factual strings or null.
+For publication_date prefer the activity table's 'Release of RFE' date.
+Technical requirements must reference actual work such as OCR, AI agents,
+LLM inference, RAG and MLOps when present; do not leave the array empty
+if those sections are supplied.
+Do not describe an RFE for AI/ML resource empanelment as a direct
+DigiLocker-only API integration tender.
 scope_summary and why_relevant_to_topic are brief strings.
 evidence is a JSON object keyed by factual field names with short EXACT text
 quotes from the supplied material. Do not quote text you cannot find.
@@ -133,6 +161,28 @@ def ollama_analyze(text: str, topic: str, model: str, base_url: str, timeout: in
     return parsed
 
 
+
+def validate_evidence(evidence: object, original_text: str) -> dict:
+    """Mark whether evidence quotations actually appear in the source text."""
+    if not isinstance(evidence, dict):
+        return {"checked": 0, "matched": 0, "unmatched_fields": ["evidence_not_an_object"]}
+    normalized_source = re.sub(r"\s+", " ", original_text).casefold()
+    checked = matched = 0
+    unmatched: list[str] = []
+    for field, value in evidence.items():
+        quotes = value if isinstance(value, list) else [value]
+        for quote in quotes:
+            if not isinstance(quote, str) or not quote.strip():
+                continue
+            checked += 1
+            normalized_quote = re.sub(r"\s+", " ", quote).strip().casefold()
+            if normalized_quote in normalized_source:
+                matched += 1
+            else:
+                unmatched.append(field)
+    return {"checked": checked, "matched": matched, "unmatched_fields": sorted(set(unmatched))}
+
+
 def deadline_status(raw_date: object) -> str:
     """Based on the document's stated original deadline; not official live status."""
     if not isinstance(raw_date, str):
@@ -156,6 +206,7 @@ def analyze(input_path: Path, output_path: Path, model: str, base_url: str, time
         try:
             facts = ollama_analyze(item["text"], source.get("topic") or "", model, base_url, timeout)
             facts["deadline_status"] = deadline_status(facts.get("submission_deadline"))
+            facts["evidence_validation"] = validate_evidence(facts.get("evidence"), item["text"])
             results.append({
                 "document_url": item.get("document_url"),
                 "sha256": item.get("sha256"),
