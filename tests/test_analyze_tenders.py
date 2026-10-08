@@ -1,4 +1,4 @@
-from analyze_tenders import deadline_status, select_context
+from analyze_tenders import deadline_status, select_context, validate_evidence
 
 
 def test_context_budget_and_evidence():
@@ -15,3 +15,16 @@ def test_bad_or_unknown_date():
 
 def test_past_deadline_is_not_declared_open():
     assert deadline_status("2020-08-31") == "original_deadline_passed_verify_corrigenda"
+
+
+def test_evidence_validation():
+    original = "Release of RFE\n7th August 2026\nProposal submission deadline 31st August 2026"
+    evidence = {
+        "publication_date": "Release of RFE 7th August 2026",
+        "submission_deadline": "Proposal submission deadline 31st August 2026",
+        "invented": "The proposal submission is on 15th September 2026"
+    }
+    result = validate_evidence(evidence, original)
+    assert result["checked"] == 3
+    assert result["matched"] == 2
+    assert result["unmatched_fields"] == ["invented"]
