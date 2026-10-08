@@ -1,4 +1,4 @@
-from scraper import canonicalize, document_url, extract_page, queries_for
+from scraper import canonicalize, document_url, extract_page, queries_for, topic_match, eligible_document, candidate_priority
 
 
 def test_canonicalize():
@@ -20,9 +20,31 @@ def test_html_extraction():
     """)
     assert title == "RFP Notice"
     assert "DigiLocker API integration" in text
-    assert documents == ["https://example.org/files/rfp.pdf"]
+    assert documents == [{"url": "https://example.org/files/rfp.pdf", "anchor_text": "RFP"}]
 
 
 def test_document_link():
     assert document_url("https://example.com/notice.PDF?download=1")
     assert not document_url("https://example.com/notice.html")
+
+
+def test_reject_unrelated_pages():
+    assert not topic_match("DigiLocker", "County procurement and architectural policy")
+    assert topic_match("DigiLocker", "Digi-Locker API integration")
+
+
+def test_reject_unrelated_pdf_links():
+    assert not eligible_document(
+        "https://example.org/policy.pdf", "DigiLocker", "DigiLocker integration",
+        "Architectural policy")
+    assert eligible_document(
+        "https://example.org/docs/tender.pdf", "DigiLocker", "DigiLocker integration RFP",
+        "RFP document")
+    assert eligible_document(
+        "https://example.org/files/DigiLocker-Specification.pdf", "DigiLocker", "Resources",
+        "Specification")
+
+
+def test_prioritization():
+    assert candidate_priority("https://negd.gov.in/resource/digilocker-rfp") > candidate_priority(
+        "https://www.example.com/procurement/")
