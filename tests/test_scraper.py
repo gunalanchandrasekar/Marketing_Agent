@@ -59,3 +59,22 @@ def test_reference_docs_are_not_tenders():
         "DigiLocker", "DigiLocker News", "Download")
     assert classify_page("RFQ for DigiLocker integration", "") == "procurement"
     assert classify_page("DigiLocker integration guide", "") == "technical_reference"
+
+
+def test_financial_quote_rfq_classified():
+    assert classify_page("Request for Financial Quote (RFQ) for Integration of DigiLocker", "") == "procurement"
+
+
+def test_generic_download_link_on_rfp():
+    assert eligible_document(
+        "https://example.gov.in/attachments/12345.pdf",
+        "DigiLocker", "Request for Financial Quote for DigiLocker Integration",
+        "PDF")
+    assert not eligible_document(
+        "https://example.gov.in/attachments/12345.pdf",
+        "DigiLocker", "DigiLocker API Resources", "PDF")
+
+
+def test_awards_not_active_procurement():
+    assert classify_page("Final List of Agencies Selected for DigiLocker Integration", "") == "award_or_selection"
+
