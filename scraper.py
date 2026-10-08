@@ -79,6 +79,43 @@ def document_url(url: str) -> bool:
     return urlparse(url).path.lower().endswith(DOCUMENT_SUFFIXES)
 
 
+def topic_match(topic: str, text: str) -> bool:
+    """Reject unrelated pages, preserving flexible case/space/hyphen matching."""
+    terms = re.findall(r"[a-z0-9]+", topic.lower())
+    if not terms:
+        return False
+    normalized = re.sub(r"[^a-z0-9]+", "", text.lower())
+    return "".join(terms) in normalized
+
+
+def candidate_priority(url: str) -> int:
+    """Prefer Indian procurement sources over unrelated generic RFP listings."""
+    p = urlparse(url)
+    host = (p.hostname or "").lower()
+    path = p.path.lower()
+    score = 0
+    if host.endswith((".gov.in", ".nic.in", ".ac.in")) or host == "gov.in":
+        score += 9
+    if host.endswith(".in"):
+        score += 3
+    if any(x in host for x in ("ocac", "eprocure", "negd", "gem.gov")):
+        score += 7
+    if any(x in path for x in ("digilocker", "digi-locker")):
+        score += 5
+    if any(x in path for x in ("tender", "rfp", "rfq", "procurement", "bid")):
+        score += 2
+    return score
+
+
+def eligible_document(url: str, topic: str, page_title: str, anchor_text: str) -> bool:
+    """Only download linked documents that are likely connected to the topic."""
+    hint = " ".join((urlparse(url).path, anchor_text))
+    if topic_match(topic, hint):
+        return True
+    procurement = re.search(r"(?i)\b(rfp|rfq|tender|bid|corrigendum|expression.of.interest|eoi)\b", hint)
+    return bool(procurement and topic_match(topic, page_title))
+
+
 def extract_page(url: str, content: bytes) -> tuple[str, str, list[str]]:
     soup = BeautifulSoup(content, "html.parser")
     title = soup.title.get_text(" ", strip=True) if soup.title else ""
@@ -86,12 +123,13 @@ def extract_page(url: str, content: bytes) -> tuple[str, str, list[str]]:
     for anchor in soup.find_all("a", href=True):
         link = canonicalize(urljoin(url, anchor["href"]))
         if link and document_url(link):
-            docs.append(link)
+            docs.append({"url": link, "anchor_text": anchor.get_text(" ", strip=True)[:200]})
     for tag in soup(["script", "style", "nav", "footer", "noscript"]):
         tag.decompose()
     body = soup.get_text(" ", strip=True)
     text = re.sub(r"\s+", " ", body)[:MAX_TEXT_CHARS]
-    return title, text, list(dict.fromkeys(docs))
+    unique_docs = {row["url"]: row for row in docs}
+    return title, text, list(unique_docs.values())
 
 
 def download_document(client: httpx.Client, url: str, folder: Path, max_bytes: int) -> dict:
@@ -142,11 +180,12 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
                 errors.append({"stage": "search", "query": query, "error": str(exc)})
                 LOG.warning("Search failed: %s: %s", query, exc)
         doc_candidates = []
-        for url, matched_queries in list(urls.items()):
+        for url, matched_queries in sorted(urls.items(), key=lambda pair: candidate_priority(pair[0]), reverse=True):
             if len(records) >= max_pages:
                 break
             if document_url(url):
-                doc_candidates.append(url)
+                if topic_match(topic, url) or re.search(r"(?i)(rfp|rfq|tender|corrigendum)", url):
+                    doc_candidates.append((candidate_priority(url), url))
                 continue
             try:
                 response = client.get(url)
@@ -157,15 +196,21 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
                 if len(response.content) > 5_000_000:
                     raise ValueError("Page exceeds 5 MB")
                 title, text, doc_links = extract_page(str(response.url), response.content)
+                if not topic_match(topic, title + " " + text):
+                    LOG.info("Skipped off-topic page: %s", url)
+                    continue
+                relevant_docs = [row["url"] for row in doc_links
+                                 if eligible_document(row["url"], topic, title, row["anchor_text"])]
                 records.append({"url": url, "title": title, "text": text,
-                                "search_queries": sorted(matched_queries), "document_links": doc_links})
-                doc_candidates.extend(doc_links)
-                LOG.info("Fetched %s, found %d document links", url, len(doc_links))
+                                "search_queries": sorted(matched_queries), "document_links": relevant_docs})
+                doc_candidates.extend((candidate_priority(url), link) for link in relevant_docs)
+                LOG.info("Fetched relevant page %s, selected %d/%d documents", url, len(relevant_docs), len(doc_links))
             except Exception as exc:
                 errors.append({"stage": "fetch", "url": url, "error": str(exc)})
                 LOG.warning("Fetch failed: %s: %s", url, exc)
             time.sleep(max(0, request_delay))
-        for url in dict.fromkeys(doc_candidates):
+        ranked_docs = sorted(doc_candidates, key=lambda pair: pair[0], reverse=True)
+        for url in dict.fromkeys(link for _, link in ranked_docs):
             if len(documents) >= max_docs:
                 break
             try:
