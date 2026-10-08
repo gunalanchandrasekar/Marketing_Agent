@@ -28,7 +28,7 @@ KEY_SECTIONS = (
     "5.3 Technical Evaluation",
     "7.8 Bid Security",
 )
-MAX_CONTEXT = 24000
+MAX_CONTEXT = 31000
 FIELDS = (
     "tender_title", "tender_reference", "issuing_authority", "opportunity_type",
     "publication_date", "submission_deadline", "pre_bid_date", "submission_portal",
@@ -47,7 +47,8 @@ def select_context(text: str, topic: str, max_chars: int = MAX_CONTEXT) -> str:
     excerpts: list[str] = [clean[:min(6500, max_chars // 3)]]
     for start_marker, end_marker, cap in (
         ("Section 2 - Important Dates and Submission Details", "2.1 Mode of Submission", 4500),
-        ("3.5  Functional Domains of Engagement", "Section 4 – Human Resource", 8500),
+        ("3.5  Functional Domains of Engagement", "Section 4 – Human Resource", 6000),
+        ("5.2 Eligibility (Pre-Qualification) Criteria", "5.3 Technical Evaluation", 6500),
         ("7.8 Bid Security / EMD", "7.9 Clarifications", 1000),
     ):
         # Ignore occurrences in the table of contents: require substantive section text.
@@ -119,6 +120,7 @@ DigiLocker-only API integration tender.
 scope_summary and why_relevant_to_topic are brief strings.
 evidence is a JSON object keyed by factual field names with short EXACT text
 quotes from the supplied material. Do not quote text you cannot find.
+For eligibility_requirements use the pre-qualification table. Never use glossary entries such as PSU/MSME, or placeholders like [address], as eligibility requirements. Include requirements for registration, operations, turnover/staff exemptions, experience, certifications and tax compliance when present.
 Do not claim any tender is currently open based on a PDF alone.
 """
 
@@ -160,6 +162,25 @@ def ollama_analyze(text: str, topic: str, model: str, base_url: str, timeout: in
     parsed.setdefault("evidence", {})
     return parsed
 
+
+
+
+def clean_eligibility(items: object) -> tuple[list[str], list[str]]:
+    """Reject obvious glossary entries and form placeholders."""
+    if not isinstance(items, list):
+        return [], [str(items)] if items is not None else []
+    good, bad = [], []
+    for item in items:
+        if not isinstance(item, str):
+            bad.append(str(item))
+            continue
+        value = item.strip()
+        if (len(value) < 24 or re.search(r"\[[^\]]+\]|_{3,}", value)
+                or re.fullmatch(r"(?i)(?:public sector undertaking|micro,? small and medium enterprises|psu|msme)(?:\s*\([^)]*\))?", value)):
+            bad.append(value)
+        else:
+            good.append(value)
+    return good, bad
 
 
 def validate_evidence(evidence: object, original_text: str) -> dict:
@@ -205,6 +226,7 @@ def analyze(input_path: Path, output_path: Path, model: str, base_url: str, time
             continue
         try:
             facts = ollama_analyze(item["text"], source.get("topic") or "", model, base_url, timeout)
+            facts["eligibility_requirements"], facts["rejected_eligibility_items"] = clean_eligibility(facts.get("eligibility_requirements"))
             facts["deadline_status"] = deadline_status(facts.get("submission_deadline"))
             facts["evidence_validation"] = validate_evidence(facts.get("evidence"), item["text"])
             results.append({
