@@ -108,36 +108,47 @@ def candidate_priority(url: str) -> int:
 
 
 PROCUREMENT_RE = re.compile(
-    r"(?i)(?:\\b(?:rfp|rfq|rfe|eoi|nit|tender|corrigendum|bid|procurement|"
-    r"request\\s+for\\s+(?:proposal|quotation|expression|empanelment))\\b)"
+    r"(?i)\b(?:rfp|rfq|rfe|eoi|nit|tender|tenders|corrigendum|"
+    r"bids?|procurement)\b|"
+    r"request\s+for\s+(?:proposal|proposals|quotation|financial\s+quote|"
+    r"expression\s+of\s+interest|empanelment)|"
+    r"expression\s+of\s+interest|invitation\s+to\s+bid"
 )
+AWARD_RE = re.compile(r"(?i)\b(?:awarded|awardee|winner|selected\s+agenc(?:y|ies)|contract\s+award(?:ed)?)\b")
 REFERENCE_RE = re.compile(
     r"(?i)(?:api.?specification|user.?manual|xml.?certificate|terms.?of.?use|"
     r"workflow.?issuer|workflow.?requester|partners?.?sop|international.?sop)"
+)
+GENERIC_DOC_LABEL_RE = re.compile(
+    r"(?i)^(?:download(?:\s+(?:pdf|document|attachment))?|"
+    r"pdf|view(?:\s+(?:pdf|document|attachment))?|"
+    r"attachment|tender\s+document|notice|click\s+here)$"
 )
 
 
 def classify_page(title: str, text: str) -> str:
     heading = title[:400]
+    if AWARD_RE.search(heading):
+        return "award_or_selection"
     if PROCUREMENT_RE.search(heading):
         return "procurement"
-    if re.search(r"(?i)awarded|selected agencies|winner|contract awarded", heading):
-        return "award_or_selection"
     if re.search(r"(?i)api.?setu|documentation|developer guide|integration guide", heading):
         return "technical_reference"
     return "other"
 
 
 def eligible_document(url: str, topic: str, page_title: str, anchor_text: str) -> bool:
-    """Only select likely RFP/RFQ/bid documents, not entire resource libraries."""
-    hint = " ".join((urlparse(url).path, anchor_text))
+    """Accept evidence-linked tender files while excluding generic API resources."""
+    filename = urlparse(url).path.rsplit("/", 1)[-1]
+    hint = " ".join((filename, anchor_text))
     if REFERENCE_RE.search(hint):
         return False
-    if not PROCUREMENT_RE.search(hint):
+    if topic_match(topic, hint) and PROCUREMENT_RE.search(hint):
+        return True
+    if classify_page(page_title, "") != "procurement" or not topic_match(topic, page_title):
         return False
-    return topic_match(topic, hint) or (
-        topic_match(topic, page_title) and classify_page(page_title, "") == "procurement"
-    )
+    # An RFP's document is often called simply 'Download' or 'PDF'.
+    return bool(PROCUREMENT_RE.search(hint) or GENERIC_DOC_LABEL_RE.fullmatch(anchor_text.strip()))
 
 
 
@@ -235,6 +246,7 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
                 LOG.warning("Fetch failed: %s: %s", url, exc)
             time.sleep(max(0, request_delay))
         ranked_docs = sorted(doc_candidates, key=lambda pair: pair[0], reverse=True)
+        LOG.info("Eligible tender document URLs: %d", len(set(url for _, url in ranked_docs)))
         for url in dict.fromkeys(link for _, link in ranked_docs):
             if len(documents) >= max_docs:
                 break
@@ -252,6 +264,7 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
         "unique_candidates": len(urls),
         "pages_fetched": len(records),
         "documents_downloaded": len(documents),
+        "eligible_document_candidates": len(set(url for _, url in doc_candidates)),
         "pages": records, "documents": documents, "errors": errors,
     }
     output.write_text(json.dumps(result, ensure_ascii=False, indent=2), encoding="utf-8")
