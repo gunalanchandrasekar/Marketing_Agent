@@ -19,6 +19,7 @@ from dotenv import load_dotenv
 from scraper import run as scrape
 from extract_tenders import extract
 from analyze_tenders import analyze
+from cppp_adapter import discover_public_listings
 
 load_dotenv()
 LOG = logging.getLogger("marketing_agent.pipeline")
@@ -42,6 +43,7 @@ def execute(
     max_document_mb: int = 20,
     timeout: int = 600,
     searxng: str | None = None,
+    cppp: bool = True,
 ) -> dict:
     run_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     run_dir = output_root / safe_topic(topic) / run_stamp
@@ -50,12 +52,24 @@ def execute(
     extracted = run_dir / "extracted_tenders.json"
     analyzed = run_dir / "tender_analysis.json"
     consolidated = run_dir / "opportunities.json"
+    official_listings = run_dir / "cppp_public_listings.json"
 
     state: dict = {
         "topic": topic, "run_id": run_stamp, "started_at": datetime.now(timezone.utc).isoformat(),
         "model": model, "steps": {}, "issues": [],
         "paths": {"discovery": str(raw), "extraction": str(extracted), "analysis": str(analyzed)},
     }
+    if cppp:
+        try:
+            listings = discover_public_listings(topic)
+            official_listings.write_text(json.dumps(listings, ensure_ascii=False, indent=2), encoding="utf-8")
+            state["steps"]["cppp_public_listings"] = {"matches": len(listings["matches"]), "sources_checked": len(listings["sources"])}
+            state["issues"].extend(listings["issues"])
+            state["paths"]["cppp_public_listings"] = str(official_listings)
+            state["public_listing_candidates"] = listings["matches"]
+            state["coverage_note"] = listings["coverage_note"]
+        except Exception as exc:
+            state["issues"].append({"stage": "cppp_public_listings", "error": str(exc)})
     try:
         discovered = scrape(
             topic, searxng, raw, max_pages, max_documents, per_query, delay, max_document_mb
@@ -123,8 +137,8 @@ def execute(
     state["opportunities"] = opportunities
     state["opportunity_count"] = len(opportunities)
     state["finished_at"] = datetime.now(timezone.utc).isoformat()
-    consolidated.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
     state["paths"]["consolidated"] = str(consolidated)
+    consolidated.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
     LOG.info("Completed: %s opportunities, %s issues. %s", len(opportunities), len(state["issues"]), consolidated)
     return state
 
@@ -136,6 +150,7 @@ def main() -> None:
     p.add_argument("--model", default=os.getenv("OLLAMA_MODEL", "qwen3:30b"))
     p.add_argument("--ollama", default=os.getenv("OLLAMA_BASE_URL", "http://192.168.0.100:11434"))
     p.add_argument("--searxng", default=os.getenv("SEARXNG_URL") or None)
+    p.add_argument("--no-cppp", action="store_true", help="Skip the official public-listing adapter")
     p.add_argument("--max-pages", type=int, default=40)
     p.add_argument("--max-documents", type=int, default=10)
     p.add_argument("--per-query", type=int, default=8)
@@ -150,7 +165,8 @@ def main() -> None:
         args.topic, args.output_root, model=args.model, ollama_url=args.ollama,
         searxng=args.searxng, max_pages=args.max_pages,
         max_documents=args.max_documents, per_query=args.per_query,
-        delay=args.delay, max_document_mb=args.max_document_mb, timeout=args.timeout
+        delay=args.delay, max_document_mb=args.max_document_mb, timeout=args.timeout,
+        cppp=not args.no_cppp
     )
     print(f"Found {result['opportunity_count']} analyzed opportunities; "
           f"{len(result['issues'])} reported issues")
