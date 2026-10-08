@@ -16,11 +16,11 @@ from urllib.parse import urlparse
 from docx import Document
 from pypdf import PdfReader
 
-DATE = r"(?:\\d{1,2}[-/. ]\\d{1,2}[-/. ]\\d{2,4}|\\d{1,2}(?:st|nd|rd|th)?\\s+[A-Za-z]{3,9}\\s+20\\d{2}|[A-Za-z]{3,9}\\s+\\d{1,2},?\\s+20\\d{2})"
+DATE = r"(?:\d{1,2}[-/. ]\d{1,2}[-/. ]\d{2,4}|\d{1,2}(?:st|nd|rd|th)?\s+[A-Za-z]{3,9}\s+20\d{2}|[A-Za-z]{3,9}\s+\d{1,2},?\s+20\d{2})"
 FIELDS = {
-    "submission_deadline": r"(?:last\\s+date(?:\\s+and\\s+time)?\\s+(?:for|of)?\\s*(?:submission|receipt|bid)|bid\\s+submission\\s+(?:end|closing)\\s+date|closing\\s+date|due\\s+date)",
-    "publication_date": r"(?:date\\s+of\\s+(?:issue|publication)|published\\s+on|tender\\s+published)",
-    "pre_bid_date": r"(?:pre[- ]bid\\s+(?:meeting|date)|date\\s+of\\s+pre[- ]bid)",
+    "submission_deadline": r"(?:last\s+date(?:\s+and\s+time)?\s+(?:for|of)?\s*(?:submission|receipt|bid)|bid\s+submission\s+(?:end|closing)\s+date|closing\s+date|due\s+date)",
+    "publication_date": r"(?:date\s+of\s+(?:issue|publication)|published\s+on|tender\s+published)",
+    "pre_bid_date": r"(?:pre[- ]bid\s+(?:meeting|date)|date\s+of\s+pre[- ]bid)",
 }
 MAX_CHARS = 250_000
 
@@ -38,13 +38,13 @@ def read_document(path: Path) -> tuple[str, int]:
             length += len(part)
             if length >= MAX_CHARS:
                 break
-        return "\\n".join(chunks)[:MAX_CHARS], pages
+        return "\n".join(chunks)[:MAX_CHARS], pages
     if suffix == ".docx":
         doc = Document(str(path))
         paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
         for table in doc.tables:
             paragraphs.extend(" | ".join(c.text for c in row.cells) for row in table.rows)
-        return "\\n".join(paragraphs)[:MAX_CHARS], 0
+        return "\n".join(paragraphs)[:MAX_CHARS], 0
     raise ValueError(f"Unsupported document format: {suffix}; legacy .doc needs conversion")
 
 
@@ -58,7 +58,7 @@ def evidence_candidates(text: str) -> dict[str, list[dict]]:
             nearby_date = re.search(DATE, segment, re.I)
             hits.append({
                 "date_candidate": nearby_date.group(0) if nearby_date else None,
-                "evidence": re.sub(r"\\s+", " ", text[max(0,match.start()-35):min(len(text),match.end()+180)]).strip(),
+                "evidence": re.sub(r"\s+", " ", text[max(0,match.start()-35):min(len(text),match.end()+180)]).strip(),
                 "offset": match.start()
             })
             if len(hits) == 10:
