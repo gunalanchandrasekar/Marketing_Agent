@@ -1,4 +1,4 @@
-from scraper import canonicalize, document_url, extract_page, queries_for, topic_match, eligible_document, candidate_priority
+from scraper import canonicalize, document_url, extract_page, queries_for, topic_match, eligible_document, candidate_priority, classify_page
 
 
 def test_canonicalize():
@@ -48,3 +48,14 @@ def test_reject_unrelated_pdf_links():
 def test_prioritization():
     assert candidate_priority("https://negd.gov.in/resource/digilocker-rfp") > candidate_priority(
         "https://www.example.com/procurement/")
+
+
+def test_reference_docs_are_not_tenders():
+    assert not eligible_document(
+        "https://apisetu.gov.in/DigiLocker-Issuer-APISpecification-v1-13.pdf",
+        "DigiLocker", "DigiLocker API resources", "API Specification")
+    assert eligible_document(
+        "https://digilocker.gov.in/assets/Public_notice_for_draft_RFE_Digilocker_v2.pdf",
+        "DigiLocker", "DigiLocker News", "Download")
+    assert classify_page("RFQ for DigiLocker integration", "") == "procurement"
+    assert classify_page("DigiLocker integration guide", "") == "technical_reference"
