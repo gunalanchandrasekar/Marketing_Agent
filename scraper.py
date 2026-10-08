@@ -107,13 +107,38 @@ def candidate_priority(url: str) -> int:
     return score
 
 
+PROCUREMENT_RE = re.compile(
+    r"(?i)(?:\\b(?:rfp|rfq|rfe|eoi|nit|tender|corrigendum|bid|procurement|"
+    r"request\\s+for\\s+(?:proposal|quotation|expression|empanelment))\\b)"
+)
+REFERENCE_RE = re.compile(
+    r"(?i)(?:api.?specification|user.?manual|xml.?certificate|terms.?of.?use|"
+    r"workflow.?issuer|workflow.?requester|partners?.?sop|international.?sop)"
+)
+
+
+def classify_page(title: str, text: str) -> str:
+    heading = title[:400]
+    if PROCUREMENT_RE.search(heading):
+        return "procurement"
+    if re.search(r"(?i)awarded|selected agencies|winner|contract awarded", heading):
+        return "award_or_selection"
+    if re.search(r"(?i)api.?setu|documentation|developer guide|integration guide", heading):
+        return "technical_reference"
+    return "other"
+
+
 def eligible_document(url: str, topic: str, page_title: str, anchor_text: str) -> bool:
-    """Only download linked documents that are likely connected to the topic."""
+    """Only select likely RFP/RFQ/bid documents, not entire resource libraries."""
     hint = " ".join((urlparse(url).path, anchor_text))
-    if topic_match(topic, hint):
-        return True
-    procurement = re.search(r"(?i)\b(rfp|rfq|tender|bid|corrigendum|expression.of.interest|eoi)\b", hint)
-    return bool(procurement and topic_match(topic, page_title))
+    if REFERENCE_RE.search(hint):
+        return False
+    if not PROCUREMENT_RE.search(hint):
+        return False
+    return topic_match(topic, hint) or (
+        topic_match(topic, page_title) and classify_page(page_title, "") == "procurement"
+    )
+
 
 
 def extract_page(url: str, content: bytes) -> tuple[str, str, list[str]]:
@@ -184,7 +209,7 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
             if len(records) >= max_pages:
                 break
             if document_url(url):
-                if topic_match(topic, url) or re.search(r"(?i)(rfp|rfq|tender|corrigendum)", url):
+                if topic_match(topic, url) and PROCUREMENT_RE.search(url) and not REFERENCE_RE.search(url):
                     doc_candidates.append((candidate_priority(url), url))
                 continue
             try:
@@ -202,8 +227,8 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
                 relevant_docs = [row["url"] for row in doc_links
                                  if eligible_document(row["url"], topic, title, row["anchor_text"])]
                 records.append({"url": url, "title": title, "text": text,
-                                "search_queries": sorted(matched_queries), "document_links": relevant_docs})
-                doc_candidates.extend((candidate_priority(url), link) for link in relevant_docs)
+                                "search_queries": sorted(matched_queries), "classification": classify_page(title, text), "document_links": relevant_docs})
+                doc_candidates.extend((candidate_priority(url) + 20, link) for link in relevant_docs)
                 LOG.info("Fetched relevant page %s, selected %d/%d documents", url, len(relevant_docs), len(doc_links))
             except Exception as exc:
                 errors.append({"stage": "fetch", "url": url, "error": str(exc)})
