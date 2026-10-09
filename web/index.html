@@ -23,8 +23,26 @@ h1,h2,h3,h4{font-family:Manrope,Arial,sans-serif;letter-spacing:-.55px;line-heig
 .loader-progress>span{display:block;width:0%;height:100%;background:linear-gradient(90deg,#e7962c,#c8a55a,#7eb5b3,#36a9e1);transition:width .4s}
 .loader-percent{font-size:14px;font-weight:800;color:#225876}.loader-steps{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;margin-top:17px}.loader-steps span{border-radius:25px;font-size:11px;padding:4px 9px;background:#f1f4f9;color:#586c85}
 .doc-summary{margin:17px 0;padding:17px;border-radius:12px;background:#f5faff;border:1px solid #dfeaf3}.doc-summary h4{font-size:16px;margin-bottom:9px}.doc-summary p{font-size:14px;margin:7px 0;color:#39475b}
-.brand-logo{width:52px;height:52px;object-fit:contain;background:#fff;border-radius:12px;padding:5px}.loader-logo{width:78px;height:78px;object-fit:contain}.loader-overlay{position:fixed;inset:0;z-index:999;background:#0b1735b8;backdrop-filter:blur(5px);display:grid;place-items:center}.loader-overlay.hidden{display:none!important}.loader-box{background:white;width:min(510px,92vw);padding:35px;border-radius:22px;text-align:center;box-shadow:0 24px 80px #101a3240}.loader-wheel{width:55px;height:55px;margin:22px auto;border:6px solid #e8eef7;border-top-color:#ed9225;border-right-color:#36a9df;border-radius:50%;animation:spin .8s linear infinite}.loader-track{height:11px;background:#e8edf6;border-radius:20px;overflow:hidden}.loader-track div{height:100%;width:0;background:linear-gradient(90deg,#ed9225,#c4a363,#74afa9,#36a9df);transition:width .3s}.button.primary{background:linear-gradient(100deg,#ec942a,#35a8dc);border:0}.hero{background:linear-gradient(112deg,#172c58,#245487 62%,#2ba5d9)}.navbtn.active{box-shadow:inset 3px 0 #ed9429} </style></head><body>
-<div class="shell"><aside><div class="brand"><img class="brand-logo" src="/assets/vaf-logo.png" alt="VAF AI logo" onerror="this.style.display='none'"><div><strong>VAF <span style="color:#9db8ff">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
+.brand-logo{width:52px;height:52px;object-fit:contain;background:#fff;border-radius:12px;padding:5px}.loader-logo{width:78px;height:78px;object-fit:contain}.loader-overlay{position:fixed;inset:0;z-index:999;background:#0b1735b8;backdrop-filter:blur(5px);display:grid;place-items:center}.loader-overlay.hidden{display:none!important}.loader-box{background:white;width:min(510px,92vw);padding:35px;border-radius:22px;text-align:center;box-shadow:0 24px 80px #101a3240}.loader-wheel{width:55px;height:55px;margin:22px auto;border:6px solid #e8eef7;border-top-color:#ed9225;border-right-color:#36a9df;border-radius:50%;animation:spin .8s linear infinite}.loader-track{height:11px;background:#e8edf6;border-radius:20px;overflow:hidden}.loader-track div{height:100%;width:0;background:linear-gradient(90deg,#ed9225,#c4a363,#74afa9,#36a9df);transition:width .3s}.button.primary{background:linear-gradient(100deg,#ec942a,#35a8dc);border:0}.hero{background:linear-gradient(112deg,#172c58,#245487 62%,#2ba5d9)}.navbtn.active{box-shadow:inset 3px 0 #ed9429} 
+/* VAF logo-inspired light sidebar: high contrast, orange + sky blue. */
+:root{--nav:#f4faff;--brand:#e99125;--bg:#f7fafc}
+aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);color:#253d56;border-right:1px solid #dceaf0;box-shadow:4px 0 22px rgba(44,125,160,.035)}
+.brand{color:#18334c;border-bottom:1px solid #d9e8ef;padding:3px 9px 24px;gap:13px}
+.brand-logo{width:64px;height:64px;object-fit:contain;background:#fff;border:1px solid #e1edf0;box-shadow:0 4px 14px #65a8c41d;padding:4px;border-radius:13px}
+.brand strong{color:#193951;font-size:22px;line-height:1.15}
+.brand-ai{color:#df8622}
+.brand small{color:#58788f;font-size:10.5px;letter-spacing:1.25px;line-height:1.5;margin-top:5px}
+.navlabel{color:#6e8a9b;font-size:11px}
+.navbtn{color:#35516a;font-size:14px;font-weight:700;border:1px solid transparent;transition:background .18s,border-color .18s,transform .18s}
+.navbtn:hover{background:#e7f5fd;color:#174b70;border-color:#cce9f6}
+.navbtn.active{background:linear-gradient(90deg,#fff2df 0%,#e9f7ff 100%);color:#123d59;border-color:#f4d7aa;box-shadow:inset 4px 0 #e99125}
+.navbtn .mini{background:#dbf0fa;color:#245d80}
+.sidetip{background:#fff;border:1px solid #dbeaf0;color:#536e82;box-shadow:0 5px 18px #2987ae0a}
+.sidetip b{color:#204b62}.sidetip p{color:#5e7687;font-size:13px}
+.eyebrow{color:#d78424}
+@media(max-width:930px){aside{border-right:0;border-bottom:1px solid #dceaf0}.navbtn{flex-shrink:0}}
+</style></head><body>
+<div class="shell"><aside><div class="brand"><img class="brand-logo" src="/assets/vaf-logo.png" alt="VAF AI logo" onerror="this.style.display='none'"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
 <button class="navbtn" data-page="opportunities" onclick="navigate('opportunities')">◈ &nbsp; Opportunities <span class="mini" id="side-count">0</span></button>
