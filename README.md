@@ -58,3 +58,47 @@ pytest -q
 3. Local Ollama-powered relevance analysis and summaries
 4. PostgreSQL, change tracking, nightly scheduling
 5. FastAPI, UI, notifications and Docker
+
+
+## VAF Marketing Intelligence dashboard (demo)
+
+Install dependencies and launch the local UI from the project root:
+
+~~~bash
+git pull origin Dev_Guna
+pip install -r requirements.txt
+pytest -q
+streamlit run dashboard.py
+~~~
+
+The dashboard opens at http://localhost:8501 (normally opened automatically by Streamlit).
+
+Dashboard sections:
+- Overview: real discovery, extraction, and AI pipeline counts
+- Opportunities: AI-extracted tender details, scope, requirements, links, CSV and JSON exports
+- Document queue: extracted PDFs and the ability to retry unfinished Ollama analysis
+- Official listings: limited CAPTCHA-free CPPP homepage matches, with manual search link
+- Diagnostics: real search, download, and model errors
+
+The sidebar accepts a search topic and runs the existing pipeline in the background.
+Click **Refresh runs** after it completes. Console output is written to
+data/pipeline-ui.log, viewable in the sidebar.
+
+If Ollama timed out after PDF extraction, select that run and click
+**Retry unfinished documents** in **Document queue**, or use the terminal:
+
+~~~bash
+python retry_analysis.py \
+  --run-dir data/runs/digilocker/YOUR_RUN_ID \
+  --model qwen3:30b \
+  --timeout 1200
+~~~
+
+This reuses already downloaded text, merging new AI results back into the existing
+opportunities.json file without repeating web scraping or document downloads.
+
+**Note:** None of the AI records or public homepage matches establish that a
+tender is currently open. The original deadline is only a historical document fact;
+the official tender detail page and corrigenda must be checked before bidding.
+The dashboard is intended for a trusted local network; it has no authentication
+or access control and should not be published on the internet.
