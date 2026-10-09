@@ -128,7 +128,7 @@ PROCUREMENT_RE = re.compile(
     r"expression\s+of\s+interest|empanelment)|"
     r"expression\s+of\s+interest|invitation\s+to\s+bid"
 )
-AWARD_RE = re.compile(r"(?i)\b(?:awarded|awardee|winner|selected\s+agenc(?:y|ies)|contract\s+award(?:ed)?)\b")
+AWARD_RE = re.compile(r"(?i)\b(?:awarded|awardee|winner|selected\s+agenc(?:y|ies)|agenc(?:y|ies)\s+selected|contract\s+award(?:ed)?)\b")
 REFERENCE_RE = re.compile(
     r"(?i)(?:api.?specification|user.?manual|xml.?certificate|terms.?of.?use|"
     r"workflow.?issuer|workflow.?requester|partners?.?sop|international.?sop)"
@@ -157,7 +157,9 @@ def eligible_document(url: str, topic: str, page_title: str, anchor_text: str) -
     hint = " ".join((filename, anchor_text))
     if REFERENCE_RE.search(hint):
         return False
-    if topic_match(topic, hint) and PROCUREMENT_RE.search(hint):
+    if re.search(r"(?i)\b(?:api[-_ ]?specification|technical[-_ ]?specification)\b", hint):
+        return False
+    if topic_match(topic, hint) and (PROCUREMENT_RE.search(hint) or re.search(r"(?i)(?:^|[_-])RFE(?:[_-]|$)|public[_-]notice", hint)):
         return True
     if classify_page(page_title, "") != "procurement" or not topic_match(topic, page_title):
         return False
