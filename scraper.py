@@ -40,21 +40,35 @@ def canonicalize(url: str) -> str:
     return urlunparse((parsed.scheme.lower(), parsed.netloc.lower(), parsed.path or "/", "", query, ""))
 
 
+INDIAN_STATES = (
+    "Andhra Pradesh", "Arunachal Pradesh", "Assam", "Bihar", "Chhattisgarh",
+    "Goa", "Gujarat", "Haryana", "Himachal Pradesh", "Jharkhand",
+    "Karnataka", "Kerala", "Madhya Pradesh", "Maharashtra", "Manipur",
+    "Meghalaya", "Mizoram", "Nagaland", "Odisha", "Punjab", "Rajasthan",
+    "Sikkim", "Tamil Nadu", "Telangana", "Tripura", "Uttar Pradesh",
+    "Uttarakhand", "West Bengal",
+)
+UNION_TERRITORIES = (
+    "Andaman and Nicobar Islands", "Chandigarh",
+    "Dadra and Nagar Haveli and Daman and Diu", "Delhi",
+    "Jammu and Kashmir", "Ladakh", "Lakshadweep", "Puducherry",
+)
+
 def queries_for(topic: str) -> list[str]:
-    phrase = f'"{topic}"'
-    return [
-        f'{phrase} tender OR RFP',
-        f'{phrase} integration government tender',
-        f'{phrase} request for proposal',
-        f'{phrase} implementation services',
-        f'{phrase} API integration requirement',
-        f'{phrase} developer integration help',
-        f'site:gov.in {phrase} tender',
-        f'site:nic.in {phrase} RFP',
-        f'site:github.com {phrase} integration',
-        f'site:reddit.com {phrase} API',
-        f'{phrase} site:ocac.in tender',
+    """Search indexed tender notices nationwide; coverage is not exhaustive."""
+    q = chr(34) + topic + chr(34)
+    general = [
+        f'{q} tender RFP RFQ government',
+        f'{q} eprocurement bid India',
+        f'{q} expression of interest empanelment government',
+        f'site:eprocure.gov.in {q}',
+        f'site:gem.gov.in {q}',
+        f'site:gov.in {q} tender',
+        f'site:nic.in {q} tender',
     ]
+    regional = [f'{q} {state} tender RFP eprocurement'
+                for state in (*INDIAN_STATES, *UNION_TERRITORIES)]
+    return general + regional
 
 
 def search_searxng(client: httpx.Client, base: str, query: str, limit: int) -> list[str]:
