@@ -16,6 +16,7 @@ import uvicorn
 import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
 from run_pipeline import execute, safe_topic
@@ -26,6 +27,9 @@ BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
 WEB = BASE / "web" / "index.html"
 app = FastAPI(title="VAF Opportunity Intelligence", docs_url=None, redoc_url=None)
+ASSETS = BASE / "web" / "assets"
+ASSETS.mkdir(parents=True, exist_ok=True)
+app.mount("/assets", StaticFiles(directory=ASSETS), name="assets")
 pool = ThreadPoolExecutor(max_workers=1)
 jobs: dict[str, dict[str, Any]] = {}
 jobs_lock = threading.Lock()
@@ -71,14 +75,38 @@ def run_detail(run_dir: Path) -> dict:
     if not result:
         raise HTTPException(status_code=404, detail="No consolidated data")
     extract_data = read_json(run_dir / "extracted_tenders.json")
+    summaries = {}
+    for name in ("tender_analysis.json", "tender_analysis_retry.json"):
+        for row in read_json(run_dir / name).get("results", []):
+            facts = row.get("analysis") or {}
+            summaries[row.get("sha256") or row.get("document_url")] = {
+                "title": facts.get("tender_title"),
+                "issuing_authority": facts.get("issuing_authority"),
+                "summary": facts.get("scope_summary"),
+                "submission_deadline": facts.get("submission_deadline"),
+                "publication_date": facts.get("publication_date"),
+                "why_relevant_to_topic": facts.get("why_relevant_to_topic"),
+            }
+    for opportunity in result.get("opportunities", []):
+        key = opportunity.get("document_sha256") or opportunity.get("document_url")
+        summaries.setdefault(key, {
+            "title": opportunity.get("title"),
+            "issuing_authority": opportunity.get("issuing_authority"),
+            "summary": opportunity.get("scope_summary"),
+            "submission_deadline": opportunity.get("submission_deadline"),
+            "publication_date": opportunity.get("publication_date"),
+            "why_relevant_to_topic": opportunity.get("why_relevant_to_topic"),
+        })
     docs = []
     for item in extract_data.get("documents", []):
+        key = item.get("sha256") or item.get("document_url")
         docs.append({
             "document_url": item.get("document_url"),
             "sha256": item.get("sha256"),
             "page_count": item.get("page_count"),
             "text_characters": item.get("text_characters"),
             "extraction_status": item.get("extraction_status"),
+            "summary_data": summaries.get(key),
         })
     listing = read_json(run_dir / "cppp_public_listings.json")
     result["documents"] = docs
