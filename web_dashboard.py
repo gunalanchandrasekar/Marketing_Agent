@@ -114,7 +114,7 @@ def start_job(kind: str, fn) -> dict:
                     jobs[job_id].update(stage=stage, message=message, percent=percent)
             result = fn(progress)
             with jobs_lock:
-                jobs[job_id].update(status="complete", stage="complete", percent=100, message="Completed", result=result)
+                jobs[job_id].update(status=("needs_attention" if result.get("needs_attention") else "complete"), stage=("needs_attention" if result.get("needs_attention") else "complete"), percent=100, message=("Scan finished but some AI analyses failed. Open Documents to retry." if result.get("needs_attention") else "Completed"), result=result)
         except Exception as exc:
             with jobs_lock:
                 jobs[job_id].update(status="failed", message=str(exc)[:500])
@@ -161,7 +161,7 @@ def scan(params: ScanInput):
             max_pages=params.max_pages, max_documents=params.max_documents, timeout=1200,
             progress=progress,
         )
-        return {"run_id": result["run_id"], "opportunities": result["opportunity_count"]}
+        return {"run_id": result["run_id"], "opportunities": result["opportunity_count"], "needs_attention": result.get("run_status") == "needs_attention"}
     return start_job("scan", action)
 
 
@@ -176,7 +176,7 @@ def retry_run(run_id: str, params: RetryInput):
             params.timeout,
         )
         progress("saving", "Updated analysis results", 95)
-        return {"run_id": run_id, "opportunities": result["opportunity_count"]}
+        return {"run_id": run_id, "opportunities": result["opportunity_count"], "needs_attention": any(x.get("stage") == "analysis" for x in result.get("issues", []))}
     return start_job("retry", action)
 
 
