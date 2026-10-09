@@ -42,7 +42,7 @@ def test_reject_unrelated_pdf_links():
     assert eligible_document(
         "https://example.org/docs/tender.pdf", "DigiLocker", "DigiLocker integration RFP",
         "RFP document")
-    assert eligible_document(
+    assert not eligible_document(
         "https://example.org/files/DigiLocker-Specification.pdf", "DigiLocker", "Resources",
         "Specification")
 
