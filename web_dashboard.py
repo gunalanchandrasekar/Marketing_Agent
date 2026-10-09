@@ -1,7 +1,7 @@
 """VAF Opportunity Intelligence web UI. Run: python web_dashboard.py
 
-Binds to localhost only. UI reads existing pipeline outputs and can start/retry jobs.
-Not suitable for exposure to the public internet without authentication.
+Binds to a configurable LAN address. UI reads existing pipeline outputs and can start/retry jobs.
+No authentication: restrict access to trusted LAN devices only; do not expose publicly.
 """
 from __future__ import annotations
 import json
@@ -226,4 +226,4 @@ def job_info(job_id: str):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="127.0.0.1", port=8502, log_level="info")
+    uvicorn.run(app, host=os.getenv("DASHBOARD_HOST", "192.168.0.5"), port=int(os.getenv("DASHBOARD_PORT", "8502")), log_level="info")
