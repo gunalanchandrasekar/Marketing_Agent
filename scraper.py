@@ -209,7 +209,7 @@ def download_document(client: httpx.Client, url: str, folder: Path, max_bytes: i
 
 
 def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs: int,
-        per_query: int, request_delay: float, max_document_mb: int) -> dict:
+        per_query: int, request_delay: float, max_document_mb: int, progress=None) -> dict:
     output.parent.mkdir(parents=True, exist_ok=True)
     started = datetime.now(timezone.utc).isoformat()
     records, documents, errors = [], [], []
@@ -217,7 +217,9 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
     queries = queries_for(topic)
     limits = httpx.Limits(max_connections=5, max_keepalive_connections=5)
     with httpx.Client(headers=HEADERS, timeout=20, follow_redirects=True, limits=limits) as client:
-        for query in queries:
+        for query_number, query in enumerate(queries, 1):
+            if progress:
+                progress("searching", f"Searching source queries {query_number}/{len(queries)}", 20 + int(16 * query_number / max(1, len(queries))))
             try:
                 found = (search_searxng(client, searxng, query, per_query)
                          if searxng else search_ddgs(query, per_query))
@@ -229,6 +231,8 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
             except Exception as exc:
                 errors.append({"stage": "search", "query": query, "error": str(exc)})
                 LOG.warning("Search failed: %s: %s", query, exc)
+        if progress:
+            progress("fetching", "Inspecting relevant web pages", 37)
         doc_candidates = []
         for url, matched_queries in sorted(urls.items(), key=lambda pair: candidate_priority(pair[0]), reverse=True):
             if len(records) >= max_pages:
@@ -259,6 +263,8 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
                 errors.append({"stage": "fetch", "url": url, "error": str(exc)})
                 LOG.warning("Fetch failed: %s: %s", url, exc)
             time.sleep(max(0, request_delay))
+        if progress:
+            progress("downloading", "Downloading matched tender documents", 49)
         ranked_docs = sorted(doc_candidates, key=lambda pair: pair[0], reverse=True)
         LOG.info("Eligible tender document URLs: %d", len(set(url for _, url in ranked_docs)))
         for url in dict.fromkeys(link for _, link in ranked_docs):
