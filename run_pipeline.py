@@ -151,7 +151,17 @@ def execute(
     state["paths"]["consolidated"] = str(consolidated)
     consolidated.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
     LOG.info("Completed: %s opportunities, %s issues. %s", len(opportunities), len(state["issues"]), consolidated)
-    report("complete", "Finished", 100)
+    extracted_count = state.get("steps", {}).get("extraction", {}).get("documents_extracted", 0)
+    analyzed_count = state.get("steps", {}).get("analysis", {}).get("documents_analyzed", 0)
+    if extracted_count > analyzed_count:
+        state["run_status"] = "needs_attention"
+        state["run_message"] = f"{extracted_count - analyzed_count} extracted document(s) still require AI analysis."
+        report("needs_attention", state["run_message"], 100)
+    else:
+        state["run_status"] = "complete"
+        state["run_message"] = "All extracted documents processed."
+        report("complete", "Finished", 100)
+    consolidated.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
     return state
 
 
