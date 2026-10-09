@@ -9,7 +9,9 @@ def test_canonicalize():
 def test_discovery_queries():
     q = queries_for("DigiLocker")
     assert any("tender" in term for term in q)
-    assert any("github" in term for term in q)
+    assert any("Tripura" in term for term in q)
+    assert any("Tamil Nadu" in term for term in q)
+    assert any("eprocure.gov.in" in term for term in q)
 
 
 def test_html_extraction():
