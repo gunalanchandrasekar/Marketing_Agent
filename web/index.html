@@ -79,8 +79,33 @@ aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);col
 .chat-foot{display:flex;justify-content:space-between;gap:7px;font-size:10.5px;color:#798da0}
 .chat-foot #chat-state{color:#326b86;font-weight:700}
 @media(max-width:560px){.chat-fab{min-width:55px;width:55px;padding:0;justify-content:center}.chat-fab-text{display:none}.chat-window{right:12px;bottom:85px}}
+
+/* Compact assistant and uncluttered sidebar (VAF light theme). */
+.brand{flex-direction:row;align-items:center;min-height:76px;padding:8px 10px 20px}
+.brand strong{font-size:25px;letter-spacing:-.75px}
+.brand small{font-size:10px;letter-spacing:1.25px}
+.chat-fab{width:54px;height:54px;min-width:54px;right:19px;bottom:19px;padding:0;border-radius:50%;justify-content:center;box-shadow:0 7px 21px #358dae42}
+.chat-fab-icon{font-size:22px;background:transparent;width:auto;height:auto}
+.chat-fab-text{display:none}
+.chat-window{width:min(385px,calc(100vw - 24px));height:min(535px,calc(100dvh - 100px));right:18px;bottom:84px;border-radius:16px;box-shadow:0 18px 54px #132d4935;z-index:1000}
+.chat-head{padding:12px 15px}
+.chat-initial{width:33px;height:33px;display:grid;place-items:center;border-radius:10px;background:linear-gradient(135deg,#f2aa42,#4caddd);color:white;font:bold 12px Manrope,sans-serif}
+.chat-head h3{font-size:15px}
+.chat-head p{font-size:11px}
+.chat-context{padding:10px 13px}
+.chat-body{padding:12px 14px}
+.chat-msg{font-size:13px;line-height:1.55;padding:10px 12px}
+.chat-controls{padding:10px 12px;gap:7px}
+.chat-advanced{font-size:11px;color:#65788b}
+.chat-advanced summary{cursor:pointer;user-select:none}
+.chat-advanced .chat-model-label{display:block;margin:7px 0 3px}
+.chat-compose textarea{min-height:32px;padding:7px;font-size:13px}
+.chat-compose button{width:35px;height:35px}
+.chat-foot{font-size:10px}
+.chat-pending:after{content:"";display:inline-block;width:11px;height:11px;margin-left:7px;border:2px solid #dccab2;border-top-color:#bd7e2c;border-radius:50%;animation:spin .8s linear infinite}
+@media(max-width:560px){.chat-window{right:10px;bottom:79px;height:min(535px,calc(100dvh - 90px))}.chat-fab{right:14px;bottom:14px}}
 </style></head><body>
-<div class="shell"><aside><div class="brand"><img class="brand-logo" src="/assets/Logo%20-%20Copy.png" alt="VAF Company Logo" onerror="this.alt='VAF logo unavailable'"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
+<div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
 <button class="navbtn" data-page="opportunities" onclick="navigate('opportunities')">◈ &nbsp; Opportunities <span class="mini" id="side-count">0</span></button>
@@ -105,12 +130,12 @@ aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);col
 <div class="footer-note">VAF AI · Opportunity Intelligence &nbsp; | &nbsp; Tender records and dates are unverified until confirmed on official sources.</div></main></div>
 <div id="overlay" class="drawer-backdrop" onclick="if(event.target===this)closeDrawer()"><div class="drawer"><div class="drawer-top"><div class="eyebrow" id="drawer-eyebrow">Tender details</div><button class="close" onclick="closeDrawer()" aria-label="Close">×</button></div><div id="drawer-content"></div></div></div>
 
-<button id="chat-fab" class="chat-fab" type="button" onclick="toggleChat()" aria-label="Open VAF document assistant" title="Ask VAF AI">
-  <span class="chat-fab-icon">✦</span><span class="chat-fab-text">Ask VAF AI</span>
+<button id="chat-fab" class="chat-fab" type="button" aria-expanded="false" onclick="toggleChat()" aria-label="Open VAF document assistant" title="Ask VAF AI">
+  <span class="chat-fab-icon">✦</span>
 </button>
 <div id="chat-window" class="chat-window hidden" role="dialog" aria-label="VAF document assistant">
   <div class="chat-head">
-    <div class="chat-head-title"><img src="/assets/Logo%20-%20Copy.png" alt="" class="chat-brand-icon"><div><h3>VAF AI Assistant</h3><p>Chat with your tender documents</p></div></div>
+    <div class="chat-head-title"><div class="chat-initial">AI</div><div><h3>VAF Assistant</h3><p>Ask about your selected tender</p></div></div>
     <button class="chat-close" type="button" onclick="toggleChat()" aria-label="Close assistant">×</button>
   </div>
   <div class="chat-context">
@@ -126,7 +151,7 @@ aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);col
     </div>
   </div>
   <form class="chat-controls" onsubmit="sendChat(event)">
-    <label for="chat-model" class="chat-model-label">AI Model</label><select id="chat-model" class="input"></select>
+    <details class="chat-advanced"><summary>Model settings</summary><label for="chat-model" class="chat-model-label">AI model</label><select id="chat-model" class="input"></select></details>
     <div class="chat-compose">
       <textarea id="chat-input" required maxlength="3000" rows="2" placeholder="Ask a question about the tender..." aria-label="Your question"></textarea>
       <button id="chat-send" type="submit" aria-label="Send message" title="Send message">➤</button>
@@ -177,9 +202,9 @@ E('issue-list').innerHTML=issues.length?issues.map(x=>'<div class="runbox"><div>
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
 function renderRecords(){const term=(E('record-search').value||'').toLowerCase(),filter=E('record-filter').value;const ops=current?.opportunities||[];const found=ops.filter(o=>{let s=o.deadline_status||'';return (filter==='all'||(filter==='passed'&&s.includes('passed'))||(filter==='future'&&s.includes('future'))||(filter==='other'&&!s.includes('passed')&&!s.includes('future')))&&[o.title,o.issuing_authority,o.tender_reference].join(' ').toLowerCase().includes(term)});E('all-records').innerHTML=found.length?found.map(recordCard).join(''):'<div class="empty"><h3>No records match the selected filters</h3><p>Try another keyword or select a different pipeline run.</p></div>'}
 function detail(label,value){return '<div class="detail"><span>'+label+'</span><b>'+esc(value||'Not available')+'</b></div>'}
-function openRecord(i){let o=current?.opportunities?.[i];if(!o)return;const s=status(o),v=o.evidence_validation||{},url=link(o.document_url);E('drawer-eyebrow').textContent='TENDER INTELLIGENCE / '+(o.tender_reference||'RECORD');E('drawer-content').innerHTML=pill(s[0],s[1])+'<h2>'+esc(o.title||'Untitled tender')+'</h2><p>'+esc(o.issuing_authority||'Unknown issuer')+'</p><div class="detail-grid">'+detail('Publication',fmtDate(o.publication_date))+detail('Original deadline',fmtDate(o.submission_deadline))+detail('Evidence match',v.matched===undefined?'Not checked':v.matched+' / '+v.checked)+'</div><h3>Project scope</h3><p>'+esc(o.scope_summary||'Not available')+'</p><h3>Technical requirements</h3>'+bullets(o.technical_requirements)+'<h3>Eligibility and compliance</h3>'+bullets(o.eligibility_requirements)+'<h3>Topic relevance</h3><p>'+esc(o.why_relevant_to_topic||'Not assessed')+'</p><div class="alert">The original tender deadline does not establish current bidding availability. Confirm updates and corrigenda on official sources.</div>'+(url?'<a class="button primary" target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">Open source tender PDF ↗</a>':'');E('overlay').classList.add('show')}
+function openRecord(i){closeChat();let o=current?.opportunities?.[i];if(!o)return;const s=status(o),v=o.evidence_validation||{},url=link(o.document_url);E('drawer-eyebrow').textContent='TENDER INTELLIGENCE / '+(o.tender_reference||'RECORD');E('drawer-content').innerHTML=pill(s[0],s[1])+'<h2>'+esc(o.title||'Untitled tender')+'</h2><p>'+esc(o.issuing_authority||'Unknown issuer')+'</p><div class="detail-grid">'+detail('Publication',fmtDate(o.publication_date))+detail('Original deadline',fmtDate(o.submission_deadline))+detail('Evidence match',v.matched===undefined?'Not checked':v.matched+' / '+v.checked)+'</div><h3>Project scope</h3><p>'+esc(o.scope_summary||'Not available')+'</p><h3>Technical requirements</h3>'+bullets(o.technical_requirements)+'<h3>Eligibility and compliance</h3>'+bullets(o.eligibility_requirements)+'<h3>Topic relevance</h3><p>'+esc(o.why_relevant_to_topic||'Not assessed')+'</p><div class="alert">The original tender deadline does not establish current bidding availability. Confirm updates and corrigenda on official sources.</div>'+(url?'<a class="button primary" target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">Open source tender PDF ↗</a>':'');E('overlay').classList.add('show')}
 function bullets(items){return items?.length?'<ul class="bullet">'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<p>Not extracted</p>'}
-function openDrawer(title,body){E('drawer-eyebrow').textContent=title;E('drawer-content').innerHTML=body;E('overlay').classList.add('show')}
+function openDrawer(title,body){closeChat();E('drawer-eyebrow').textContent=title;E('drawer-content').innerHTML=body;E('overlay').classList.add('show')}
 function closeDrawer(){E('overlay').classList.remove('show')}
 async function openScan(){const result=await loadModels();openDrawer('NEW INTELLIGENCE SCAN','<h2>Discover procurement opportunities</h2><p>Scan public sources, download documents and analyze extracted text with your local Ollama model.</p><div class="notice">Ollama: '+(result.connected?'Connected · '+availableModels.length+' models available':'Not reachable · '+esc(result.error||'check connection'))+'</div><form id="scan-form" onsubmit="submitScan(event)"><label class="field">Search topic<input class="input" name="topic" value="DigiLocker" required maxlength="120"></label><div class="form-row"><label class="field">Ollama model'+modelSelect()+'</label><label class="field">Maximum documents<input class="input" name="documents" type="number" min="1" max="12" value="5"></label></div><label class="field">Maximum pages<input class="input" name="pages" type="number" min="1" max="60" value="20"></label><div class="notice">Runs locally. The model may take several minutes per document. The dashboard remains responsive while it processes.</div><button class="button primary" type="submit">Start discovery scan →</button></form>')}
 async function submitScan(ev){ev.preventDefault();let f=new FormData(ev.target);try{let response=await api('/api/scans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:f.get('topic'),model:f.get('model'),max_pages:Number(f.get('pages')),max_documents:Number(f.get('documents'))})});closeDrawer();monitorJob(response.job_id)}catch(e){alert(e.message)}}
@@ -211,9 +236,13 @@ function exportCsv(){const rows=opp_frame();if(!rows.length)return;const cols=['
 function opp_frame(){return current?.opportunities||[]}
 
 let chatBusy=false;
+function closeChat(){E('chat-window').classList.add('hidden');E('chat-fab').setAttribute('aria-expanded','false')}
 async function toggleChat(){
- const windowEl=E('chat-window');windowEl.classList.toggle('hidden');
- if(!windowEl.classList.contains('hidden')){await loadModels();updateChatControls()}
+ const windowEl=E('chat-window');
+ if(!windowEl.classList.contains('hidden')){closeChat();return}
+ closeDrawer();
+ windowEl.classList.remove('hidden');E('chat-fab').setAttribute('aria-expanded','true');
+ await loadModels();updateChatControls();E('chat-input').focus();
 }
 function updateChatControls(){
  const models=availableModels.filter(m=>!m.endsWith(':cloud') && !m.includes('embed'));
