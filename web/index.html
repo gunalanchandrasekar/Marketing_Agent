@@ -130,6 +130,23 @@ body.tender-view-open{overflow:hidden}
 .tender-fullscreen #drawer-content>.alert{font-size:14px;line-height:1.6}
 @media(max-width:860px){.tender-columns{grid-template-columns:1fr}.tender-fullscreen .detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tender-fullscreen .drawer-top:before{font-size:12px}}
 @media(max-width:540px){.tender-fullscreen .drawer{padding:0 15px 45px}.tender-fullscreen .drawer-top{margin:0 -15px;padding:12px 15px}.tender-fullscreen .drawer-top .eyebrow{display:none}.tender-fullscreen .detail-grid{gap:9px}.tender-fullscreen .detail{padding:12px}.tender-section{padding:18px;margin:12px 0}.tender-actions{flex-direction:column}.tender-actions .button{width:100%}}
+
+/* Document assistant alongside the full-page tender view. */
+.tender-fullscreen.tender-chat-open .drawer{padding-right:445px;transition:padding-right .2s ease}
+.tender-fullscreen.tender-chat-open #drawer-content{max-width:100%;margin:0 auto}
+.tender-fullscreen.tender-chat-open .drawer-top{padding-right:445px}
+.tender-fullscreen.tender-chat-open .tender-columns{grid-template-columns:1fr}
+.tender-fullscreen.tender-chat-open .detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tender-fullscreen.tender-chat-open .tender-section{max-width:100%}
+.tender-fullscreen.tender-chat-open .chat-window{z-index:1100}
+.tender-fullscreen.tender-chat-open ~ .chat-window{z-index:1100}
+body.tender-view-open .chat-window:not(.hidden){position:fixed;right:15px;top:16px;bottom:16px;height:auto;width:405px;z-index:1100;box-shadow:0 12px 45px #1c3e6027}
+body.tender-view-open .chat-fab{z-index:1101}
+@media(max-width:900px){
+ .tender-fullscreen.tender-chat-open .drawer{padding-right:15px}
+ .tender-fullscreen.tender-chat-open .drawer-top{padding-right:15px}
+ body.tender-view-open .chat-window:not(.hidden){top:auto;right:10px;bottom:10px;height:min(590px,calc(100dvh - 20px));width:min(405px,calc(100vw - 20px))}
+}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
@@ -258,7 +275,7 @@ function openRecord(i){
 }
 function bullets(items){return items?.length?'<ul class="bullet">'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<p>Not extracted</p>'}
 function openDrawer(title,body){E('overlay').querySelector('.drawer-top .close').textContent='×';closeChat();E('overlay').classList.remove('tender-fullscreen');document.body.classList.remove('tender-view-open');E('drawer-eyebrow').textContent=title;E('drawer-content').innerHTML=body;E('overlay').classList.add('show')}
-function closeDrawer(){E('overlay').querySelector('.drawer-top .close').textContent='×';E('overlay').classList.remove('show','tender-fullscreen');document.body.classList.remove('tender-view-open')}
+function closeDrawer(){closeChat();E('overlay').querySelector('.drawer-top .close').textContent='×';E('overlay').classList.remove('show','tender-fullscreen');document.body.classList.remove('tender-view-open')}
 async function openScan(){const result=await loadModels();openDrawer('NEW INTELLIGENCE SCAN','<h2>Discover procurement opportunities</h2><p>Scan public sources, download documents and analyze extracted text with your local Ollama model.</p><div class="notice">Ollama: '+(result.connected?'Connected · '+availableModels.length+' models available':'Not reachable · '+esc(result.error||'check connection'))+'</div><form id="scan-form" onsubmit="submitScan(event)"><label class="field">Search topic<input class="input" name="topic" value="DigiLocker" required maxlength="120"></label><div class="form-row"><label class="field">Ollama model'+modelSelect()+'</label><label class="field">Maximum documents<input class="input" name="documents" type="number" min="1" max="12" value="5"></label></div><label class="field">Maximum pages<input class="input" name="pages" type="number" min="1" max="60" value="20"></label><div class="notice">Runs locally. The model may take several minutes per document. The dashboard remains responsive while it processes.</div><button class="button primary" type="submit">Start discovery scan →</button></form>')}
 async function submitScan(ev){ev.preventDefault();let f=new FormData(ev.target);try{let response=await api('/api/scans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:f.get('topic'),model:f.get('model'),max_pages:Number(f.get('pages')),max_documents:Number(f.get('documents'))})});closeDrawer();monitorJob(response.job_id)}catch(e){alert(e.message)}}
 async function retryOpen(){if(!selected)return;await loadModels();openDrawer('RECOVER AI ANALYSIS','<h2>Retry unfinished documents</h2><p>Recover results from the current run without scraping the same websites or downloading PDFs again.</p><form onsubmit="submitRetry(event)"><label class="field">Ollama model'+modelSelect()+'</label><label class="field">Timeout per document (seconds)<input class="input" name="timeout" type="number" min="60" max="3600" value="1200"></label><div class="notice">Only unprocessed documents will be sent to Ollama.</div><button class="button primary">Retry analysis →</button></form>')}
@@ -300,12 +317,13 @@ function setActiveTender(op){
   E('chat-scope-note').title=activeTenderTitle;
 }
 function resetTenderScope(){activeTenderSha=null;activeTenderTitle='';updateChatControls();E('chat-scope-note').textContent='All documents in this run';}
-function closeChat(){E('chat-window').classList.add('hidden');E('chat-fab').setAttribute('aria-expanded','false')}
+function closeChat(){E('chat-window').classList.add('hidden');E('chat-fab').setAttribute('aria-expanded','false');E('overlay').classList.remove('tender-chat-open')}
 async function toggleChat(){
  const windowEl=E('chat-window');
  if(!windowEl.classList.contains('hidden')){closeChat();return}
- closeDrawer();
+ if(!E('overlay').classList.contains('tender-fullscreen')) closeDrawer();
  windowEl.classList.remove('hidden');E('chat-fab').setAttribute('aria-expanded','true');
+ if(E('overlay').classList.contains('tender-fullscreen'))E('overlay').classList.add('tender-chat-open');
  await loadModels();updateChatControls();E('chat-input').focus();
 }
 function updateChatControls(){
