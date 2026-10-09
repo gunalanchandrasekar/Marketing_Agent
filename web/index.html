@@ -49,8 +49,38 @@ aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);col
 .chat-body{flex:1;overflow:auto;background:#fbfdff;padding:17px;display:flex;flex-direction:column;gap:11px}.chat-msg{max-width:91%;border-radius:12px;padding:11px 13px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.55}.chat-msg.bot{background:#fff2dd;color:#634418;align-self:flex-start}.chat-msg.user{background:#e8f4ff;color:#164266;align-self:flex-end}
 .chat-controls{border-top:1px solid #e3ebf2;padding:13px;display:grid;gap:8px;background:#fff}.chat-controls textarea{width:100%;min-height:70px;max-height:135px;resize:vertical}.chat-controls select{width:100%;font-size:13px}.chat-actions{display:flex;justify-content:space-between;align-items:center}.chat-actions .button{padding:8px 18px}
 @media(max-width:560px){.chat-window{right:12px;bottom:86px}.chat-fab{right:18px;bottom:16px}}
+
+/* Refined VAF document assistant */
+.chat-fab{width:auto;min-width:156px;height:54px;border-radius:999px;padding:0 20px;display:flex;align-items:center;gap:11px;font:800 14px Manrope,sans-serif;letter-spacing:.01em;box-shadow:0 9px 30px #24688b36}
+.chat-fab-icon{width:30px;height:30px;background:#ffffff24;border-radius:50%;display:grid;place-items:center;font-size:21px}
+.chat-window{width:min(440px,calc(100vw - 26px));height:min(645px,calc(100dvh - 115px));border-radius:19px;box-shadow:0 24px 75px #243d5340;border:1px solid #dce7eb}
+.chat-head{padding:15px 17px;background:linear-gradient(105deg,#fff8ef,#eaf8fe);border-bottom:1px solid #e4edf2}
+.chat-head-title{display:flex;align-items:center;gap:12px}
+.chat-brand-icon{width:43px;height:43px;object-fit:contain;border-radius:10px;background:white;padding:3px}
+.chat-head h3{font-size:16px;letter-spacing:-.25px;color:#16374e;margin:0}
+.chat-head p{font-size:12px;color:#617b90;margin:2px 0 0}
+.chat-close{background:white;border:1px solid #d9e5ea;color:#49677c;font-size:23px;border-radius:9px;width:32px;height:32px;line-height:1}
+.chat-context{padding:12px 16px;background:#fff;border-bottom:1px solid #ecf0f3;display:grid;gap:5px}
+.chat-context label,.chat-model-label{font-size:11px;font-weight:800;color:#587287;letter-spacing:.045em}
+.chat-context select,.chat-controls select{width:100%;border:1px solid #dbe5eb;border-radius:9px;padding:10px;font-size:13px;min-height:39px;background:#fff;color:#223a4e}
+.chat-body{background:linear-gradient(180deg,#f8fcfe,#fff);padding:18px;gap:13px}
+.chat-msg{font-size:14px;line-height:1.65;padding:12px 14px;max-width:91%;border-radius:13px}
+.chat-msg.bot{background:#fff5e8;color:#553f25;border-top-left-radius:4px}
+.chat-msg.user{background:#e6f5fd;color:#23465e;border-top-right-radius:4px}
+.chat-suggestions{display:flex;flex-wrap:wrap;gap:8px;align-self:flex-start}
+.chat-suggestions button{background:#fff;border:1px solid #d9e8f0;color:#2f607f;border-radius:999px;padding:7px 11px;font-size:12px;font-weight:700}
+.chat-suggestions button:hover{background:#e9f8ff;border-color:#89c5e0}
+.chat-controls{padding:13px 15px 12px;gap:7px;border-top:1px solid #e5edf1}
+.chat-compose{position:relative;border:1px solid #cbdae2;border-radius:13px;background:white;display:flex;align-items:flex-end;padding:7px;gap:7px}
+.chat-compose:focus-within{border-color:#4aaade;box-shadow:0 0 0 3px #43abdd20}
+.chat-compose textarea{border:0;outline:0;resize:none;min-height:43px;max-height:110px;flex:1;font:inherit;font-size:14px;padding:8px;line-height:1.45;color:#16314c}
+.chat-compose button{border:0;background:linear-gradient(130deg,#e7962c,#32a7dc);border-radius:10px;width:39px;height:39px;color:white;font-size:17px;flex:none}
+.chat-compose button:disabled{opacity:.45}
+.chat-foot{display:flex;justify-content:space-between;gap:7px;font-size:10.5px;color:#798da0}
+.chat-foot #chat-state{color:#326b86;font-weight:700}
+@media(max-width:560px){.chat-fab{min-width:55px;width:55px;padding:0;justify-content:center}.chat-fab-text{display:none}.chat-window{right:12px;bottom:85px}}
 </style></head><body>
-<div class="shell"><aside><div class="brand"><img class="brand-logo" src="/assets/vaf-logo.png" alt="VAF Company Logo" onerror="this.alt='VAF logo unavailable'"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
+<div class="shell"><aside><div class="brand"><img class="brand-logo" src="/assets/Logo%20-%20Copy.png" alt="VAF Company Logo" onerror="this.alt='VAF logo unavailable'"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
 <button class="navbtn" data-page="opportunities" onclick="navigate('opportunities')">◈ &nbsp; Opportunities <span class="mini" id="side-count">0</span></button>
@@ -75,19 +105,37 @@ aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);col
 <div class="footer-note">VAF AI · Opportunity Intelligence &nbsp; | &nbsp; Tender records and dates are unverified until confirmed on official sources.</div></main></div>
 <div id="overlay" class="drawer-backdrop" onclick="if(event.target===this)closeDrawer()"><div class="drawer"><div class="drawer-top"><div class="eyebrow" id="drawer-eyebrow">Tender details</div><button class="close" onclick="closeDrawer()" aria-label="Close">×</button></div><div id="drawer-content"></div></div></div>
 
-<button id="chat-fab" class="chat-fab" type="button" onclick="toggleChat()" aria-label="Open document assistant">✦</button>
+<button id="chat-fab" class="chat-fab" type="button" onclick="toggleChat()" aria-label="Open VAF document assistant" title="Ask VAF AI">
+  <span class="chat-fab-icon">✦</span><span class="chat-fab-text">Ask VAF AI</span>
+</button>
 <div id="chat-window" class="chat-window hidden" role="dialog" aria-label="VAF document assistant">
-  <div class="chat-head"><div><h3>VAF Document Assistant</h3><p>Ask about summaries, eligibility and downloaded PDFs</p></div><button class="close" onclick="toggleChat()" aria-label="Close chat">×</button></div>
-  <div id="chat-body" class="chat-body"><div class="chat-msg bot">Hello! Select a run and ask me to summarize a tender, explain eligibility, or find details in its documents. Answers depend on the available extracted text.</div></div>
+  <div class="chat-head">
+    <div class="chat-head-title"><img src="/assets/Logo%20-%20Copy.png" alt="" class="chat-brand-icon"><div><h3>VAF AI Assistant</h3><p>Chat with your tender documents</p></div></div>
+    <button class="chat-close" type="button" onclick="toggleChat()" aria-label="Close assistant">×</button>
+  </div>
+  <div class="chat-context">
+    <label for="chat-document">Research document</label>
+    <select id="chat-document" class="input"><option value="">All documents in selected run</option></select>
+  </div>
+  <div id="chat-body" class="chat-body" aria-live="polite">
+    <div class="chat-msg bot">Welcome! I can explain the selected tender and answer questions using its extracted document text.</div>
+    <div class="chat-suggestions">
+      <button type="button" onclick="askSuggestion('Summarize the selected document in simple terms')">Summarize document</button>
+      <button type="button" onclick="askSuggestion('What are the eligibility requirements?')">Eligibility requirements</button>
+      <button type="button" onclick="askSuggestion('What is the original submission deadline?')">Submission deadline</button>
+    </div>
+  </div>
   <form class="chat-controls" onsubmit="sendChat(event)">
-    <label class="field" style="margin:0">Document scope<select id="chat-document" class="input"><option value="">All documents in selected run</option></select></label>
-    <label class="field" style="margin:0">Ollama model<select id="chat-model" class="input"></select></label>
-    <textarea id="chat-input" class="input" required maxlength="3000" placeholder="Ask about this tender or document..."></textarea>
-    <div class="chat-actions"><small id="chat-state" class="muted">Ready</small><button id="chat-send" class="button primary" type="submit">Send →</button></div>
+    <label for="chat-model" class="chat-model-label">AI Model</label><select id="chat-model" class="input"></select>
+    <div class="chat-compose">
+      <textarea id="chat-input" required maxlength="3000" rows="2" placeholder="Ask a question about the tender..." aria-label="Your question"></textarea>
+      <button id="chat-send" type="submit" aria-label="Send message" title="Send message">➤</button>
+    </div>
+    <div class="chat-foot"><span id="chat-state">Ready to help</span><span>Enter to send · Shift+Enter for new line</span></div>
   </form>
 </div>
 <div id="global-loader" class="loader-overlay hidden" role="status" aria-live="polite">
-<div class="loader-box"><img class="loader-logo" src="/assets/vaf-logo.png" alt="VAF AI" onerror="this.style.display='none'">
+<div class="loader-box"><img class="loader-logo" src="/assets/Logo%20-%20Copy.png" alt="VAF AI" onerror="this.style.display='none'">
 <div class="loader-spinner"></div><h2 id="loader-title" class="loader-title">Searching opportunities</h2>
 <p id="loader-message" class="loader-message">Preparing your intelligence search...</p>
 <div class="loader-progress"><span id="loader-progress-bar"></span></div>
@@ -184,6 +232,8 @@ function addChat(role,message){
  E('chat-body').appendChild(node);E('chat-body').scrollTop=E('chat-body').scrollHeight;
  return node;
 }
+function askSuggestion(question){E("chat-input").value=question;E("chat-input").focus();E("chat-input").closest("form").requestSubmit()}
+E("chat-input").addEventListener("keydown",function(event){if(event.key==="Enter"&&!event.shiftKey&&!event.isComposing){event.preventDefault();this.closest("form").requestSubmit()}});
 async function sendChat(e){
  e.preventDefault();if(chatBusy)return;
  if(!selected){addChat('bot','Select a completed research run first.');return}
@@ -191,14 +241,15 @@ async function sendChat(e){
  const model=E('chat-model').value||'qwen3:30b';
  const documentSha=E('chat-document').value||null;
  addChat('user',question);E('chat-input').value='';
- const pending=addChat('bot','Reading relevant document passages and asking Ollama...');
- chatBusy=true;E('chat-send').disabled=true;E('chat-state').textContent='Thinking...';
+ const pending=addChat('bot','Reading the document and preparing an answer…');
+ pending.classList.add('chat-pending');
+ chatBusy=true;E('chat-send').disabled=true;E('chat-state').textContent='Analyzing document…';
  try{
    const answer=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({run_id:selected,message:question,model:model,document_sha256:documentSha})});
-   pending.textContent=answer.answer;
- }catch(error){pending.textContent='Unable to answer: '+error.message}
- finally{chatBusy=false;E('chat-send').disabled=false;E('chat-state').textContent='Ready';E('chat-body').scrollTop=E('chat-body').scrollHeight}
+   pending.textContent=answer.answer;pending.classList.remove('chat-pending');
+ }catch(error){pending.textContent='Unable to answer: '+error.message;pending.classList.remove('chat-pending')}
+ finally{chatBusy=false;E('chat-send').disabled=false;E('chat-state').textContent='Ready to help';E('chat-body').scrollTop=E('chat-body').scrollHeight}
 }
 
 refresh();
-</script><div id="global-loader" class="loader-overlay hidden"><div class="loader-box"><img class="loader-logo" src="/assets/vaf-logo.png" alt="VAF"><h2 id="loader-title">SEARCHING</h2><p id="loader-message">Starting research...</p><div class="loader-wheel"></div><div class="loader-track"><div id="loader-progress-bar"></div></div><p id="loader-percent">0%</p></div></div></body></html>
+</script><div id="global-loader" class="loader-overlay hidden"><div class="loader-box"><img class="loader-logo" src="/assets/Logo%20-%20Copy.png" alt="VAF"><h2 id="loader-title">SEARCHING</h2><p id="loader-message">Starting research...</p><div class="loader-wheel"></div><div class="loader-track"><div id="loader-progress-bar"></div></div><p id="loader-percent">0%</p></div></div></body></html>
