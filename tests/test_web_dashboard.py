@@ -39,3 +39,26 @@ def test_models_failure_is_visible_not_a_server_crash(monkeypatch):
     response=TestClient(web_dashboard.app).get("/api/models")
     assert response.status_code==200
     assert response.json()["connected"] is False
+
+
+def test_document_summary_includes_retry_results(tmp_path):
+    import json
+    run = tmp_path / "run"
+    run.mkdir()
+    url = "https://example.gov.in/tender.pdf"
+    (run / "opportunities.json").write_text(json.dumps({
+        "topic": "DigiLocker", "run_id": "20261009T062130907068Z",
+        "opportunities": [], "steps": {}
+    }))
+    (run / "extracted_tenders.json").write_text(json.dumps({
+        "documents": [{"document_url": url, "sha256": "abc",
+                       "extraction_status": "ok", "page_count": 2}]
+    }))
+    (run / "tender_analysis_retry.json").write_text(json.dumps({
+        "results": [{"document_url": url, "sha256": "abc",
+                     "analysis": {"tender_title": "DigiLocker RFP",
+                                  "scope_summary": "API integration work",
+                                  "issuing_authority": "Demo Authority"}}]
+    }))
+    detail = web_dashboard.run_detail(run)
+    assert detail["documents"][0]["summary_data"]["summary"] == "API integration work"
