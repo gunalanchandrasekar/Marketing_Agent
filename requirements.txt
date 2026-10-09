@@ -8,3 +8,6 @@ pytest>=8,<10
 
 streamlit>=1.38,<2
 pandas>=2.2,<3
+
+fastapi>=0.115,<1
+uvicorn>=0.30,<1
