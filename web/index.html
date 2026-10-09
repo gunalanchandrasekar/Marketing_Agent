@@ -41,8 +41,16 @@ aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);col
 .sidetip b{color:#204b62}.sidetip p{color:#5e7687;font-size:13px}
 .eyebrow{color:#d78424}
 @media(max-width:930px){aside{border-right:0;border-bottom:1px solid #dceaf0}.navbtn{flex-shrink:0}}
+
+.brand{display:flex;flex-direction:column;align-items:flex-start;gap:9px}.brand-logo{width:120px;height:94px;max-width:100%;object-fit:contain;border:0;box-shadow:none;background:transparent;padding:0}.brand strong{font-size:21px}
+.chat-fab{position:fixed;right:25px;bottom:23px;z-index:1000;border:0;border-radius:50%;width:60px;height:60px;background:linear-gradient(135deg,#eb9329,#38a9de);color:white;font-size:25px;box-shadow:0 12px 28px #3e8da43a}
+.chat-window{position:fixed;right:25px;bottom:95px;width:min(415px,calc(100vw - 24px));height:min(605px,calc(100dvh - 115px));border-radius:19px;background:white;border:1px solid #dbe8ef;box-shadow:0 18px 55px #14283d30;z-index:1000;display:flex;flex-direction:column;overflow:hidden}
+.chat-head{padding:16px 18px;background:linear-gradient(100deg,#fff4e4,#e7f8ff);display:flex;align-items:center;justify-content:space-between}.chat-head h3{font-size:16px}.chat-head p{font-size:12px;margin:3px 0}
+.chat-body{flex:1;overflow:auto;background:#fbfdff;padding:17px;display:flex;flex-direction:column;gap:11px}.chat-msg{max-width:91%;border-radius:12px;padding:11px 13px;white-space:pre-wrap;overflow-wrap:anywhere;font-size:14px;line-height:1.55}.chat-msg.bot{background:#fff2dd;color:#634418;align-self:flex-start}.chat-msg.user{background:#e8f4ff;color:#164266;align-self:flex-end}
+.chat-controls{border-top:1px solid #e3ebf2;padding:13px;display:grid;gap:8px;background:#fff}.chat-controls textarea{width:100%;min-height:70px;max-height:135px;resize:vertical}.chat-controls select{width:100%;font-size:13px}.chat-actions{display:flex;justify-content:space-between;align-items:center}.chat-actions .button{padding:8px 18px}
+@media(max-width:560px){.chat-window{right:12px;bottom:86px}.chat-fab{right:18px;bottom:16px}}
 </style></head><body>
-<div class="shell"><aside><div class="brand"><img class="brand-logo" src="/assets/vaf-logo.png" alt="VAF AI logo" onerror="this.style.display='none'"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
+<div class="shell"><aside><div class="brand"><img class="brand-logo" src="/assets/vaf-logo.png" alt="VAF Company Logo" onerror="this.alt='VAF logo unavailable'"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
 <button class="navbtn" data-page="opportunities" onclick="navigate('opportunities')">◈ &nbsp; Opportunities <span class="mini" id="side-count">0</span></button>
@@ -66,6 +74,18 @@ aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);col
 <section id="view-activity" class="hidden"><div class="panel"><div class="panel-head"><div><h2>Run history</h2><p>Choose an earlier execution to inspect its results</p></div></div><div id="history"></div></div><div class="panel"><div class="panel-head"><h2>Issue diagnostics</h2></div><div id="issue-list"></div></div></section>
 <div class="footer-note">VAF AI · Opportunity Intelligence &nbsp; | &nbsp; Tender records and dates are unverified until confirmed on official sources.</div></main></div>
 <div id="overlay" class="drawer-backdrop" onclick="if(event.target===this)closeDrawer()"><div class="drawer"><div class="drawer-top"><div class="eyebrow" id="drawer-eyebrow">Tender details</div><button class="close" onclick="closeDrawer()" aria-label="Close">×</button></div><div id="drawer-content"></div></div></div>
+
+<button id="chat-fab" class="chat-fab" type="button" onclick="toggleChat()" aria-label="Open document assistant">✦</button>
+<div id="chat-window" class="chat-window hidden" role="dialog" aria-label="VAF document assistant">
+  <div class="chat-head"><div><h3>VAF Document Assistant</h3><p>Ask about summaries, eligibility and downloaded PDFs</p></div><button class="close" onclick="toggleChat()" aria-label="Close chat">×</button></div>
+  <div id="chat-body" class="chat-body"><div class="chat-msg bot">Hello! Select a run and ask me to summarize a tender, explain eligibility, or find details in its documents. Answers depend on the available extracted text.</div></div>
+  <form class="chat-controls" onsubmit="sendChat(event)">
+    <label class="field" style="margin:0">Document scope<select id="chat-document" class="input"><option value="">All documents in selected run</option></select></label>
+    <label class="field" style="margin:0">Ollama model<select id="chat-model" class="input"></select></label>
+    <textarea id="chat-input" class="input" required maxlength="3000" placeholder="Ask about this tender or document..."></textarea>
+    <div class="chat-actions"><small id="chat-state" class="muted">Ready</small><button id="chat-send" class="button primary" type="submit">Send →</button></div>
+  </form>
+</div>
 <div id="global-loader" class="loader-overlay hidden" role="status" aria-live="polite">
 <div class="loader-box"><img class="loader-logo" src="/assets/vaf-logo.png" alt="VAF AI" onerror="this.style.display='none'">
 <div class="loader-spinner"></div><h2 id="loader-title" class="loader-title">Searching opportunities</h2>
@@ -88,8 +108,8 @@ const link=u=>{try{let p=new URL(u);return p.protocol==='https:'||p.protocol==='
 async function api(path,options){let r=await fetch(path,options);let json=await r.json().catch(()=>({}));if(!r.ok)throw Error(json.detail||('HTTP '+r.status));return json}
 async function loadModels(){try{let r=await api('/api/models');availableModels=r.models||[];return r}catch(e){return {models:[],connected:false,error:e.message}}}
 function modelSelect(name='model'){let opts=availableModels.filter(m=>!m.includes(':cloud'));return opts.length?'<select class="input" name="'+name+'">'+opts.map(m=>'<option value="'+esc(m)+'" '+(m==='qwen3:30b'?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select>':'<input class="input" name="'+name+'" value="qwen3:30b" placeholder="Ollama model" />'}
-async function refresh(prefer){try{const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' records</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;render()}catch(e){E('health').textContent='Unable to load runs: '+e.message}}
-async function chooseRun(id){selected=id;try{current=await api('/api/runs/'+encodeURIComponent(id));render()}catch(e){alert(e.message)}}
+async function refresh(prefer){try{const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' records</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;render();updateChatControls()}catch(e){E('health').textContent='Unable to load runs: '+e.message}}
+async function chooseRun(id){selected=id;try{current=await api('/api/runs/'+encodeURIComponent(id));render();updateChatControls()}catch(e){alert(e.message)}}
 function navigate(p){currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','Explore scope, eligibility and source-backed procurement research.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
 function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only']].map(row=>'<div class="stat"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div></div>').join('');
 E('recent-records').innerHTML=ops.length?ops.slice(0,4).map(o=>recordCard(o)).join(''):'<div class="empty"><h3>No completed AI records in this run</h3><p>'+docs.length+' documents ready. Open the document queue to recover unfinished analysis.</p><button class="button primary" onclick="navigate(\'documents\')">View document queue</button></div>';
@@ -141,5 +161,44 @@ async function clearOldData(){
 }
 function exportCsv(){const rows=opp_frame();if(!rows.length)return;const cols=['Title','Reference','Authority','Original deadline','Status','Source URL'];const output=[cols,...rows.map(o=>[o.title,o.tender_reference,o.issuing_authority,o.submission_deadline,status(o)[0],o.document_url])].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');let a=document.createElement('a'),url=URL.createObjectURL(new Blob([output],{type:'text/csv'}));a.href=url;a.download='vaf-opportunities.csv';a.click();URL.revokeObjectURL(url)}
 function opp_frame(){return current?.opportunities||[]}
+
+let chatBusy=false;
+async function toggleChat(){
+ const windowEl=E('chat-window');windowEl.classList.toggle('hidden');
+ if(!windowEl.classList.contains('hidden')){await loadModels();updateChatControls()}
+}
+function updateChatControls(){
+ const models=availableModels.filter(m=>!m.endsWith(':cloud') && !m.includes('embed'));
+ const modelEl=E('chat-model'), previous=modelEl.value;
+ modelEl.innerHTML=models.map(m=>'<option value="'+esc(m)+'">'+esc(m)+'</option>').join('');
+ if(models.includes(previous))modelEl.value=previous;
+ else if(models.includes('qwen3:30b'))modelEl.value='qwen3:30b';
+ else if(!models.length)modelEl.innerHTML='<option value="qwen3:30b">qwen3:30b (connection not verified)</option>';
+ const docs=current?.documents||[];
+ E('chat-document').innerHTML='<option value="">All documents in selected run</option>'+docs.filter(d=>d.sha256).map((d,i)=>'<option value="'+esc(d.sha256)+'">PDF '+(i+1)+': '+esc((d.summary_data?.title||d.document_url||'Document').slice(0,80))+'</option>').join('');
+}
+function addChat(role,message){
+ const node=document.createElement('div');
+ node.className='chat-msg '+role;
+ node.textContent=message;
+ E('chat-body').appendChild(node);E('chat-body').scrollTop=E('chat-body').scrollHeight;
+ return node;
+}
+async function sendChat(e){
+ e.preventDefault();if(chatBusy)return;
+ if(!selected){addChat('bot','Select a completed research run first.');return}
+ const question=E('chat-input').value.trim();if(!question)return;
+ const model=E('chat-model').value||'qwen3:30b';
+ const documentSha=E('chat-document').value||null;
+ addChat('user',question);E('chat-input').value='';
+ const pending=addChat('bot','Reading relevant document passages and asking Ollama...');
+ chatBusy=true;E('chat-send').disabled=true;E('chat-state').textContent='Thinking...';
+ try{
+   const answer=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({run_id:selected,message:question,model:model,document_sha256:documentSha})});
+   pending.textContent=answer.answer;
+ }catch(error){pending.textContent='Unable to answer: '+error.message}
+ finally{chatBusy=false;E('chat-send').disabled=false;E('chat-state').textContent='Ready';E('chat-body').scrollTop=E('chat-body').scrollHeight}
+}
+
 refresh();
 </script><div id="global-loader" class="loader-overlay hidden"><div class="loader-box"><img class="loader-logo" src="/assets/vaf-logo.png" alt="VAF"><h2 id="loader-title">SEARCHING</h2><p id="loader-message">Starting research...</p><div class="loader-wheel"></div><div class="loader-track"><div id="loader-progress-bar"></div></div><p id="loader-percent">0%</p></div></div></body></html>
