@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import uvicorn
+import httpx
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
@@ -101,15 +102,18 @@ def start_job(kind: str, fn) -> dict:
         if any(v["status"] in ("queued", "running") for v in jobs.values()):
             raise HTTPException(status_code=409, detail="A job is already running")
         job_id = uuid.uuid4().hex[:12]
-        jobs[job_id] = {"id": job_id, "kind": kind, "status": "queued", "message": "Queued"}
+        jobs[job_id] = {"id": job_id, "kind": kind, "status": "queued", "message": "Queued", "stage": "queued", "percent": 0}
     def task():
         with jobs_lock:
             jobs[job_id]["status"] = "running"
             jobs[job_id]["message"] = "Processing. This can take several minutes."
         try:
-            result = fn()
+            def progress(stage, message, percent):
+                with jobs_lock:
+                    jobs[job_id].update(stage=stage, message=message, percent=percent)
+            result = fn(progress)
             with jobs_lock:
-                jobs[job_id].update(status="complete", message="Completed", result=result)
+                jobs[job_id].update(status="complete", stage="complete", percent=100, message="Completed", result=result)
         except Exception as exc:
             with jobs_lock:
                 jobs[job_id].update(status="failed", message=str(exc)[:500])
@@ -120,6 +124,18 @@ def start_job(kind: str, fn) -> dict:
 @app.get("/")
 def home():
     return FileResponse(WEB, media_type="text/html")
+
+
+@app.get("/api/models")
+def models():
+    url = os.getenv("OLLAMA_BASE_URL", "http://192.168.0.100:11434").rstrip("/")
+    try:
+        response = httpx.get(url + "/api/tags", timeout=7)
+        response.raise_for_status()
+        names = [m.get("name") for m in response.json().get("models", []) if m.get("name") and "embedding" not in m.get("capabilities", [])]
+        return {"models": names, "connected": True, "server": url}
+    except (httpx.HTTPError, ValueError) as exc:
+        return {"models": [], "connected": False, "server": url, "error": str(exc)}
 
 
 @app.get("/api/runs")
@@ -137,11 +153,12 @@ def scan(params: ScanInput):
     topic = params.topic.strip()
     if len(topic) < 2:
         raise HTTPException(422, detail="Topic is required")
-    def action():
+    def action(progress):
         result = execute(
             topic, RUNS, model=params.model,
             ollama_url=os.getenv("OLLAMA_BASE_URL", "http://192.168.0.100:11434"),
             max_pages=params.max_pages, max_documents=params.max_documents, timeout=1200,
+            progress=progress,
         )
         return {"run_id": result["run_id"], "opportunities": result["opportunity_count"]}
     return start_job("scan", action)
@@ -150,12 +167,14 @@ def scan(params: ScanInput):
 @app.post("/api/runs/{run_id}/retry")
 def retry_run(run_id: str, params: RetryInput):
     run_dir = get_run_dir(run_id)
-    def action():
+    def action(progress):
+        progress("analyzing", "Retrying unfinished Ollama analyses", 35)
         result = retry(
             run_dir, params.model,
             os.getenv("OLLAMA_BASE_URL", "http://192.168.0.100:11434"),
             params.timeout,
         )
+        progress("saving", "Updated analysis results", 95)
         return {"run_id": run_id, "opportunities": result["opportunity_count"]}
     return start_job("retry", action)
 
