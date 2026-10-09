@@ -104,7 +104,33 @@ aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);col
 .chat-foot{font-size:10px}
 .chat-pending:after{content:"";display:inline-block;width:11px;height:11px;margin-left:7px;border:2px solid #dccab2;border-top-color:#bd7e2c;border-radius:50%;animation:spin .8s linear infinite}
 @media(max-width:560px){.chat-window{right:10px;bottom:79px;height:min(535px,calc(100dvh - 90px))}.chat-fab{right:14px;bottom:14px}}
-.chat-scope-note{font-size:11px;line-height:1.4;color:#3c6a83;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-weight:650}.drawer .button{margin-top:7px}</style></head><body>
+.chat-scope-note{font-size:11px;line-height:1.4;color:#3c6a83;white-space:nowrap;text-overflow:ellipsis;overflow:hidden;font-weight:650}.drawer .button{margin-top:7px}
+/* Full-page tender details, separate from the slide-out scan form */
+body.tender-view-open{overflow:hidden}
+.drawer-backdrop.tender-fullscreen{background:#f7f9fc;justify-content:stretch;align-items:stretch;z-index:30}
+.tender-fullscreen .drawer{width:100%;max-width:none;height:100dvh;overflow-y:auto;padding:0 32px 64px;background:#f7f9fc;box-shadow:none}
+.tender-fullscreen .drawer-top{position:sticky;top:0;z-index:5;align-items:center;background:#fff;border-bottom:1px solid #e2e9f0;margin:0 -32px;padding:15px max(32px,calc((100vw - 1160px)/2));box-shadow:0 3px 12px #1b446009}
+.tender-fullscreen .drawer-top:before{content:"← Back to dashboard";font:700 14px Manrope,sans-serif;color:#396d88;cursor:pointer}
+.tender-fullscreen .drawer-top .eyebrow{margin-left:auto;margin-right:24px;font-size:11px}
+.tender-fullscreen #drawer-content{width:100%;max-width:1160px;margin:0 auto;padding-top:30px}
+.tender-fullscreen #drawer-content h2{font-size:clamp(22px,2.3vw,32px);line-height:1.35;max-width:1000px;margin:16px 0 10px}
+.tender-authority{font-size:15px;color:#5b7390;margin-bottom:18px}
+.tender-fullscreen .detail-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:23px 0}
+.tender-fullscreen .detail{background:#fff;padding:18px;border-radius:13px;border:1px solid #e0e9f1}
+.tender-fullscreen .detail span{font-size:12px}
+.tender-fullscreen .detail b{font-size:15px;overflow-wrap:anywhere}
+.tender-columns{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.tender-section{background:#fff;border:1px solid #e0e9f1;border-radius:15px;padding:23px 27px;margin:18px 0}
+.tender-section h3{font-size:17px;color:#1c3857;margin:0 0 14px}
+.tender-section p,.tender-section li{font-size:15px;line-height:1.75;color:#455c73}
+.tender-section .bullet{padding-left:21px}
+.tender-section .bullet li{padding-left:4px;margin-bottom:9px}
+.tender-actions{display:flex;gap:12px;flex-wrap:wrap;margin:22px 0 35px}
+.tender-actions .button{font-size:14px;min-height:43px}
+.tender-fullscreen #drawer-content>.alert{font-size:14px;line-height:1.6}
+@media(max-width:860px){.tender-columns{grid-template-columns:1fr}.tender-fullscreen .detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.tender-fullscreen .drawer-top:before{font-size:12px}}
+@media(max-width:540px){.tender-fullscreen .drawer{padding:0 15px 45px}.tender-fullscreen .drawer-top{margin:0 -15px;padding:12px 15px}.tender-fullscreen .drawer-top .eyebrow{display:none}.tender-fullscreen .detail-grid{gap:9px}.tender-fullscreen .detail{padding:12px}.tender-section{padding:18px;margin:12px 0}.tender-actions{flex-direction:column}.tender-actions .button{width:100%}}
+</style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
@@ -128,7 +154,7 @@ aside{background:linear-gradient(165deg,#ffffff 0%,#eff9ff 48%,#fff8ec 100%);col
 <section id="view-sources" class="hidden"><div class="sectionbar"><h2>Official procurement signals</h2><a class="button" href="https://eprocure.gov.in/eprocure/app?page=FrontEndAdvancedSearch&service=page" target="_blank" rel="noopener noreferrer">Open CPPP search ↗</a></div><div class="notice">This public-listing adapter only inspects visible CPPP homepage notices. CAPTCHA-protected searches are not automated, and zero matches does not mean zero available tenders.</div><div id="source-list"></div></section>
 <section id="view-activity" class="hidden"><div class="panel"><div class="panel-head"><div><h2>Run history</h2><p>Choose an earlier execution to inspect its results</p></div></div><div id="history"></div></div><div class="panel"><div class="panel-head"><h2>Issue diagnostics</h2></div><div id="issue-list"></div></div></section>
 <div class="footer-note">VAF AI · Opportunity Intelligence &nbsp; | &nbsp; Tender records and dates are unverified until confirmed on official sources.</div></main></div>
-<div id="overlay" class="drawer-backdrop" onclick="if(event.target===this)closeDrawer()"><div class="drawer"><div class="drawer-top"><div class="eyebrow" id="drawer-eyebrow">Tender details</div><button class="close" onclick="closeDrawer()" aria-label="Close">×</button></div><div id="drawer-content"></div></div></div>
+<div id="overlay" class="drawer-backdrop" onclick="if(event.target===this)closeDrawer()"><div class="drawer"><div class="drawer-top"><div class="eyebrow" id="drawer-eyebrow">Tender details</div><button class="close" onclick="closeDrawer()" aria-label="Close details">×</button></div><div id="drawer-content"></div></div></div>
 
 <button id="chat-fab" class="chat-fab" type="button" aria-expanded="false" onclick="toggleChat()" aria-label="Open VAF document assistant" title="Ask VAF AI">
   <span class="chat-fab-icon">✦</span>
@@ -203,10 +229,35 @@ E('issue-list').innerHTML=issues.length?issues.map(x=>'<div class="runbox"><div>
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
 function renderRecords(){const term=(E('record-search').value||'').toLowerCase(),filter=E('record-filter').value;const ops=current?.opportunities||[];const found=ops.filter(o=>{let s=o.deadline_status||'';return (filter==='all'||(filter==='passed'&&s.includes('passed'))||(filter==='future'&&s.includes('future'))||(filter==='other'&&!s.includes('passed')&&!s.includes('future')))&&[o.title,o.issuing_authority,o.tender_reference].join(' ').toLowerCase().includes(term)});E('all-records').innerHTML=found.length?found.map(recordCard).join(''):'<div class="empty"><h3>No records match the selected filters</h3><p>Try another keyword or select a different pipeline run.</p></div>'}
 function detail(label,value){return '<div class="detail"><span>'+label+'</span><b>'+esc(value||'Not available')+'</b></div>'}
-function openRecord(i){closeChat();let o=current?.opportunities?.[i];if(!o)return;setActiveTender(o);const s=status(o),v=o.evidence_validation||{},url=link(o.document_url);E('drawer-eyebrow').textContent='TENDER INTELLIGENCE / '+(o.tender_reference||'RECORD');E('drawer-content').innerHTML=pill(s[0],s[1])+'<h2>'+esc(o.title||'Untitled tender')+'</h2><p>'+esc(o.issuing_authority||'Unknown issuer')+'</p><div class="detail-grid">'+detail('Publication',fmtDate(o.publication_date))+detail('Original deadline',fmtDate(o.submission_deadline))+detail('Evidence match',v.matched===undefined?'Not checked':v.matched+' / '+v.checked)+'</div><h3>Project scope</h3><p>'+esc(o.scope_summary||'Not available')+'</p><h3>Technical requirements</h3>'+bullets(o.technical_requirements)+'<h3>Eligibility and compliance</h3>'+bullets(o.eligibility_requirements)+'<h3>Topic relevance</h3><p>'+esc(o.why_relevant_to_topic||'Not assessed')+'</p><div class="alert">The original tender deadline does not establish current bidding availability. Confirm updates and corrigenda on official sources.</div>'+(url?'<a class="button primary" target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">Open source tender PDF ↗</a>':'')+'<button class="button primary" style="margin-left:8px" onclick="toggleChat()">✦ Ask AI about this tender</button>';E('overlay').classList.add('show')}
+function openRecord(i){
+  closeChat();
+  const o=current?.opportunities?.[i];if(!o)return;
+  setActiveTender(o);
+  const state=status(o),evidence=o.evidence_validation||{},url=link(o.document_url);
+  E('drawer-eyebrow').textContent='TENDER INTELLIGENCE / '+(o.tender_reference||'RECORD');
+  E('drawer-content').innerHTML=
+    '<div class="tender-title-row"><div>'+pill(o.opportunity_type||'Tender','grey')+' '+pill(state[0],state[1])+
+    '<h2>'+esc(o.title||'Untitled tender')+'</h2><p class="tender-authority">'+esc(o.issuing_authority||'Unknown issuer')+'</p></div></div>'+
+    '<div class="detail-grid tender-facts">'+
+      detail('Publication',fmtDate(o.publication_date))+
+      detail('Original deadline',fmtDate(o.submission_deadline))+
+      detail('Tender reference',o.tender_reference||'Not specified')+
+      detail('Evidence matched',evidence.matched===undefined?'Not checked':evidence.matched+' / '+evidence.checked)+
+    '</div>'+
+    '<div class="tender-section"><h3>Project overview</h3><p>'+esc(o.scope_summary||'Not available')+'</p></div>'+
+    '<div class="tender-columns"><section class="tender-section"><h3>Technical requirements</h3>'+bullets(o.technical_requirements)+'</section>'+
+    '<section class="tender-section"><h3>Eligibility and compliance</h3>'+bullets(o.eligibility_requirements)+'</section></div>'+
+    '<div class="tender-section"><h3>Why this opportunity is relevant</h3><p>'+esc(o.why_relevant_to_topic||'Not assessed')+'</p></div>'+
+    '<div class="alert">The original tender deadline does not establish current bidding availability. Check official tender updates and corrigenda before taking action.</div>'+
+    '<div class="tender-actions">'+(url?'<a class="button primary" target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">Open source PDF ↗</a>':'')+
+    '<button class="button primary" onclick="toggleChat()">✦ Ask AI about this tender</button></div>';
+  E('overlay').classList.add('tender-fullscreen','show');
+  document.body.classList.add('tender-view-open');
+  E('overlay').querySelector('.drawer').scrollTop=0;
+}
 function bullets(items){return items?.length?'<ul class="bullet">'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<p>Not extracted</p>'}
-function openDrawer(title,body){closeChat();E('drawer-eyebrow').textContent=title;E('drawer-content').innerHTML=body;E('overlay').classList.add('show')}
-function closeDrawer(){E('overlay').classList.remove('show')}
+function openDrawer(title,body){closeChat();E('overlay').classList.remove('tender-fullscreen');document.body.classList.remove('tender-view-open');E('drawer-eyebrow').textContent=title;E('drawer-content').innerHTML=body;E('overlay').classList.add('show')}
+function closeDrawer(){E('overlay').classList.remove('show','tender-fullscreen');document.body.classList.remove('tender-view-open')}
 async function openScan(){const result=await loadModels();openDrawer('NEW INTELLIGENCE SCAN','<h2>Discover procurement opportunities</h2><p>Scan public sources, download documents and analyze extracted text with your local Ollama model.</p><div class="notice">Ollama: '+(result.connected?'Connected · '+availableModels.length+' models available':'Not reachable · '+esc(result.error||'check connection'))+'</div><form id="scan-form" onsubmit="submitScan(event)"><label class="field">Search topic<input class="input" name="topic" value="DigiLocker" required maxlength="120"></label><div class="form-row"><label class="field">Ollama model'+modelSelect()+'</label><label class="field">Maximum documents<input class="input" name="documents" type="number" min="1" max="12" value="5"></label></div><label class="field">Maximum pages<input class="input" name="pages" type="number" min="1" max="60" value="20"></label><div class="notice">Runs locally. The model may take several minutes per document. The dashboard remains responsive while it processes.</div><button class="button primary" type="submit">Start discovery scan →</button></form>')}
 async function submitScan(ev){ev.preventDefault();let f=new FormData(ev.target);try{let response=await api('/api/scans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:f.get('topic'),model:f.get('model'),max_pages:Number(f.get('pages')),max_documents:Number(f.get('documents'))})});closeDrawer();monitorJob(response.job_id)}catch(e){alert(e.message)}}
 async function retryOpen(){if(!selected)return;await loadModels();openDrawer('RECOVER AI ANALYSIS','<h2>Retry unfinished documents</h2><p>Recover results from the current run without scraping the same websites or downloading PDFs again.</p><form onsubmit="submitRetry(event)"><label class="field">Ollama model'+modelSelect()+'</label><label class="field">Timeout per document (seconds)<input class="input" name="timeout" type="number" min="60" max="3600" value="1200"></label><div class="notice">Only unprocessed documents will be sent to Ollama.</div><button class="button primary">Retry analysis →</button></form>')}
