@@ -79,7 +79,8 @@ def execute(
     report('searching', 'Searching websites and downloading documents', 20)
     try:
         discovered = scrape(
-            topic, searxng, raw, max_pages, max_documents, per_query, delay, max_document_mb
+            topic, searxng, raw, max_pages, max_documents, per_query, delay, max_document_mb,
+            progress=report
         )
         state["steps"]["discovery"] = {
             "unique_candidates": discovered["unique_candidates"],
