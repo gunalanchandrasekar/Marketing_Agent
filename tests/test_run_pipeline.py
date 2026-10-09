@@ -9,7 +9,7 @@ def test_safe_topic():
 
 
 def test_pipeline_reuses_stages(monkeypatch, tmp_path):
-    def fake_scrape(topic, searxng, output, *args):
+    def fake_scrape(topic, searxng, output, *args, **kwargs):
         Path(output).write_text(json.dumps({"topic": topic, "documents": []}), encoding="utf-8")
         return {"unique_candidates": 2, "pages_fetched": 1, "documents_downloaded": 0,
                 "errors": [{"stage": "fetch", "error": "blocked"}]}
@@ -40,7 +40,7 @@ def test_pipeline_public_listing_capture(monkeypatch, tmp_path):
             "coverage_note": "Only public listing subset.",
             "issues": [],
         }
-    def fake_scrape(topic, searxng, output, *args):
+    def fake_scrape(topic, searxng, output, *args, **kwargs):
         Path(output).write_text(json.dumps({"topic": topic, "documents": []}), encoding="utf-8")
         return {"unique_candidates": 0, "pages_fetched": 0, "documents_downloaded": 0, "errors": []}
     def fake_extract(inp, output):
