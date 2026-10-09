@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field
 
 from run_pipeline import execute, safe_topic
 from retry_analysis import retry
+from cleanup_data import cleanup
 
 BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
@@ -177,6 +178,15 @@ def retry_run(run_id: str, params: RetryInput):
         progress("saving", "Updated analysis results", 95)
         return {"run_id": run_id, "opportunities": result["opportunity_count"]}
     return start_job("retry", action)
+
+
+@app.post("/api/data/cleanup")
+def cleanup_generated():
+    with jobs_lock:
+        if any(j["status"] in ("queued", "running") for j in jobs.values()):
+            raise HTTPException(409, detail="Wait for the current scan to finish before cleanup")
+    removed = cleanup(BASE / "data", confirm=True)
+    return {"removed": len(removed), "paths": removed}
 
 
 @app.get("/api/jobs/{job_id}")
