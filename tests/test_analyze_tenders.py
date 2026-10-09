@@ -1,10 +1,10 @@
-from analyze_tenders import deadline_status, select_context, validate_evidence
+from analyze_tenders import deadline_status, select_context, validate_evidence, MAX_CONTEXT
 
 
 def test_context_budget_and_evidence():
     text = "header " * 3000 + "Proposal submission deadline: 31st August 2026 " + " tail" * 5000
     result = select_context(text, "DigiLocker")
-    assert len(result) <= 24000
+    assert len(result) <= MAX_CONTEXT
     assert "Proposal submission deadline" in result
 
 
