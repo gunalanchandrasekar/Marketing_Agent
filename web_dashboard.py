@@ -57,7 +57,7 @@ def list_runs() -> list[dict]:
 
 
 def get_run_dir(run_id: str) -> Path:
-    if not run_id.isdigit() and not (len(run_id) == 23 and run_id.endswith("Z")):
+    if not run_id.isdigit() and not (len(run_id) == 22 and run_id.endswith("Z")):
         raise HTTPException(status_code=400, detail="Invalid run ID")
     matches = list(RUNS.glob("*/" + run_id + "/opportunities.json"))
     if len(matches) != 1:
