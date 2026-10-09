@@ -44,6 +44,7 @@ def execute(
     timeout: int = 600,
     searxng: str | None = None,
     cppp: bool = True,
+    progress=None,
 ) -> dict:
     run_stamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
     run_dir = output_root / safe_topic(topic) / run_stamp
@@ -54,12 +55,17 @@ def execute(
     consolidated = run_dir / "opportunities.json"
     official_listings = run_dir / "cppp_public_listings.json"
 
+    def report(stage, message, percent):
+        if progress is not None:
+            progress(stage, message, percent)
+    report('starting', 'Preparing sources', 2)
     state: dict = {
         "topic": topic, "run_id": run_stamp, "started_at": datetime.now(timezone.utc).isoformat(),
         "model": model, "steps": {}, "issues": [],
         "paths": {"discovery": str(raw), "extraction": str(extracted), "analysis": str(analyzed)},
     }
     if cppp:
+        report('official_sources', 'Checking public procurement listings', 8)
         try:
             listings = discover_public_listings(topic)
             official_listings.write_text(json.dumps(listings, ensure_ascii=False, indent=2), encoding="utf-8")
@@ -70,6 +76,7 @@ def execute(
             state["coverage_note"] = listings["coverage_note"]
         except Exception as exc:
             state["issues"].append({"stage": "cppp_public_listings", "error": str(exc)})
+    report('searching', 'Searching websites and downloading documents', 20)
     try:
         discovered = scrape(
             topic, searxng, raw, max_pages, max_documents, per_query, delay, max_document_mb
@@ -84,6 +91,7 @@ def execute(
         state["issues"].append({"stage": "discovery", "error": str(exc)})
         discovered = {"documents": []}
 
+    report('extracting', 'Extracting PDF text', 55)
     try:
         # Extractor reads paths relative to the current working directory.
         if not raw.exists():
@@ -97,6 +105,7 @@ def execute(
         state["issues"].append({"stage": "extraction", "error": str(exc)})
         extracted_result = {"documents": []}
 
+    report('analyzing', 'Analyzing tender text using Ollama', 72)
     try:
         if not extracted.exists():
             extracted.write_text(json.dumps({"topic": topic, "documents": []}), encoding="utf-8")
@@ -134,12 +143,14 @@ def execute(
             "verification_status": "requires_official_source_and_corrigenda_check",
         })
 
+    report('saving', 'Saving results', 97)
     state["opportunities"] = opportunities
     state["opportunity_count"] = len(opportunities)
     state["finished_at"] = datetime.now(timezone.utc).isoformat()
     state["paths"]["consolidated"] = str(consolidated)
     consolidated.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
     LOG.info("Completed: %s opportunities, %s issues. %s", len(opportunities), len(state["issues"]), consolidated)
+    report("complete", "Finished", 100)
     return state
 
 
