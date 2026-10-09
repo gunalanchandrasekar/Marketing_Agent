@@ -26,7 +26,7 @@ h1,h2,h3,h4{font-family:Manrope,Arial,sans-serif;letter-spacing:-.55px;line-heig
 <main><div class="topbar"><div class="crumb">VAF AI &nbsp; / &nbsp; <b id="breadcrumb">Overview</b></div><div class="righttop"><div class="live"><span class="dot"></span> Local intelligence workspace</div><div class="avatar">VA</div></div></div>
 <div class="intro"><div><div class="eyebrow">Opportunity discovery platform</div><h1 id="page-title">Intelligence Overview</h1><p class="subtitle" id="page-subtitle">Understand your latest tender research and discover the next opportunity.</p></div><button class="button primary" onclick="openScan()">＋ &nbsp; New intelligence scan</button></div>
 <div id="job-state" class="job hidden"></div>
-<div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button></div>
+<div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear old generated runs</button></div>
 <section id="view-overview">
 <div class="hero"><div><div class="eyebrow" style="color:#a9c3ff">RESEARCH COMMAND CENTER</div><h2>From public tenders to qualified opportunities</h2><p>Track every step of discovery, inspect downloaded evidence, and prioritize actionable procurement signals.</p></div><button class="button" onclick="navigate('opportunities')">Explore opportunities →</button></div>
 <div id="stats" class="stats"></div>
@@ -79,6 +79,16 @@ async function retryOpen(){if(!selected)return;await loadModels();openDrawer('RE
 async function submitRetry(ev){ev.preventDefault();let f=new FormData(ev.target);try{let r=await api('/api/runs/'+encodeURIComponent(selected)+'/retry',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:f.get('model'),timeout:Number(f.get('timeout'))})});closeDrawer();monitorJob(r.job_id)}catch(e){alert(e.message)}}
 function monitorJob(id){currentJob=id;E('job-state').classList.remove('hidden');pollJob(id)}
 async function pollJob(id){if(currentJob!==id)return;try{let j=await api('/api/jobs/'+id);E('job-state').innerHTML='<div><span class="spinner" style="'+(j.status==='complete'||j.status==='failed'?'display:none':'')+'"></span><b>'+esc((j.stage||j.kind).replace(/_/g,' ').toUpperCase())+'</b> · '+esc(j.message)+'</div><div class="jobbar"><span style="width:'+Number(j.percent||0)+'%"></span></div><div style="font-size:12px;margin-top:6px">'+Number(j.percent||0)+'% · '+esc(j.status)+'</div>';if(j.status==='complete'){currentJob=null;await refresh(j.result?.run_id);return}if(j.status==='failed'){currentJob=null;return}setTimeout(()=>pollJob(id),3000)}catch(e){E('job-state').textContent='Job status unavailable: '+e.message}}
+async function clearOldData(){
+ const confirmation=prompt('This permanently deletes generated tender runs and old JSON files in data/. Source code and the .venv are unaffected. Type DELETE to continue.');
+ if(confirmation!=='DELETE')return;
+ try{
+   const result=await api('/api/data/cleanup',{method:'POST'});
+   current=null;selected=null;
+   await refresh();
+   alert('Removed '+result.removed+' generated files/folders. You can start a new scan now.');
+ }catch(error){alert('Cleanup not completed: '+error.message)}
+}
 function exportCsv(){const rows=opp_frame();if(!rows.length)return;const cols=['Title','Reference','Authority','Original deadline','Status','Source URL'];const output=[cols,...rows.map(o=>[o.title,o.tender_reference,o.issuing_authority,o.submission_deadline,status(o)[0],o.document_url])].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');let a=document.createElement('a'),url=URL.createObjectURL(new Blob([output],{type:'text/csv'}));a.href=url;a.download='vaf-opportunities.csv';a.click();URL.revokeObjectURL(url)}
 function opp_frame(){return current?.opportunities||[]}
 refresh();
