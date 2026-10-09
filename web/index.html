@@ -147,6 +147,30 @@ body.tender-view-open .chat-fab{z-index:1101}
  .tender-fullscreen.tender-chat-open .drawer-top{padding-right:15px}
  body.tender-view-open .chat-window:not(.hidden){top:auto;right:10px;bottom:10px;height:min(590px,calc(100dvh - 20px));width:min(405px,calc(100vw - 20px))}
 }
+
+/* Tender reading + assistant layout. Suppress the floating launcher while chat is open. */
+body.tender-view-open .chat-window:not(.hidden){right:0;top:0;bottom:0;width:390px;height:100dvh;border-radius:0;border-left:1px solid #d9e6ee;border-top:0;border-bottom:0;box-shadow:-8px 0 30px #14314f14}
+.tender-fullscreen.tender-chat-open .drawer{padding-right:410px;padding-left:24px}
+.tender-fullscreen.tender-chat-open .drawer-top{padding-right:410px;padding-left:24px}
+.tender-fullscreen.tender-chat-open #drawer-content{max-width:980px}
+.tender-fullscreen.tender-chat-open .tender-columns{grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.tender-fullscreen.tender-chat-open .detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+.tender-fullscreen.tender-chat-open .tender-section{min-width:0}
+.tender-fullscreen.tender-chat-open .tender-section li{overflow-wrap:anywhere}
+.chat-window .chat-body{min-height:0;overscroll-behavior:contain}
+.chat-window .chat-controls{flex:none;box-shadow:0 -3px 14px #2c5f800b}
+.chat-window .chat-head{flex:none}
+.chat-window .chat-context{flex:none}
+.chat-window .chat-suggestions{gap:7px}
+.chat-window .chat-suggestions button{font-size:12px}
+@media(max-width:1120px){
+ .tender-fullscreen.tender-chat-open .tender-columns{grid-template-columns:1fr}
+}
+@media(max-width:850px){
+ .tender-fullscreen.tender-chat-open .drawer{padding-right:15px;padding-left:15px}
+ .tender-fullscreen.tender-chat-open .drawer-top{padding-right:15px;padding-left:15px}
+ body.tender-view-open .chat-window:not(.hidden){right:0;top:0;bottom:0;width:min(390px,100vw);height:100dvh;box-shadow:-8px 0 30px #14314f25}
+}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
@@ -317,12 +341,12 @@ function setActiveTender(op){
   E('chat-scope-note').title=activeTenderTitle;
 }
 function resetTenderScope(){activeTenderSha=null;activeTenderTitle='';updateChatControls();E('chat-scope-note').textContent='All documents in this run';}
-function closeChat(){E('chat-window').classList.add('hidden');E('chat-fab').setAttribute('aria-expanded','false');E('overlay').classList.remove('tender-chat-open')}
+function closeChat(){E('chat-window').classList.add('hidden');E('chat-fab').setAttribute('aria-expanded','false');E('chat-fab').classList.remove('hidden');E('overlay').classList.remove('tender-chat-open')}
 async function toggleChat(){
  const windowEl=E('chat-window');
  if(!windowEl.classList.contains('hidden')){closeChat();return}
  if(!E('overlay').classList.contains('tender-fullscreen')) closeDrawer();
- windowEl.classList.remove('hidden');E('chat-fab').setAttribute('aria-expanded','true');
+ windowEl.classList.remove('hidden');E('chat-fab').setAttribute('aria-expanded','true');E('chat-fab').classList.add('hidden');
  if(E('overlay').classList.contains('tender-fullscreen'))E('overlay').classList.add('tender-chat-open');
  await loadModels();updateChatControls();E('chat-input').focus();
 }
