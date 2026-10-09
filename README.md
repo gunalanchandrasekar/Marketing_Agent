@@ -102,3 +102,19 @@ tender is currently open. The original deadline is only a historical document fa
 the official tender detail page and corrigenda must be checked before bidding.
 The dashboard is intended for a trusted local network; it has no authentication
 or access control and should not be published on the internet.
+
+
+## Redesigned VAF web dashboard (recommended)
+
+This is the custom enterprise-style interface that replaces the presentation layer previously built in Streamlit. It does not depend on Node.js or a React build.
+
+```bash
+git pull origin Dev_Guna
+pip install -r requirements.txt
+pytest -q
+python web_dashboard.py
+```
+
+Open **http://127.0.0.1:8502**. The server listens only on the local computer.
+
+The UI reads saved `data/runs/.../opportunities.json` files. Use **New intelligence scan** to start discovery, **Documents > Retry unfinished AI analysis** to recover timeouts, and **Activity & diagnostics** to inspect errors. Data remains local; current tender availability requires official verification. The older `streamlit run dashboard.py` entry point remains for comparison but is no longer recommended.
