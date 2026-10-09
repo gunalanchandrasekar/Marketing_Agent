@@ -110,9 +110,9 @@ body.tender-view-open{overflow:hidden}
 .drawer-backdrop.tender-fullscreen{background:#f7f9fc;justify-content:stretch;align-items:stretch;z-index:30}
 .tender-fullscreen .drawer{width:100%;max-width:none;height:100dvh;overflow-y:auto;padding:0 32px 64px;background:#f7f9fc;box-shadow:none}
 .tender-fullscreen .drawer-top{position:sticky;top:0;z-index:5;align-items:center;background:#fff;border-bottom:1px solid #e2e9f0;margin:0 -32px;padding:15px max(32px,calc((100vw - 1160px)/2));box-shadow:0 3px 12px #1b446009}
-.tender-fullscreen .drawer-top:before{content:"← Back to dashboard";font:700 14px Manrope,sans-serif;color:#396d88;cursor:pointer}
-.tender-fullscreen .drawer-top .eyebrow{margin-left:auto;margin-right:24px;font-size:11px}
-.tender-fullscreen #drawer-content{width:100%;max-width:1160px;margin:0 auto;padding-top:30px}
+
+.tender-fullscreen .drawer-top .eyebrow{margin-right:auto;font-size:11px}
+.tender-fullscreen .drawer-top .close{width:auto;min-width:95px;height:40px;padding:0 15px;font:700 13px Manrope,sans-serif;color:#275a78;background:#eef7fc;border:1px solid #c9e6f1}.tender-fullscreen #drawer-content{width:100%;max-width:1160px;margin:0 auto;padding-top:30px}
 .tender-fullscreen #drawer-content h2{font-size:clamp(22px,2.3vw,32px);line-height:1.35;max-width:1000px;margin:16px 0 10px}
 .tender-authority{font-size:15px;color:#5b7390;margin-bottom:18px}
 .tender-fullscreen .detail-grid{grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin:23px 0}
@@ -251,13 +251,14 @@ function openRecord(i){
     '<div class="alert">The original tender deadline does not establish current bidding availability. Check official tender updates and corrigenda before taking action.</div>'+
     '<div class="tender-actions">'+(url?'<a class="button primary" target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">Open source PDF ↗</a>':'')+
     '<button class="button primary" onclick="toggleChat()">✦ Ask AI about this tender</button></div>';
+  E('overlay').querySelector('.drawer-top .close').textContent='← Back';
   E('overlay').classList.add('tender-fullscreen','show');
   document.body.classList.add('tender-view-open');
   E('overlay').querySelector('.drawer').scrollTop=0;
 }
 function bullets(items){return items?.length?'<ul class="bullet">'+items.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'<p>Not extracted</p>'}
-function openDrawer(title,body){closeChat();E('overlay').classList.remove('tender-fullscreen');document.body.classList.remove('tender-view-open');E('drawer-eyebrow').textContent=title;E('drawer-content').innerHTML=body;E('overlay').classList.add('show')}
-function closeDrawer(){E('overlay').classList.remove('show','tender-fullscreen');document.body.classList.remove('tender-view-open')}
+function openDrawer(title,body){E('overlay').querySelector('.drawer-top .close').textContent='×';closeChat();E('overlay').classList.remove('tender-fullscreen');document.body.classList.remove('tender-view-open');E('drawer-eyebrow').textContent=title;E('drawer-content').innerHTML=body;E('overlay').classList.add('show')}
+function closeDrawer(){E('overlay').querySelector('.drawer-top .close').textContent='×';E('overlay').classList.remove('show','tender-fullscreen');document.body.classList.remove('tender-view-open')}
 async function openScan(){const result=await loadModels();openDrawer('NEW INTELLIGENCE SCAN','<h2>Discover procurement opportunities</h2><p>Scan public sources, download documents and analyze extracted text with your local Ollama model.</p><div class="notice">Ollama: '+(result.connected?'Connected · '+availableModels.length+' models available':'Not reachable · '+esc(result.error||'check connection'))+'</div><form id="scan-form" onsubmit="submitScan(event)"><label class="field">Search topic<input class="input" name="topic" value="DigiLocker" required maxlength="120"></label><div class="form-row"><label class="field">Ollama model'+modelSelect()+'</label><label class="field">Maximum documents<input class="input" name="documents" type="number" min="1" max="12" value="5"></label></div><label class="field">Maximum pages<input class="input" name="pages" type="number" min="1" max="60" value="20"></label><div class="notice">Runs locally. The model may take several minutes per document. The dashboard remains responsive while it processes.</div><button class="button primary" type="submit">Start discovery scan →</button></form>')}
 async function submitScan(ev){ev.preventDefault();let f=new FormData(ev.target);try{let response=await api('/api/scans',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({topic:f.get('topic'),model:f.get('model'),max_pages:Number(f.get('pages')),max_documents:Number(f.get('documents'))})});closeDrawer();monitorJob(response.job_id)}catch(e){alert(e.message)}}
 async function retryOpen(){if(!selected)return;await loadModels();openDrawer('RECOVER AI ANALYSIS','<h2>Retry unfinished documents</h2><p>Recover results from the current run without scraping the same websites or downloading PDFs again.</p><form onsubmit="submitRetry(event)"><label class="field">Ollama model'+modelSelect()+'</label><label class="field">Timeout per document (seconds)<input class="input" name="timeout" type="number" min="60" max="3600" value="1200"></label><div class="notice">Only unprocessed documents will be sent to Ollama.</div><button class="button primary">Retry analysis →</button></form>')}
