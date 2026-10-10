@@ -173,7 +173,13 @@ def run_detail(run_dir: Path) -> dict:
     try:
         # Build on demand for older runs without rerunning the scraper or model.
         signal_data = read_json(run_dir / "signals.json")
-        if not signal_data or (run_dir / "results.json").stat().st_mtime > (run_dir / "signals.json").stat().st_mtime:
+        source_files = ["results.json", "extracted_tenders.json", "tender_analysis.json", "tender_analysis_retry.json"]
+        saved_file = run_dir / "signals.json"
+        stale = not saved_file.exists() or any(
+            (run_dir / name).exists() and (run_dir / name).stat().st_mtime > saved_file.stat().st_mtime
+            for name in source_files
+        )
+        if not signal_data or stale:
             signal_data = build_signals(run_dir)
         result["signal_intelligence"] = signal_data
     except (OSError, ValueError) as exc:
