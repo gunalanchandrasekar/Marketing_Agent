@@ -137,6 +137,9 @@ def run_detail(run_dir: Path) -> dict:
                 "submission_deadline": facts.get("submission_deadline"),
                 "publication_date": facts.get("publication_date"),
                 "why_relevant_to_topic": facts.get("why_relevant_to_topic"),
+                "technical_requirements": facts.get("technical_requirements") or [],
+                "eligibility_requirements": facts.get("eligibility_requirements") or [],
+                "evidence_validation": facts.get("evidence_validation") or {},
             }
     # Backfill missing technical requirements from already extracted PDF text
     # without downloading anything or altering the saved analysis.
