@@ -36,3 +36,21 @@ visually maps that target and explicitly reports what is implemented.
 
 The wireframe uses fictional sample entities, scores, dates and counts. Never show
 them as discovered real businesses or currently open tenders.
+
+## Product screen ownership (October 2026)
+
+The standalone **Workflow Map** was removed from the live app: it mixed future architectural ambitions with usable features. The wireframe continues to inform the build roadmap, not user-facing navigation.
+
+| Screen | Single purpose |
+| --- | --- |
+| Overview | Live selected-run summary, funnel, scan initiation, stage navigation |
+| Web Discovery | Search candidates and inspected source pages only |
+| Signal Filtering | Explainable normalized classification (accepted / review / rejected), deduplication |
+| Tender Analysis | AI-analyzed procurement records with eligibility, deadlines, evidence and document-scoped chat |
+| Documents | PDF extraction, summaries, links and retry unfinished analysis |
+| Government Sources | Government issuer evidence vs official-domain provenance and verification |
+| Run History & Issues | Select previous runs, inspect processing and connectivity errors |
+
+Metrics on Overview navigate to their owner screens. Web Discovery no longer repeats Documents, Tender Analysis, or Government Sources. Research data and the original pipeline artifacts remain intact.
+
+**Not yet implemented:** the other four lead mining channel adapters, entity correlation, scored shortlist, opportunity dossiers, human review workflow, CRM. Do not represent them as shipped features.
