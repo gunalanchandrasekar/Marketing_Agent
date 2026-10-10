@@ -431,6 +431,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 @media(max-width:900px){.doc-workspace{grid-template-columns:1fr}.doc-file-list{max-height:320px}.doc-review-summary{grid-template-columns:1fr}.doc-pdf-frame{height:500px}}
 @media(max-width:600px){.doc-evidence-form{flex-direction:column}.doc-review-header{flex-direction:column}.doc-pdf-frame{height:390px}}
 .chat-evidence-note{font-size:12px!important;background:#f1f7fd!important;color:#356187!important;border:1px solid #d8e9f8}
+.doc-summary-section{grid-column:span 1}.doc-summary-section ul{padding-left:16px;margin:8px 0;color:#506783;font-size:12px}.doc-summary-section li{margin:6px 0}.doc-summary-section .muted{font-size:12px}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
@@ -619,7 +620,11 @@ function showReviewedDocument(d){
  E('doc-review-status').textContent=readable?'Text extracted':'OCR / text extraction needed';
  E('doc-review-summary').innerHTML='<div><b>AI document summary</b><p>'+esc(info.summary||'Not analyzed yet. Retry analysis when readable text is available.')+'</p></div>'+
  '<div><b>Issuing authority</b><p>'+esc(info.issuing_authority||'Not identified')+'</p></div>'+
- '<div><b>Original submission deadline</b><p>'+fmtDate(info.submission_deadline)+'</p></div>';
+ '<div><b>Original submission deadline</b><p>'+fmtDate(info.submission_deadline)+'</p></div>'+
+ '<div class="doc-summary-section"><b>Technical requirements</b>'+bullets(info.technical_requirements)+'</div>'+
+ '<div class="doc-summary-section"><b>Eligibility requirements</b>'+bullets(info.eligibility_requirements)+'</div>'+
+ '<div class="doc-summary-section"><b>Evidence validation</b><p>'+
+ (info.evidence_validation?.checked===undefined?'Not checked':num(info.evidence_validation.matched)+' of '+num(info.evidence_validation.checked)+' source quotations matched')+'</p></div>';
  E('doc-original').classList.toggle('hidden',!original);
  if(original)E('doc-original').href=original;
  E('doc-ask').disabled=!readable || !d.sha256;
