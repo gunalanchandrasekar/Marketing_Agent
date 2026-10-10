@@ -92,7 +92,12 @@ def search_ddgs(query: str, limit: int) -> list[str]:
 
 
 def document_url(url: str) -> bool:
-    return urlparse(url).path.lower().endswith(DOCUMENT_SUFFIXES)
+    path = urlparse(url).path.lower()
+    if path.endswith(DOCUMENT_SUFFIXES):
+        return True
+    # Government portals often provide attachments through a download handler.
+    return bool(re.search(r"/(?:download|downloadfile|getdocument|attachment)(?:/|$)", path)
+                and urlparse(url).query)
 
 
 def topic_match(topic: str, text: str) -> bool:
@@ -178,8 +183,11 @@ def extract_page(url: str, content: bytes) -> tuple[str, str, list[str]]:
     for anchor in soup.find_all("a", href=True):
         link = canonicalize(urljoin(url, anchor["href"]))
         if link and document_url(link):
+            # A government listing often names the tender in its enclosing table row,
+            # not in the download link or page title.
+            container = anchor.find_parent(["tr", "li", "article"]) or anchor.parent
             docs.append({"url": link, "anchor_text": anchor.get_text(" ", strip=True)[:200],
-                         "context": anchor.parent.get_text(" ", strip=True)[:700] if anchor.parent else ""})
+                         "context": container.get_text(" ", strip=True)[:700] if container else ""})
     for tag in soup(["script", "style", "nav", "footer", "noscript"]):
         tag.decompose()
     body = soup.get_text(" ", strip=True)
@@ -208,8 +216,10 @@ def download_document(client: httpx.Client, url: str, folder: Path, max_bytes: i
     digest = hashlib.sha256()
     total = 0
     suffix = Path(urlparse(url).path).suffix.lower()
+    if suffix not in DOCUMENT_SUFFIXES and not document_url(url):
+        raise ValueError("Not a supported document URL")
     if suffix not in DOCUMENT_SUFFIXES:
-        raise ValueError("Not an allowed document extension")
+        suffix = ".pdf"  # provisional; content signature below is mandatory
     tmp = folder / (hashlib.sha256(url.encode()).hexdigest()[:20] + ".partial")
     try:
         with client.stream("GET", url) as response:
