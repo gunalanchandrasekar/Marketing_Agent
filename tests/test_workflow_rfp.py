@@ -29,7 +29,8 @@ def test_each_screen_has_a_distinct_purpose():
     assert 'id="view-rfp-intelligence"' in page
     assert 'id="view-workflow"' not in page
     assert 'data-page="workflow"' not in page
-    assert 'id="view-signals"' in page
+    assert 'id="view-signals"' not in page
+    assert 'data-page="signals"' not in page
     assert 'id="view-documents"' in page
     assert 'id="view-opportunities"' in page
     assert 'id="view-sources"' in page
