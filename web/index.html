@@ -415,7 +415,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <main><div class="topbar"><div class="top-search"><span class="top-search-icon">⌕</span><input id="global-search" type="search" aria-label="Search tenders documents and sources" placeholder="Search tenders, documents, sources" onkeydown="if(event.key===\'Enter\')searchWorkspace()"><button type="button" onclick="searchWorkspace()" aria-label="Run search">↗</button></div><div class="righttop"><div class="live"><span class="dot"></span> Local intelligence workspace</div><div class="avatar">VA</div></div></div>
 <div class="intro"><div><div class="eyebrow">Opportunity discovery platform</div><h1 id="page-title">Intelligence Overview</h1><p class="subtitle" id="page-subtitle">Understand your latest tender research and discover the next opportunity.</p></div><button class="button primary" onclick="openScan()">＋ &nbsp; New intelligence scan</button></div>
 <div id="job-state" class="job hidden"></div>
-<div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear old generated runs</button></div>
+<div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="archiveSelectedTopic()" style="color:#a23d47">Remove topic data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear all generated runs</button></div>
 <section id="view-overview">
 <div class="hero vaf-showcase">
  <div class="hero-copy"><div class="eyebrow">OPPORTUNITY DISCOVERY PLATFORM</div><h2>From public tenders to<br>qualified opportunities</h2><p>Understand your latest tender research, inspect downloaded evidence, and prioritize actionable procurement signals.</p>
@@ -585,6 +585,27 @@ function showGlobalLoader(j){
 function hideGlobalLoader(){E('global-loader').classList.add('hidden')}
 function monitorJob(id){currentJob=id;showGlobalLoader({stage:"starting",message:"Starting your request...",percent:1,status:"running"});E('job-state').classList.remove('hidden');pollJob(id)}
 async function pollJob(id){if(currentJob!==id)return;try{let j=await api('/api/jobs/'+id);showGlobalLoader(j);E('job-state').innerHTML='<div><span class="spinner" style="'+(j.status==='complete'||j.status==='failed'||j.status==='needs_attention'?'display:none':'')+'"></span><b>'+esc((j.stage||j.kind).replace(/_/g,' ').toUpperCase())+'</b> · '+esc(j.message)+'</div><div class="jobbar"><span style="width:'+Number(j.percent||0)+'%"></span></div><div style="font-size:12px;margin-top:6px">'+Number(j.percent||0)+'% · '+esc(j.status)+'</div>';if(j.status==='complete'||j.status==='needs_attention'){hideGlobalLoader();currentJob=null;await refresh(j.result?.run_id);return}if(j.status==='failed'){hideGlobalLoader();currentJob=null;alert('Process failed: '+j.message);return}setTimeout(()=>pollJob(id),3000)}catch(e){hideGlobalLoader();E('job-state').textContent='Job status unavailable: '+e.message}}
+async function archiveSelectedTopic(){
+ if(!selected||!current?.topic){alert('Select a topic run first.');return}
+ const topic=current.topic;
+ try{
+   const preview=await api('/api/data/topic/preview',{
+     method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({topic})
+   });
+   if(!preview.run_count){alert('No active saved runs found for '+topic);return}
+   const answer=prompt('Remove all '+preview.run_count+' saved run(s) for "'+topic+'" from the active dashboard? Other topics stay untouched. The files can be recovered from data/topic_trash/. Type the exact topic name to confirm.');
+   if(answer!==topic)return;
+   const result=await api('/api/data/topic/archive',{
+     method:'POST',headers:{'Content-Type':'application/json'},
+     body:JSON.stringify({topic,confirm_topic:answer})
+   });
+   current=null;selected=null;
+   resetTenderScope();
+   await refresh();
+   alert('Archived '+result.run_count+' run(s) for '+topic+'. Other topic data was not changed.');
+ }catch(error){alert('Topic cleanup failed: '+error.message)}
+}
 async function clearOldData(){
  const confirmation=prompt('This permanently deletes generated tender runs and old JSON files in data/. Source code and the .venv are unaffected. Type DELETE to continue.');
  if(confirmation!=='DELETE')return;
