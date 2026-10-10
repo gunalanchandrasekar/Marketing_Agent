@@ -24,9 +24,19 @@ def test_workflow_rfp_workspace_routes_to_saved_run_records(tmp_path):
     assert len(details["discovery_details"]["pages"])==1
     assert len(details["opportunities"])==1
 
-def test_workflow_has_actual_channel_navigation():
+def test_each_screen_has_a_distinct_purpose():
     page=Path(web_dashboard.WEB).read_text(encoding="utf-8")
     assert 'id="view-rfp-intelligence"' in page
-    assert "target:'rfp-intelligence'" in page
+    assert 'id="view-workflow"' not in page
+    assert 'data-page="workflow"' not in page
+    assert 'id="view-signals"' in page
+    assert 'id="view-documents"' in page
+    assert 'id="view-opportunities"' in page
+    assert 'id="view-sources"' in page
+    assert 'id="view-activity"' in page
+    assert 'data-rfp-stage="documents"' not in page
+    assert 'data-rfp-stage="analyses"' not in page
+    assert 'data-rfp-stage="official"' not in page
+    assert "openMetricDestination(" in page
     assert "renderRfpWorkspace()" in page
     assert "rfpEvidence()" in page
