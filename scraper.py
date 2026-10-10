@@ -57,7 +57,10 @@ UNION_TERRITORIES = (
 
 def queries_for(topic: str) -> list[str]:
     """Search indexed tender notices nationwide; coverage is not exhaustive."""
-    q = chr(34) + topic + chr(34)
+    # Short generic acronyms ("PAN") produce many unrelated search hits.
+    # Search the official tax-document concept rather than the bare word.
+    search_phrase = "PAN card" if topic.strip().casefold() == "pan" else topic
+    q = chr(34) + search_phrase + chr(34)
     general = [
         f'{q} tender RFP RFQ government',
         f'{q} eprocurement bid India',
