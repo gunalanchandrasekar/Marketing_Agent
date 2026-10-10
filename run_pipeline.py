@@ -162,7 +162,16 @@ def execute(
         facts = row.get("analysis", {})
         document = extracted_by_sha.get(row.get("sha256")) or extracted_by_url.get(row.get("document_url")) or {}
         decision = qualify_analysis(topic, facts, document)
-        key = str(row.get("sha256") or row.get("document_url") or facts.get("tender_reference")).strip().lower()
+        ref = str(facts.get("tender_reference") or "").strip().lower()
+        title = str(facts.get("tender_title") or "").strip().lower()
+        issuer = str(facts.get("issuing_authority") or "").strip().lower()
+        # Different PDF copies of the same tender should not create extra leads.
+        if ref and ref not in {"n/a", "none", "unknown", "not provided"}:
+            key = "reference:" + ref
+        elif len(title) >= 15 and issuer:
+            key = "issuer-title:" + issuer + ":" + re.sub(r"\W+", "", title)
+        else:
+            key = "document:" + str(row.get("sha256") or row.get("document_url")).lower()
         if key in seen:
             excluded_records.append({"document_url": row.get("document_url"), "reason": "Duplicate source document"})
             continue
@@ -216,13 +225,14 @@ def execute(
         state["run_status"] = "needs_attention"
         state["run_message"] = "No accessible tender documents downloaded; inspect coverage and download diagnostics."
         report("needs_attention", state["run_message"], 100)
-    elif extracted_count > analyzed_count:
+    elif max(0, extracted_count - state.get("steps", {}).get("prequalification", {}).get("documents_excluded_before_ai", 0)) > analyzed_count:
         state["run_status"] = "needs_attention"
-        state["run_message"] = f"{extracted_count - analyzed_count} extracted document(s) still require AI analysis."
+        pending = max(0, extracted_count - state.get("steps", {}).get("prequalification", {}).get("documents_excluded_before_ai", 0) - analyzed_count)
+        state["run_message"] = f"{pending} relevant document(s) still require AI analysis."
         report("needs_attention", state["run_message"], 100)
     else:
         state["run_status"] = "complete"
-        state["run_message"] = "All extracted documents processed."
+        state["run_message"] = "All eligible documents processed; see qualification review for excluded or incomplete records."
         report("complete", "Finished", 100)
     consolidated.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
     return state
