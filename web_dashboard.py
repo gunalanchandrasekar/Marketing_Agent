@@ -109,6 +109,26 @@ def run_detail(run_dir: Path) -> dict:
             "extraction_status": item.get("extraction_status"),
             "summary_data": summaries.get(key),
         })
+    discovery = read_json(run_dir / "results.json")
+    # Backward compatibility: older runs only saved inspected pages, not all
+    # search candidates. Do not imply these are every discovered URL.
+    result["discovery_details"] = {
+        "candidates": discovery.get("candidates", []),
+        "candidate_urls_saved": "candidates" in discovery,
+        "pages": [
+            {"url": page.get("url"), "title": page.get("title"),
+             "classification": page.get("classification"),
+             "document_links": page.get("document_links", []),
+             "search_queries": page.get("search_queries", [])}
+            for page in discovery.get("pages", [])
+        ],
+        "downloads": [
+            {"url": d.get("url") or d.get("document_url"),
+             "sha256": d.get("sha256"), "file_path": d.get("file_path")}
+            for d in discovery.get("documents", [])
+        ],
+        "errors": discovery.get("errors", []),
+    }
     listing = read_json(run_dir / "cppp_public_listings.json")
     result["documents"] = docs
     result["public_listing_candidates"] = listing.get("matches", result.get("public_listing_candidates", []))
