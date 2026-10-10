@@ -190,6 +190,7 @@ def run_detail(run_dir: Path) -> dict:
         verdict = qualify_analysis(result.get("topic", ""), {
             "tender_title": opportunity.get("title"),
             "scope_summary": opportunity.get("scope_summary"),
+            "technical_requirements": opportunity.get("technical_requirements") or [],
             "tender_reference": opportunity.get("tender_reference"),
             "why_relevant_to_topic": opportunity.get("why_relevant_to_topic"),
         }, {"text": document_text})
