@@ -461,11 +461,41 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .rfp-result-actions{margin:12px 0}
 @media(max-width:1100px){.rfp-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:720px){.rfp-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.rfp-intro,.rfp-data-head{flex-direction:column;align-items:stretch}.rfp-data-head .input{max-width:none}}
+
+/* W2 Signal Intelligence - VAF brand palette */
+.signal-intro{padding:23px 27px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.signal-intro .eyebrow{color:#e87b22}
+.signal-intro h2{font-size:22px;margin:9px 0}
+.signal-intro p{font-size:13px;color:#657894}
+.signal-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin:20px 0}
+.signal-stat{border:1px solid #dce6f1;border-radius:13px;background:white;min-width:0;text-align:left;display:flex;flex-direction:column;gap:5px;padding:17px;cursor:pointer}
+.signal-stat span{font-size:12px;color:#637791;font-weight:650}
+.signal-stat strong{font:800 29px var(--font-display);color:#182b50}
+.signal-stat small{font-size:11px;color:#2373a8;font-weight:700}
+.signal-stat:hover{border-color:#83bce0}
+.signal-toolbar{display:flex;justify-content:space-between;align-items:center;gap:15px;padding:21px 24px;border-bottom:1px solid #e2eaf3}
+.signal-toolbar h2{font-size:18px}
+.signal-toolbar p{font-size:12px;color:#647790;margin-top:5px;max-width:620px}
+.signal-filters{display:flex;gap:9px}
+.signal-filters select{min-width:155px}
+.signal-filters input{min-width:230px}
+.signal-records{padding:4px 24px 14px}
+.signal-record{border-bottom:1px solid #e5eaf2;padding:17px 0;overflow-wrap:anywhere}
+.signal-record:last-child{border-bottom:none}
+.signal-record-flags{display:flex;gap:6px;flex-wrap:wrap}
+.signal-record h3{font-size:14px;margin:9px 0 7px}
+.signal-record p{color:#506580;font-size:13px;line-height:1.6;margin:6px 0}
+.signal-record a{font-size:12px;color:#1b6ba3}
+.signal-record-meta{font-size:12px!important;color:#7b899e!important}
+.signal-footnote{padding:12px;font-size:12px;color:#667993}
+@media(max-width:1120px){.signal-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:740px){.signal-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.signal-intro,.signal-toolbar{flex-direction:column;align-items:stretch}.signal-filters{flex-direction:column}.signal-filters input{min-width:0}}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn" data-page="workflow" onclick="navigate('workflow')">◇ &nbsp; Workflow Map</button>
 <button class="navbtn" data-page="rfp-intelligence" onclick="navigate('rfp-intelligence')">▤ &nbsp; RFP Intelligence</button>
+<button class="navbtn" data-page="signals" onclick="navigate('signals')">◉ &nbsp; Signal Intelligence</button>
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
 <button class="navbtn" data-page="opportunities" onclick="navigate('opportunities')">◈ &nbsp; Opportunities <span class="mini" id="side-count">0</span></button>
 <button class="navbtn" data-page="documents" onclick="navigate('documents')">▤ &nbsp; Documents</button>
@@ -487,6 +517,20 @@ a:hover,.stat-explore:hover{color:#0c4d88}
  <div id="workflow-stages" class="workflow-stages"></div>
  <div class="wf-section-head"><h2>Selected run — evidence summary</h2><p>Grounded metrics from your selected search rather than wireframe examples.</p></div>
  <div id="workflow-evidence" class="workflow-evidence"></div>
+</section>
+<section id="view-signals" class="hidden">
+ <div class="signal-intro panel">
+  <div><div class="eyebrow">W2 / EVIDENCE-BASED DISCOVERY</div><h2>Signal Intelligence</h2><p>Normalize, deduplicate and explain every saved source candidate before AI lead qualification.</p></div>
+  <button class="button primary" onclick="navigate('rfp-intelligence')">Explore RFP evidence →</button>
+ </div>
+ <div id="signal-summary" class="signal-summary"></div>
+ <div class="panel">
+  <div class="signal-toolbar"><div><h2>Research signals</h2><p id="signal-summary-line"></p></div><div class="signal-filters">
+   <select id="signal-status" class="input" onchange="renderSignalRecords()"><option value="all">All statuses</option><option value="accepted">Accepted</option><option value="needs_review">Needs review</option><option value="rejected">Rejected</option></select>
+   <input type="search" id="signal-search" class="input" placeholder="Search source, title, reason" oninput="renderSignalRecords()">
+  </div></div>
+  <div id="signal-records" class="signal-records"></div>
+ </div>
 </section>
 <section id="view-rfp-intelligence" class="hidden">
  <div class="rfp-intro panel">
@@ -584,8 +628,8 @@ async function loadModels(){try{let r=await api('/api/models');availableModels=r
 function modelSelect(name='model'){let opts=availableModels.filter(m=>!m.includes(':cloud'));return opts.length?'<select class="input" name="'+name+'">'+opts.map(m=>'<option value="'+esc(m)+'" '+(m==='qwen3:30b'?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select>':'<input class="input" name="'+name+'" value="qwen3:30b" placeholder="Ollama model" />'}
 async function refresh(prefer){try{const previousRun=selected;const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' records</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;if(previousRun!==selected){activeTenderSha=null;activeTenderTitle=''}render();updateChatControls()}catch(e){E('health').textContent='Unable to load runs: '+e.message}}
 async function chooseRun(id){selected=id;resetTenderScope();try{current=await api('/api/runs/'+encodeURIComponent(id));render();updateChatControls()}catch(e){alert(e.message)}}
-function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['workflow','rfp-intelligence','overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={'rfp-intelligence':['RFP Intelligence','Inspect actual DigiLocker or other topic discovery evidence across each pipeline stage.'],workflow:['Intelligence Workflow','Five source channels, AI analysis, lead qualification, and human review.'],overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','Explore scope, eligibility and source-backed procurement research.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
-function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}renderWorkflow();renderRfpWorkspace();E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="showMetricDetails('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
+function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['workflow','rfp-intelligence','signals','overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={signals:['Signal Intelligence','Understand which discovered candidates were accepted, rejected or require review.'],'rfp-intelligence':['RFP Intelligence','Inspect actual DigiLocker or other topic discovery evidence across each pipeline stage.'],workflow:['Intelligence Workflow','Five source channels, AI analysis, lead qualification, and human review.'],overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','Explore scope, eligibility and source-backed procurement research.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
+function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}renderWorkflow();renderRfpWorkspace();renderSignalWorkspace();E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="showMetricDetails('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
 ['candidates','pages','documents','analysis','official'].forEach((key,i)=>{
  const n=[data('discovery').unique_candidates,data('discovery').pages_fetched,data('extraction').documents_extracted,data('analysis').documents_analyzed,data('cppp_public_listings').matches][i];
  const el=E('funnel-'+key);if(el)el.textContent=num(n);
@@ -686,6 +730,45 @@ function renderRfpEvidence(){
    (rfpStage==='analyses' ? '<div class="rfp-result-actions"><button class="button" onclick="openRecord('+((current?.opportunities||[]).findIndex(o=>o.document_url===item.document_url))+')">View tender details →</button></div>':'')+
    '</article>';
  }).join('')||'<div class="empty">No matching records. Try another search.</div>');
+}
+
+
+function signalPayload(){return current?.signal_intelligence||{total:0,counts:{},signals:[],coverage:'unknown'}}
+function setSignalFilter(filter){E('signal-status').value=filter;renderSignalRecords()}
+function renderSignalWorkspace(){
+ if(!E('signal-summary'))return;
+ const result=signalPayload(),counts=result.counts||{};
+ const blocks=[
+  ['Total saved',result.total||0,'all'],
+  ['Accepted',counts.accepted||0,'accepted'],
+  ['Needs review',counts.needs_review||0,'needs_review'],
+  ['Rejected',counts.rejected||0,'rejected'],
+  ['Deduplication events',result.duplicate_events||0,'all']
+ ];
+ E('signal-summary').innerHTML=blocks.map(row=>
+  '<button class="signal-stat" type="button" onclick="setSignalFilter(\''+row[2]+'\')"><span>'+esc(row[0])+'</span><strong>'+num(row[1])+'</strong><small>View records →</small></button>'
+ ).join('');
+ renderSignalRecords();
+}
+function renderSignalRecords(){
+ const payload=signalPayload(),rows=payload.signals||[];
+ const status=E('signal-status').value,search=(E('signal-search').value||'').trim().toLowerCase();
+ const selected=rows.filter(x=>(status==='all'||x.relevance_status===status)&&
+ [x.title,x.source_url,x.reason,x.signal_category,x.issuing_authority,...(x.search_queries||[])].join(' ').toLowerCase().includes(search));
+ E('signal-summary-line').textContent=
+  num(selected.length)+' matching of '+num(rows.length)+' unique normalized URLs · '+
+  (payload.coverage==='legacy_partial_candidates'?'Historical run: full candidate set not retained':'Saved candidate coverage')+
+  ' · deterministic preliminary triage, not verified lead scoring.';
+ E('signal-records').innerHTML=selected.length?selected.slice(0,300).map(x=>{
+  const url=link(x.source_url),statusColor=x.relevance_status==='accepted'?'green':x.relevance_status==='rejected'?'grey':'warn';
+  const labels={accepted:'Accepted',needs_review:'Needs review',rejected:'Rejected'};
+  return '<article class="signal-record"><div class="signal-record-flags">'+pill(labels[x.relevance_status]||x.relevance_status,statusColor)+' '+pill(x.source_type==='official_government_domain'?'Official-domain URL':'Unverified / other domain','grey')+' '+pill(x.processing_status||'discovered','grey')+'</div>'+
+   '<h3>'+esc(x.title||x.source_url||'Untitled signal')+'</h3><p><b>Decision:</b> '+esc(x.reason||'Not classified')+'</p>'+
+   '<p class="signal-record-meta"><b>Category:</b> '+esc(x.signal_category||'unknown')+' · <b>Origins:</b> '+esc((x.origins||[]).join(', '))+'</p>'+
+   (url?'<a target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">'+esc(url)+'</a>':'')+
+   ((x.search_queries||[]).length?'<p class="signal-record-meta"><b>Search terms:</b> '+esc(x.search_queries.slice(0,3).join(' · '))+'</p>':'')+
+   '</article>';
+ }).join('')+(selected.length>300?'<p class="signal-footnote">Showing the first 300 matching records. Narrow your search to see more.</p>':''):'<div class="empty"><h3>No matching signals</h3><p>Try another filter or start a new scan.</p></div>';
 }
 
 function renderWorkflow(){
