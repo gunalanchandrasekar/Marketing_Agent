@@ -68,6 +68,15 @@ def queries_for(topic: str) -> list[str]:
     ]
     regional = [f'{q} {state} tender RFP eprocurement'
                 for state in (*INDIAN_STATES, *UNION_TERRITORIES)]
+    if topic.lower().replace(" ", "") == "digilocker":
+        general += [
+            '"DigiLocker" "citizen portal" procurement',
+            '"Digi Locker" integration tender government',
+            '"Digi-locker" API integration tender',
+            'site:cag.gov.in DigiLocker tender',
+            'site:negd.gov.in DigiLocker RFQ',
+            '"DigiLocker" "scope of work" "RFP"',
+        ]
     return general + regional
 
 
@@ -99,7 +108,8 @@ def topic_match(topic: str, text: str) -> bool:
     if not terms:
         return False
     normalized = re.sub(r"[^a-z0-9]+", "", text.lower())
-    return "".join(terms) in normalized
+    phrase = "".join(terms)
+    return phrase in normalized or (phrase == "digilocker" and "digitallocker" in normalized)
 
 
 def candidate_priority(url: str) -> int:
@@ -175,13 +185,44 @@ def extract_page(url: str, content: bytes) -> tuple[str, str, list[str]]:
     for anchor in soup.find_all("a", href=True):
         link = canonicalize(urljoin(url, anchor["href"]))
         if link and document_url(link):
-            docs.append({"url": link, "anchor_text": anchor.get_text(" ", strip=True)[:200]})
+            container = anchor.find_parent(["tr", "li", "article"]) or anchor.parent
+            context = container.get_text(" ", strip=True)[:650] if container else ""
+            docs.append({"url": link, "anchor_text": anchor.get_text(" ", strip=True)[:200], "context": context})
     for tag in soup(["script", "style", "nav", "footer", "noscript"]):
         tag.decompose()
     body = soup.get_text(" ", strip=True)
     text = re.sub(r"\s+", " ", body)[:MAX_TEXT_CHARS]
     unique_docs = {row["url"]: row for row in docs}
     return title, text, list(unique_docs.values())
+
+
+def eligible_link(row: dict, topic: str, title: str, body: str) -> bool:
+    """Keep topic procurement attachments even when the page is titled 'Tenders'."""
+    url, anchor, context = row["url"], row.get("anchor_text", ""), row.get("context", "")
+    if eligible_document(url, topic, title, anchor):
+        return True
+    if REFERENCE_RE.search(" ".join((url, anchor, context))):
+        return False
+    return bool(
+        (topic_match(topic, context) and PROCUREMENT_RE.search(context))
+        or (topic_match(topic, body) and classify_page(title, body) == "procurement"
+            and (PROCUREMENT_RE.search(url + " " + anchor)
+                 or GENERIC_DOC_LABEL_RE.fullmatch(anchor.strip())))
+    )
+
+
+def balanced_candidates(urls: dict[str, set[str]]) -> list[tuple[str, set[str]]]:
+    """Cycle through distinct hosts rather than exhausting one domain first."""
+    buckets: dict[str, list[tuple[str, set[str]]]] = {}
+    for item in sorted(urls.items(), key=lambda pair: candidate_priority(pair[0]), reverse=True):
+        host = (urlparse(item[0]).hostname or "").lower()
+        buckets.setdefault(host, []).append(item)
+    result = []
+    while any(buckets.values()):
+        for host in buckets:
+            if buckets[host]:
+                result.append(buckets[host].pop(0))
+    return result
 
 
 def download_document(client: httpx.Client, url: str, folder: Path, max_bytes: int) -> dict:
@@ -203,6 +244,14 @@ def download_document(client: httpx.Client, url: str, folder: Path, max_bytes: i
                         raise ValueError("Document exceeds size limit")
                     digest.update(chunk)
                     out.write(chunk)
+        with tmp.open("rb") as probe:
+            magic = probe.read(16)
+        if suffix == ".pdf" and not magic.lstrip().startswith(b"%PDF-"):
+            raise ValueError("Document URL returned non-PDF content")
+        if suffix == ".docx" and not magic.startswith(b"PK"):
+            raise ValueError("Document URL returned non-DOCX content")
+        if total == 0:
+            raise ValueError("Document is empty")
         final = folder / (digest.hexdigest() + suffix)
         tmp.replace(final)
         return {"url": url, "path": str(final), "sha256": digest.hexdigest(), "bytes": total}
@@ -218,6 +267,7 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
     urls: dict[str, set[str]] = {}
     queries = queries_for(topic)
     limits = httpx.Limits(max_connections=5, max_keepalive_connections=5)
+    successful_queries = 0
     with httpx.Client(headers=HEADERS, timeout=20, follow_redirects=True, limits=limits) as client:
         for query_number, query in enumerate(queries, 1):
             if progress:
@@ -225,6 +275,7 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
             try:
                 found = (search_searxng(client, searxng, query, per_query)
                          if searxng else search_ddgs(query, per_query))
+                successful_queries += 1
                 for candidate in found:
                     url = canonicalize(candidate)
                     if url:
@@ -236,9 +287,11 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
         if progress:
             progress("fetching", "Inspecting relevant web pages", 37)
         doc_candidates = []
-        for url, matched_queries in sorted(urls.items(), key=lambda pair: candidate_priority(pair[0]), reverse=True):
+        inspected_attempts = 0
+        for url, matched_queries in balanced_candidates(urls):
             if len(records) >= max_pages:
                 break
+            inspected_attempts += 1
             if document_url(url):
                 if topic_match(topic, url) and PROCUREMENT_RE.search(url) and not REFERENCE_RE.search(url):
                     doc_candidates.append((candidate_priority(url), url))
@@ -256,7 +309,7 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
                     LOG.info("Skipped off-topic page: %s", url)
                     continue
                 relevant_docs = [row["url"] for row in doc_links
-                                 if eligible_document(row["url"], topic, title, row["anchor_text"])]
+                                 if eligible_link(row, topic, title, text)]
                 records.append({"url": url, "title": title, "text": text,
                                 "search_queries": sorted(matched_queries), "classification": classify_page(title, text), "document_links": relevant_docs})
                 doc_candidates.extend((candidate_priority(url) + 20, link) for link in relevant_docs)
@@ -283,6 +336,14 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
         "topic": topic, "started_at": started, "finished_at": datetime.now(timezone.utc).isoformat(),
         "backend": "searxng" if searxng else "ddgs",
         "queries": queries,
+        "coverage": {
+            "queries_attempted": len(queries),
+            "queries_succeeded": successful_queries,
+            "queries_failed": len(queries) - successful_queries,
+            "urls_considered": inspected_attempts,
+            "discovered_hosts": len({urlparse(u).hostname for u in urls}),
+            "limitations": "Indexed web search only, not exhaustive state portals or authenticated tenders.",
+        },
         "unique_candidates": len(urls),
         "candidates": [{"url": url, "search_queries": sorted(matched), "priority": candidate_priority(url)} for url, matched in sorted(urls.items(), key=lambda pair: candidate_priority(pair[0]), reverse=True)],
         "pages_fetched": len(records),
