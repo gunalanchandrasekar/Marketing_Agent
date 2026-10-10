@@ -92,7 +92,17 @@ def select_context(text: str, topic: str, max_chars: int = MAX_CONTEXT) -> str:
     ]
     seen: set[int] = set()
     for pattern in patterns:
-        for match in list(re.finditer(pattern, clean, re.I))[:3]:
+        hits = list(re.finditer(pattern, clean, re.I))
+        # Large PDFs may mention section titles several times in the table
+        # of contents. Prefer substantive occurrences later in the document.
+        substantive = next((hit for hit in hits if hit.start() > 8000), None)
+        sampled = []
+        for hit in (substantive, hits[0] if hits else None,
+                    hits[len(hits)//2] if hits else None,
+                    hits[-1] if hits else None):
+            if hit is not None and hit.start() not in {m.start() for m in sampled}:
+                sampled.append(hit)
+        for match in sampled:
             start = max(0, match.start() - 280)
             if any(abs(start - used) < 350 for used in seen):
                 continue
