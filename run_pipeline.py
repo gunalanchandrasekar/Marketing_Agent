@@ -93,6 +93,15 @@ def execute(
         state["issues"].append({"stage": "discovery", "error": str(exc)})
         discovered = {"documents": []}
 
+    if not discovered.get("documents"):
+        state["issues"].append({
+            "stage": "discovery",
+            "error": (
+                "No downloadable tender documents were found for this topic. "
+                "Inspect the saved candidate URLs, matching pages and download failures. "
+                "Public search does not guarantee that a portal exposes a public PDF."
+            ),
+        })
     report('extracting', 'Extracting PDF text', 55)
     try:
         # Extractor reads paths relative to the current working directory.
@@ -103,6 +112,13 @@ def execute(
             "documents_extracted": len(extracted_result.get("documents", []))
         }
         state["issues"].extend({**e, "stage": "extraction"} for e in extracted_result.get("errors", []))
+        if extracted_result.get("documents") and not any(
+            doc.get("extraction_status") == "ok" for doc in extracted_result["documents"]
+        ):
+            state["issues"].append({
+                "stage": "extraction",
+                "error": "Documents were downloaded but have no readable embedded text. Scanned PDFs require OCR.",
+            })
     except Exception as exc:
         state["issues"].append({"stage": "extraction", "error": str(exc)})
         extracted_result = {"documents": []}
