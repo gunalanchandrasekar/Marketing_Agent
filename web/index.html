@@ -468,7 +468,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .rfp-summary{grid-template-columns:repeat(2,minmax(0,1fr));max-width:590px}
 @media(max-width:600px){.rfp-summary{grid-template-columns:1fr 1fr}}
 .intro>.button.primary{display:none}.overview-active .intro>.button.primary{display:inline-flex}
-</style></head><body>
+.rfp-diagnostics{margin:12px 0}.rfp-diagnostics .rfp-hint{line-height:1.7}.rfp-success{padding:13px 16px;border:1px solid #cde4ef;border-radius:10px;background:#f0f8fc;color:#234b73;font-size:13px}.rfp-diagnostics a{color:#116baa;text-decoration:underline}</style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
@@ -488,6 +488,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
    <button class="button primary" onclick="openScan()">＋ Run new search</button>
  </div>
  <div class="rfp-summary" id="rfp-summary"></div>
+ <div id="discovery-diagnostics" class="rfp-diagnostics"></div>
  <div class="rfp-tabs" role="group" aria-label="RFP evidence stages">
    <button type="button" data-rfp-stage="candidates" onclick="setRfpStage('candidates')">Discovered URLs <span id="rfp-count-candidates">0</span></button>
    <button type="button" data-rfp-stage="pages" onclick="setRfpStage('pages')">Inspected pages <span id="rfp-count-pages">0</span></button>
@@ -653,6 +654,17 @@ function renderRfpWorkspace(){
  };
  E('rfp-run-context').textContent=(current?.topic||'No run selected')+' · '+(selected||'')+' · evidence is provisional until official verification.';
  const counts={candidates:raw,pages:evidence.pages.length};
+ const downloaded=(current?.documents||[]).length;
+ const errors=current?.issues||[];
+ const searchErrors=errors.filter(e=>e.stage==='search').length;
+ const downloadErrors=errors.filter(e=>e.stage==='download').length;
+ const extractionErrors=errors.filter(e=>e.stage==='extraction').length;
+ E('discovery-diagnostics').innerHTML=current && downloaded===0
+  ? '<div class="rfp-hint"><b>No tender document was downloaded from this scan.</b> The search found '+num(raw)+' candidate URL(s) and inspected '+num(evidence.pages.length)+' relevant page(s). '+
+    'Search errors: '+num(searchErrors)+' · Download errors: '+num(downloadErrors)+' · Extraction errors: '+num(extractionErrors)+'. '+
+    'Check <a href="#" onclick="event.preventDefault();navigate(\'activity\')">Run History & Issues</a> for the exact failing URLs and errors. '+
+    'Government portals may require a login or expose no accessible file.</div>'
+  : current ? '<div class="rfp-success"><b>'+num(downloaded)+' extracted document record(s) available.</b> Continue to <a href="#" onclick="event.preventDefault();navigate(\'documents\')">Documents</a> for readable text and chatbot evidence.</div>' : '';
  for(const key of Object.keys(counts)){
   E('rfp-count-'+key).textContent=num(counts[key]);
  }
