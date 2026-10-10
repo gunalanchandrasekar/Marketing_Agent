@@ -66,15 +66,8 @@ def select_context(text: str, topic: str, max_chars: int = MAX_CONTEXT) -> str:
         remaining = 0
     # Retrieve evidence-sized windows from throughout the full PDF.
     patterns = [
-        r"proposal\s+submission\s+deadline",
-        r"last\s+date\s+for\s+submission",
-        r"release\s+of\s+rfe",
-        r"rfe\s+reference",
-        r"pre[- ]bid\s+meeting",
-        r"5\.2\s+eligibility",
-        r"financial\s+turnover",
-        r"technical\s+evaluation",
-        r"bid\s+security\s*/\s*emd",
+        # Technical scope and deliverables come first so long eligibility sections
+        # and dates cannot exhaust the model's finite context budget.
         r"scope\s+of\s+work",
         r"technical\s+(?:requirements?|specifications?)",
         r"functional\s+(?:requirements?|specifications?)",
@@ -82,7 +75,18 @@ def select_context(text: str, topic: str, max_chars: int = MAX_CONTEXT) -> str:
         r"deliverables?",
         r"integration\s+with",
         r"implementation\s+scope",
-        r"AI\s+agents\s+for\s+Government",
+        r"development\s+of",
+        r"solution\s+architecture",
+        r"services\s+required",
+        r"technical\s+evaluation",
+        r"proposal\s+submission\s+deadline",
+        r"last\s+date\s+for\s+submission",
+        r"release\s+of\s+rfe",
+        r"rfe\s+reference",
+        r"pre[- ]bid\s+meeting",
+        r"5\.2\s+eligibility",
+        r"financial\s+turnover",
+        r"bid\s+security\s*/\s*emd",
         r"no\s+earnest\s+money\s+deposit",
         re.escape(topic),
     ]
