@@ -28,7 +28,8 @@ def test_pipeline_reuses_stages(monkeypatch, tmp_path):
     result = run_pipeline.execute("DigiLocker", tmp_path, model="qwen3:30b",
                                   ollama_url="http://localhost:11434", cppp=False)
     assert result["opportunity_count"] == 0
-    assert len(result["issues"]) == 1
+    assert result["run_status"] == "needs_attention"
+    assert any("No downloadable tender documents" in x.get("error", "") for x in result["issues"])
     assert Path(result["paths"]["consolidated"]).exists()
 
 
