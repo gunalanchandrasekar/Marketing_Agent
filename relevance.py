@@ -57,7 +57,7 @@ def qualify_analysis(topic: str, facts: dict, document: dict) -> dict:
     title = facts.get("tender_title")
     scope = facts.get("scope_summary") or ""
     combined = " ".join(str(x or "") for x in (
-        title, scope, facts.get("why_relevant_to_topic"), source_text[:22000]
+        title, scope, facts.get("why_relevant_to_topic"), source_text
     ))
     if not topic_present(topic, combined):
         return {"status": "rejected", "reason": "No source-backed match to searched topic"}
@@ -67,6 +67,6 @@ def qualify_analysis(topic: str, facts: dict, document: dict) -> dict:
         return {"status": "review", "reason": "Missing meaningful tender title; retain PDF for review"}
     if not scope or len(str(scope).strip()) < 25:
         return {"status": "review", "reason": "Tender scope not sufficiently extracted"}
-    if not topic_present(topic, str(title) + " " + str(scope) + " " + source_text[:22000]):
+    if not topic_present(topic, str(title) + " " + str(scope) + " " + source_text):
         return {"status": "rejected", "reason": "Topic appears only in unsupported AI claim"}
     return {"status": "candidate", "reason": "Topic and procurement context found in source; official status unverified"}
