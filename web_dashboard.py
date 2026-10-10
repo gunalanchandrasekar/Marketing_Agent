@@ -25,6 +25,7 @@ from cleanup_data import cleanup, archive_topic
 from chat_context import build_chat_context
 from technical_requirements import extract_technical_requirements
 from relevance import qualify_analysis
+from document_review import find_document, page_evidence
 
 BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
@@ -110,6 +111,14 @@ def government_source_records(run: dict, matches: list[dict]) -> list[dict]:
             "source_status": "Official government domain" if is_official_government_url(url) else "Third-party or unverified document host",
         })
     return records
+
+
+def _local_pdf_available(run_dir: Path, item: dict, records: list[dict]) -> bool:
+    try:
+        find_document(run_dir, item.get("sha256") or "", records)
+        return True
+    except (ValueError, OSError):
+        return False
 
 
 def run_detail(run_dir: Path) -> dict:
@@ -207,6 +216,7 @@ def run_detail(run_dir: Path) -> dict:
             "page_count": item.get("page_count"),
             "text_characters": item.get("text_characters"),
             "extraction_status": item.get("extraction_status"),
+            "local_pdf_available": bool(item.get("sha256") and _local_pdf_available(run_dir, item, extract_data.get("documents", []))),
             "summary_data": summaries.get(key),
         })
     discovery = read_json(run_dir / "results.json")
@@ -302,6 +312,31 @@ def models():
         return {"models": [], "connected": False, "server": url, "error": str(exc)}
 
 
+@app.get("/api/runs/{run_id}/documents/{sha256}/pdf")
+def local_document_pdf(run_id: str, sha256: str):
+    run_dir = get_run_dir(run_id)
+    extracted = read_json(run_dir / "extracted_tenders.json")
+    try:
+        match = find_document(run_dir, sha256, extracted.get("documents", []))
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return FileResponse(match["path"], media_type="application/pdf",
+                        headers={"Content-Disposition": "inline"})
+
+
+@app.get("/api/runs/{run_id}/documents/{sha256}/pages")
+def local_document_pages(run_id: str, sha256: str, question: str = "technical requirements"):
+    run_dir = get_run_dir(run_id)
+    extracted = read_json(run_dir / "extracted_tenders.json")
+    try:
+        match = find_document(run_dir, sha256, extracted.get("documents", []))
+        passages = page_evidence(match["path"], question[:400])
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return {"document_sha256": sha256, "pages": passages,
+            "note": "Pages are ranked by keyword overlap; verify quotes against the PDF."}
+
+
 @app.get("/api/runs")
 def runs():
     return {"runs": list_runs()}
@@ -379,6 +414,18 @@ def chat(payload: ChatInput):
     run_dir = get_run_dir(payload.run_id)
     try:
         context = build_chat_context(run_dir, payload.message, payload.document_sha256)
+        cited_pages = []
+        if payload.document_sha256:
+            extracted = read_json(run_dir / "extracted_tenders.json")
+            try:
+                match = find_document(run_dir, payload.document_sha256, extracted.get("documents", []))
+                cited_pages = page_evidence(match["path"], payload.message, limit=4)
+                if cited_pages:
+                    context += "\\n\\nPAGE-NUMBERED PDF EXCERPTS (cite these page numbers only if directly supporting the answer):\\n" + "\\n".join(
+                        f"[PDF PAGE {p['page']}] {p['excerpt']}" for p in cited_pages
+                    )
+            except (ValueError, OSError):
+                pass
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
     url = os.getenv("OLLAMA_BASE_URL", "http://192.168.0.100:11434").rstrip("/") + "/api/chat"
@@ -388,7 +435,9 @@ def chat(payload: ChatInput):
         "using only the extracted run context. If evidence is unavailable, say so. "
         "Distinguish historical original deadlines from verified current tender status. "
         "Never claim a tender is currently open without official confirmation. "
-        "Provide a concise useful answer and identify the document URL when possible."
+        "Provide a concise useful answer and identify the document URL when possible. "
+        "When page-numbered PDF evidence is present, cite the matching PDF page number. "
+        "Do not invent page references."
     )
     try:
         response = httpx.post(url, json={
@@ -405,7 +454,8 @@ def chat(payload: ChatInput):
         if not answer:
             raise ValueError("Ollama returned an empty answer")
         return {"answer": answer, "run_id": payload.run_id,
-                "document_sha256": payload.document_sha256}
+                "document_sha256": payload.document_sha256,
+                "source_pages": cited_pages}
     except (httpx.HTTPError, ValueError) as exc:
         raise HTTPException(status_code=502, detail="Ollama chat error: " + str(exc)[:300])
 
