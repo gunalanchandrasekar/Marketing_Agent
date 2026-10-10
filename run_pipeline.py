@@ -20,6 +20,7 @@ from scraper import run as scrape
 from extract_tenders import extract
 from analyze_tenders import analyze
 from cppp_adapter import discover_public_listings
+from signal_store import generate as build_signals
 
 load_dotenv()
 LOG = logging.getLogger("marketing_agent.pipeline")
@@ -162,6 +163,14 @@ def execute(
         state["run_message"] = "All extracted documents processed."
         report("complete", "Finished", 100)
     consolidated.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
+    try:
+        signals = build_signals(run_dir)
+        state["steps"]["signal_intelligence"] = {"total": signals["total"], **signals["counts"], "duplicates": signals["duplicate_events"]}
+        state["paths"]["signals"] = str(run_dir / "signals.json")
+        consolidated.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
+    except Exception as exc:
+        state["issues"].append({"stage": "signal_intelligence", "error": str(exc)})
+        consolidated.write_text(json.dumps(state, indent=2, ensure_ascii=False), encoding="utf-8")
     return state
 
 
