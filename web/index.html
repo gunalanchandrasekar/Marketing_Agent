@@ -403,7 +403,34 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .loader-spinner{border-top-color:var(--vaf-orange);border-right-color:var(--vaf-blue)}
 .loader-progress span,.loader-track div{background:linear-gradient(90deg,var(--vaf-orange),var(--vaf-blue))}
 .loader-percent{color:var(--vaf-navy)}
-.opportunity-review{border-top:1px solid #e0e7f2;margin-top:7px}.opportunity-review-header{padding:20px 24px 12px;background:#f8faff}.opportunity-review-header h3{font-size:16px;color:#142951}.opportunity-review-header p{color:#5d728f;font-size:12px;margin-top:5px}.opportunity-review-row{padding:15px 24px;border-top:1px solid #edf0f6;display:flex;align-items:flex-start;gap:13px}.opportunity-review-row>div{flex:1;min-width:0}.opportunity-review-row b{font-size:13px;color:#192e54}.opportunity-review-row p{font-size:12px;color:#66758a;margin:5px 0}.opportunity-review-row a{font-size:12px;color:#196caa;overflow-wrap:anywhere}.opportunity-review-empty{padding:16px 24px;color:#73829a;font-size:12px}.opportunity-review .pill{flex-shrink:0}</style></head><body>
+.opportunity-review{border-top:1px solid #e0e7f2;margin-top:7px}.opportunity-review-header{padding:20px 24px 12px;background:#f8faff}.opportunity-review-header h3{font-size:16px;color:#142951}.opportunity-review-header p{color:#5d728f;font-size:12px;margin-top:5px}.opportunity-review-row{padding:15px 24px;border-top:1px solid #edf0f6;display:flex;align-items:flex-start;gap:13px}.opportunity-review-row>div{flex:1;min-width:0}.opportunity-review-row b{font-size:13px;color:#192e54}.opportunity-review-row p{font-size:12px;color:#66758a;margin:5px 0}.opportunity-review-row a{font-size:12px;color:#196caa;overflow-wrap:anywhere}.opportunity-review-empty{padding:16px 24px;color:#73829a;font-size:12px}.opportunity-review .pill{flex-shrink:0}
+/* VAF Document Intelligence Center */
+.doc-workspace{display:grid;grid-template-columns:minmax(230px,.35fr) minmax(0,1fr);gap:15px;align-items:start;margin-top:18px}
+.doc-sidebar,.doc-main{min-width:0;overflow:hidden}.doc-sidebar .panel-head{padding:18px 19px}
+.doc-sidebar .panel-head h2{font-size:16px}.doc-file-list{max-height:78vh;overflow-y:auto}
+.doc-file{display:flex;gap:11px;align-items:flex-start;width:100%;text-align:left;padding:15px;background:#fff;border:0;border-top:1px solid #e5ebf4;color:#193153;cursor:pointer}
+.doc-file.selected{background:#edf6fd;box-shadow:inset 3px 0 var(--vaf-orange)}
+.doc-file:hover{background:#f3f8ff}.doc-file-icon{color:#e77328;font-size:21px}
+.doc-file-detail{min-width:0;display:flex;flex-direction:column;gap:6px;flex:1}.doc-file-detail b{font-size:13px;line-height:1.5;overflow-wrap:anywhere}
+.doc-file-detail small,.doc-file-status{font-size:11px;color:#6b7d95}
+.doc-review-header{display:flex;justify-content:space-between;gap:20px;align-items:start;padding:22px 24px 10px}
+.doc-review-header h2{font-size:21px;line-height:1.35;margin:6px 0;overflow-wrap:anywhere}
+#doc-review-status{border-radius:100px;background:#edf6fd;color:#24699c;padding:5px 10px;white-space:nowrap;font-size:11px}
+.doc-review-actions{display:flex;gap:9px;flex-wrap:wrap;padding:12px 24px}
+.doc-review-summary{display:grid;grid-template-columns:1.5fr 1fr 1fr;gap:12px;padding:9px 24px 20px}
+.doc-review-summary>div{background:#f8fafd;border:1px solid #e6ecf4;border-radius:11px;padding:13px}
+.doc-review-summary b{font-size:12px;color:#183f70}.doc-review-summary p{font-size:12px;color:#536986;margin:7px 0 0;overflow-wrap:anywhere}
+.doc-pdf-toolbar{display:flex;justify-content:space-between;padding:12px 24px;background:#10234b;color:#fff;align-items:center}
+.doc-pdf-toolbar span{font-size:11px;color:#bdd2ea}
+.doc-pdf-frame{border:0;width:100%;height:600px;background:#e6eaf1}
+.doc-evidence-section{padding:23px 24px;border-top:1px solid #e7ebf1}
+.doc-evidence-heading h3{font-size:17px}.doc-evidence-heading p{font-size:12px;color:#6b7d95}
+.doc-evidence-form{display:flex;gap:10px;margin:16px 0}.doc-evidence-form input{flex:1;min-width:0}
+.doc-evidence-item{border:1px solid #e5eaf2;border-radius:10px;padding:13px;margin:9px 0}
+.doc-evidence-item p{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;color:#445a76;margin:10px 0 0}
+@media(max-width:900px){.doc-workspace{grid-template-columns:1fr}.doc-file-list{max-height:320px}.doc-review-summary{grid-template-columns:1fr}.doc-pdf-frame{height:500px}}
+@media(max-width:600px){.doc-evidence-form{flex-direction:column}.doc-review-header{flex-direction:column}.doc-pdf-frame{height:390px}}
+</style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
@@ -434,7 +461,26 @@ a:hover,.stat-explore:hover{color:#0c4d88}
   <div class="panel activity-card"><div class="panel-head"><div><h2>Scan activity</h2><p>Actual research progress and source verification</p></div></div><div id="scan-activity" class="panel-inner"></div></div>
  </div></section>
 <section id="view-opportunities" class="hidden"><div class="toolbar"><input id="record-search" class="input search" placeholder="Search by title, authority or tender reference..." oninput="renderRecords()"/><select id="record-filter" class="input" onchange="renderRecords()"><option value="all">All statuses</option><option value="passed">Original deadline passed</option><option value="future">Future original deadline</option><option value="other">Needs verification</option></select><button class="button" onclick="exportCsv()">↓ Export CSV</button></div><div class="panel"><div class="panel-head"><div><h2>Analyzed tender opportunities</h2><p>Expand a record to view requirements and evidence quality</p></div><span class="pill" id="record-count">0 records</span></div><div id="all-records"></div><div id="opportunity-review" class="opportunity-review"></div></div></section>
-<section id="view-documents" class="hidden"><div class="sectionbar"><h2>Downloaded document queue</h2><button class="button primary" onclick="retryOpen()">↻ &nbsp; Retry unfinished AI analysis</button></div><div class="notice">Documents remain available after an Ollama timeout. Retrying uses the extracted PDF text and does not download files again.</div><div id="doc-list" class="cards"></div></section>
+<section id="view-documents" class="hidden">
+ <div class="sectionbar"><div><h2>Document Intelligence Center</h2><p class="muted" style="font-size:13px">Inspect downloaded evidence, read PDFs and ask document-specific questions.</p></div><button class="button" onclick="retryOpen()">↻ Retry incomplete analysis</button></div>
+ <div class="doc-workspace">
+  <div class="doc-sidebar panel"><div class="panel-head"><div><h2>Downloaded files</h2><p>Choose a document to review</p></div></div><div id="doc-list" class="doc-file-list"></div></div>
+  <div class="doc-main panel">
+   <div id="doc-review-empty" class="empty"><h3>Select a document</h3><p>Review the PDF, extracted details and supporting evidence here.</p></div>
+   <div id="doc-review-content" class="hidden">
+    <div class="doc-review-header"><div><div class="eyebrow">SOURCE DOCUMENT REVIEW</div><h2 id="doc-review-title"></h2><p id="doc-review-meta" class="muted"></p></div><div id="doc-review-status"></div></div>
+    <div class="doc-review-actions"><button class="button primary" id="doc-ask" onclick="chatWithReviewedDocument()">Ask AI about this PDF ↗</button><a id="doc-original" class="button" target="_blank" rel="noopener noreferrer">Original source ↗</a></div>
+    <div id="doc-review-summary" class="doc-review-summary"></div>
+    <div class="doc-pdf-toolbar"><b>PDF preview</b><span id="doc-pdf-note" class="muted"></span></div>
+    <iframe id="doc-pdf" title="Selected tender PDF preview" class="doc-pdf-frame" loading="lazy"></iframe>
+    <div class="doc-evidence-section"><div class="doc-evidence-heading"><h3>Find evidence by question</h3><p>Page numbers refer to the saved PDF and can be verified in the viewer.</p></div>
+      <form onsubmit="searchDocEvidence(event)" class="doc-evidence-form"><input id="doc-evidence-question" class="input" placeholder="e.g. Technical requirements or bidder eligibility" value="technical requirements" aria-label="Question for document evidence"/><button class="button primary" type="submit">Find pages</button></form>
+      <div id="doc-evidence-results" class="doc-evidence-results"></div>
+    </div>
+   </div>
+  </div>
+ </div>
+</section>
 <section id="view-sources" class="hidden"><div class="sectionbar"><h2>Official procurement signals</h2><a class="button" href="https://eprocure.gov.in/eprocure/app?page=FrontEndAdvancedSearch&service=page" target="_blank" rel="noopener noreferrer">Open CPPP search ↗</a></div><div class="notice">This public-listing adapter only inspects visible CPPP homepage notices. CAPTCHA-protected searches are not automated, and zero matches does not mean zero available tenders.</div><div id="source-list"></div></section>
 <section id="view-activity" class="hidden"><div class="panel"><div class="panel-head"><div><h2>Run history</h2><p>Choose an earlier execution to inspect its results</p></div></div><div id="history"></div></div><div class="panel"><div class="panel-head"><h2>Nationwide discovery coverage</h2><p>Search visibility is not the same as exhaustive state-portal coverage</p></div><div id="discovery-coverage"></div></div><div class="panel"><div class="panel-head"><h2>Issue diagnostics</h2></div><div id="issue-list"></div></div></section>
 <div class="footer-note">VAF AI · Opportunity Intelligence &nbsp; | &nbsp; Tender records and dates are unverified until confirmed on official sources.</div></main></div>
@@ -516,11 +562,7 @@ const stages=[['Search discovery',data('discovery').pages_fetched, data('discove
 E('pipeline').innerHTML=stages.map((s,i)=>'<div style="margin-bottom:22px"><div style="display:flex;justify-content:space-between;font-size:12px"><b>'+s[0]+'</b><span class="muted">'+num(s[1])+' completed</span></div><div class="progress"><span style="width:'+Math.round(100*Math.min(1,(s[1]||0)/s[2]))+'%"></span></div></div>').join('');
 E('health').innerHTML='<div class="detail"><span>Recorded issues</span><b style="font-size:24px">'+issues.length+'</b></div><div style="height:12px"></div>'+pill(docs.length-ops.length>0?'AI analysis needs attention':'Results available',docs.length-ops.length>0?'warn':'green')+'<p style="font-size:12px;margin-top:14px">A downloaded document is not automatically a qualified or currently open lead.</p>';
 renderRecords();
-E('doc-list').innerHTML=docs.length?docs.map(d=>{
- const u=link(d.document_url),info=d.summary_data;
- const summary=info?'<div class="doc-summary"><h4>'+esc(info.title||'Document summary')+'</h4><p><b>Authority:</b> '+esc(info.issuing_authority||'Not identified')+'</p><p><b>Scope summary:</b> '+esc(info.summary||'Not available')+'</p><p><b>Published:</b> '+fmtDate(info.publication_date)+'</p><p><b>Original deadline:</b> '+fmtDate(info.submission_deadline)+'</p><p><b>Why relevant:</b> '+esc(info.why_relevant_to_topic||'Not assessed')+'</p></div>':'<div class="notice">Summary not available yet. Retry AI analysis for this downloaded document.</div>';
- return '<div class="smallcard"><div class="eyebrow">DOWNLOADED DOCUMENT</div><h3 style="margin-top:12px;word-break:break-word">'+esc((d.document_url||'Document').split('/').pop())+'</h3><p>'+num(d.page_count)+' pages · '+num(d.text_characters)+' extracted characters</p>'+pill(d.extraction_status||'unknown','green')+summary+'<div class="notice"><b>Document summary</b><p>'+esc(d.summary_data?.summary||'AI summary is not available yet. Retry analysis from this tab.')+'</p><p><b>Authority:</b> '+esc(d.summary_data?.issuing_authority||'Not identified')+'</p><p><b>Original deadline:</b> '+fmtDate(d.summary_data?.submission_deadline)+'</p></div><div style="margin-top:16px">'+(u?'<a class="button" href="'+esc(u)+'" target="_blank" rel="noopener noreferrer">Open source PDF ↗</a>':'')+'</div></div>'
-}).join(''):'<div class="panel"><div class="empty">No extracted documents for this run.</div></div>';
+renderDocumentList(docs);
 const governmentRecords=current?.government_source_records||[];
 E('source-list').innerHTML=governmentRecords.length?governmentRecords.map(x=>{
  const url=link(x.url),official=x.source_status==='Official government domain';
@@ -536,6 +578,82 @@ E('issue-list').innerHTML=(reviews.length?'<div class="panel-inner"><b>Opportuni
 reviews.slice(0,30).map(x=>'<div class="runbox"><div><h4>'+esc(x.title||'Unqualified document')+'</h4><p>'+esc(x.reason||'Needs review')+'</p><span class="tiny muted">'+esc(x.document_url||'')+'</span></div>'+pill('Not qualified','warn')+'</div>').join(''):'')+
 (issues.length?issues.map(x=>'<div class="runbox"><div><h4>'+esc(x.stage||'Pipeline issue')+'</h4><p>'+esc(x.error||'No detail')+'</p><span class="tiny muted">'+esc(x.document_url||x.url||x.query||'')+'</span></div>'+pill('Review','warn')+'</div>').join(''):'<div class="empty">No additional processing errors reported.</div>');
 }
+
+let reviewedDocumentSha=null;
+function renderDocumentList(docs){
+ const list=E('doc-list');
+ list.innerHTML=docs.length?docs.map((d,i)=>{
+  const selectedDoc=d.sha256===reviewedDocumentSha;
+  const label=d.summary_data?.title || (d.document_url||'Document '+(i+1)).split('/').pop();
+  const readable=d.extraction_status==='ok' && (d.text_characters||0)>0;
+  const analyzed=Boolean(d.summary_data?.summary);
+  return '<button type="button" class="doc-file '+(selectedDoc?'selected':'')+'" onclick="selectReviewedDocument('+i+')">'+
+   '<span class="doc-file-icon">▣</span><span class="doc-file-detail"><b>'+esc(label)+'</b><small>'+num(d.page_count)+' pages · '+num(d.text_characters)+' characters</small>'+
+   '<span class="doc-file-status">'+(readable?'Text extracted':'OCR or extraction needed')+' · '+(analyzed?'AI summary available':'Analysis pending')+'</span></span></button>';
+ }).join(''):'<div class="empty"><h3>No PDFs downloaded</h3><p>Run a topic scan to collect tender documents. Download errors are available in Activity & Diagnostics.</p></div>';
+ if(!docs.length){reviewedDocumentSha=null;E('doc-review-empty').classList.remove('hidden');E('doc-review-content').classList.add('hidden');return}
+ const selectedIndex=docs.findIndex(d=>d.sha256 && d.sha256===reviewedDocumentSha);
+ if(selectedIndex<0){selectReviewedDocument(0)}
+ else showReviewedDocument(docs[selectedIndex]);
+}
+function selectReviewedDocument(index){
+ const document=current?.documents?.[index];
+ if(!document)return;
+ reviewedDocumentSha=document.sha256||null;
+ renderDocumentListItems();
+ showReviewedDocument(document);
+}
+function renderDocumentListItems(){
+ const docs=current?.documents||[];
+ E('doc-list').querySelectorAll('.doc-file').forEach((node,i)=>node.classList.toggle('selected',docs[i]?.sha256===reviewedDocumentSha));
+}
+function showReviewedDocument(d){
+ const info=d.summary_data||{};
+ const pdf=d.local_pdf_available && d.sha256 && selected ? '/api/runs/'+encodeURIComponent(selected)+'/documents/'+encodeURIComponent(d.sha256)+'/pdf' : null;
+ const original=link(d.document_url);
+ E('doc-review-empty').classList.add('hidden');E('doc-review-content').classList.remove('hidden');
+ E('doc-review-title').textContent=info.title||d.document_url?.split('/').pop()||'Untitled PDF';
+ E('doc-review-meta').textContent=(d.page_count||'Unknown')+' pages · '+num(d.text_characters)+' extracted characters';
+ const readable=d.extraction_status==='ok' && (d.text_characters||0)>0;
+ E('doc-review-status').textContent=readable?'Text extracted':'OCR / text extraction needed';
+ E('doc-review-summary').innerHTML='<div><b>AI document summary</b><p>'+esc(info.summary||'Not analyzed yet. Retry analysis when readable text is available.')+'</p></div>'+
+ '<div><b>Issuing authority</b><p>'+esc(info.issuing_authority||'Not identified')+'</p></div>'+
+ '<div><b>Original submission deadline</b><p>'+fmtDate(info.submission_deadline)+'</p></div>';
+ E('doc-original').classList.toggle('hidden',!original);
+ if(original)E('doc-original').href=original;
+ E('doc-ask').disabled=!readable || !d.sha256;
+ E('doc-pdf-note').textContent=pdf?'Saved copy · local PDF':'No local PDF preview available';
+ E('doc-pdf').classList.toggle('hidden',!pdf);
+ E('doc-pdf').src=pdf||'about:blank';
+ E('doc-evidence-question').value='technical requirements';
+ E('doc-evidence-results').innerHTML=pdf?'<p class="muted">Enter a question to locate supporting pages.</p>':'<p class="muted">Page-level evidence requires a saved, readable local PDF.</p>';
+}
+async function searchDocEvidence(event){
+ if(event)event.preventDefault();
+ const d=(current?.documents||[]).find(x=>x.sha256===reviewedDocumentSha);
+ if(!selected||!d?.local_pdf_available)return;
+ const q=E('doc-evidence-question').value.trim();
+ if(!q)return;
+ const el=E('doc-evidence-results');el.innerHTML='<p class="muted">Searching saved PDF pages…</p>';
+ try{
+  const result=await api('/api/runs/'+encodeURIComponent(selected)+'/documents/'+encodeURIComponent(d.sha256)+'/pages?question='+encodeURIComponent(q));
+  el.innerHTML=result.pages.length?result.pages.map(x=>'<div class="doc-evidence-item"><button class="button" onclick="jumpDocumentPage('+Number(x.page)+')">Page '+Number(x.page)+' ↗</button><p>'+esc(x.excerpt)+'</p></div>').join(''):'<div class="notice">No readable page text matched. The PDF may be image-based.</div>';
+ }catch(e){el.textContent='Could not retrieve page evidence: '+e.message}
+}
+function jumpDocumentPage(page){
+ const frame=E('doc-pdf');
+ if(frame.src&&frame.src!=='about:blank')frame.src=frame.src.split('#')[0]+'#page='+page;
+}
+async function chatWithReviewedDocument(){
+ const d=(current?.documents||[]).find(x=>x.sha256===reviewedDocumentSha);
+ if(!d?.sha256)return;
+ activeTenderSha=d.sha256;
+ activeTenderTitle=d.summary_data?.title||d.document_url||'Selected document';
+ await toggleChat();
+ E('chat-document').value=d.sha256;
+ E('chat-scope-note').textContent='Selected PDF: '+activeTenderTitle;
+}
+
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
 function renderRecords(){
  const term=(E('record-search').value||'').trim().toLowerCase(),filter=E('record-filter').value;
