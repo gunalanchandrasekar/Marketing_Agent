@@ -170,7 +170,11 @@ def execute(
     LOG.info("Completed: %s opportunities, %s issues. %s", len(opportunities), len(state["issues"]), consolidated)
     extracted_count = state.get("steps", {}).get("extraction", {}).get("documents_extracted", 0)
     analyzed_count = state.get("steps", {}).get("analysis", {}).get("documents_analyzed", 0)
-    if extracted_count > analyzed_count:
+    if not state.get("steps", {}).get("discovery", {}).get("documents_downloaded", 0):
+        state["run_status"] = "needs_attention"
+        state["run_message"] = "Search completed but no accessible tender documents were downloaded. Inspect Web Discovery and Run History & Issues."
+        report("needs_attention", state["run_message"], 100)
+    elif extracted_count > analyzed_count:
         state["run_status"] = "needs_attention"
         state["run_message"] = f"{extracted_count - analyzed_count} extracted document(s) still require AI analysis."
         report("needs_attention", state["run_message"], 100)
