@@ -1,4 +1,4 @@
-from scraper import canonicalize, document_url, extract_page, queries_for, topic_match, eligible_document, candidate_priority, classify_page
+from scraper import canonicalize, document_url, extract_page, queries_for, topic_match, eligible_document, eligible_link, balanced_candidates, candidate_priority, classify_page
 
 
 def test_canonicalize():
@@ -22,7 +22,9 @@ def test_html_extraction():
     """)
     assert title == "RFP Notice"
     assert "DigiLocker API integration" in text
-    assert documents == [{"url": "https://example.org/files/rfp.pdf", "anchor_text": "RFP"}]
+    assert len(documents) == 1
+    assert documents[0]["url"] == "https://example.org/files/rfp.pdf"
+    assert documents[0]["anchor_text"] == "RFP"
 
 
 def test_document_link():
@@ -80,3 +82,35 @@ def test_generic_download_link_on_rfp():
 def test_awards_not_active_procurement():
     assert classify_page("Final List of Agencies Selected for DigiLocker Integration", "") == "award_or_selection"
 
+
+def test_broader_digilocker_queries_and_source_diversity():
+    queries = queries_for("DigiLocker")
+    assert any("cag.gov.in" in q for q in queries)
+    assert any("citizen portal" in q for q in queries)
+    candidates = {
+        "https://a.gov.in/tender/1": {"x"},
+        "https://a.gov.in/tender/2": {"x"},
+        "https://b.gov.in/tender/1": {"x"},
+    }
+    ranked = balanced_candidates(candidates)
+    assert len(ranked) == 3
+    assert ranked[0][0].split("/")[2] != ranked[1][0].split("/")[2]
+
+
+def test_generic_pdf_link_on_digilocker_tender_listing():
+    page = b"""<html><head><title>Government Tenders</title></head><body>
+      <table><tr><td>RFP for DigiLocker Integration Project</td>
+      <td><a href="/uploads/12345.pdf">Download</a></td></tr></table></body></html>"""
+    title, text, docs = extract_page("https://example.gov.in/tenders", page)
+    assert eligible_link(docs[0], "DigiLocker", title, text)
+
+
+def test_download_rejects_html_disguised_as_pdf(tmp_path):
+    import pytest
+    import httpx
+    from scraper import download_document
+    with httpx.Client(transport=httpx.MockTransport(
+        lambda request: httpx.Response(200, content=b"<html>login</html>")
+    )) as client:
+        with pytest.raises(ValueError, match="non-PDF"):
+            download_document(client, "https://example.gov.in/tender.pdf", tmp_path, 10000)
