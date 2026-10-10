@@ -283,7 +283,17 @@ main{max-width:1500px;padding:0 34px 50px}
 <div id="job-state" class="job hidden"></div>
 <div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear old generated runs</button></div>
 <section id="view-overview">
-<div class="hero"><div><div class="eyebrow" style="color:#a9c3ff">RESEARCH COMMAND CENTER</div><h2>From public tenders to qualified opportunities</h2><p>Track every step of discovery, inspect downloaded evidence, and prioritize actionable procurement signals.</p></div><button class="button" onclick="navigate('opportunities')">Explore opportunities →</button></div>
+<div class="hero vaf-showcase">
+ <div class="hero-copy"><div class="eyebrow">OPPORTUNITY DISCOVERY PLATFORM</div><h2>From public tenders to<br>qualified opportunities</h2><p>Understand your latest tender research, inspect downloaded evidence, and prioritize actionable procurement signals.</p>
+ <div class="hero-actions"><button class="button primary" onclick="openScan()">＋ New intelligence scan</button><button class="button hero-outline" onclick="navigate('opportunities')">Explore opportunities →</button></div></div>
+ <div class="hero-visual" aria-label="Pipeline funnel visualization">
+   <div class="funnel-row funnel-one"><strong id="funnel-candidates">0</strong> URLs</div>
+   <div class="funnel-row funnel-two"><strong id="funnel-pages">0</strong> pages</div>
+   <div class="funnel-row funnel-three"><strong id="funnel-documents">0</strong> documents</div>
+   <div class="funnel-row funnel-four"><strong id="funnel-analysis">0</strong> analyses</div>
+   <div class="funnel-row funnel-five"><strong id="funnel-official">0</strong> official</div>
+ </div>
+ </div>
 <div id="stats" class="stats"></div>
 <div class="dashboard-grid">
   <div class="panel"><div class="panel-head"><div><h2>Latest opportunity records</h2><p>Research findings from the selected scan</p></div><button class="button ghost" onclick="navigate('opportunities')">View all →</button></div><div id="recent-records"></div></div>
