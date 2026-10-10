@@ -273,8 +273,14 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
             if progress:
                 progress("searching", f"Searching source queries {query_number}/{len(queries)}", 20 + int(16 * query_number / max(1, len(queries))))
             try:
-                found = (search_searxng(client, searxng, query, per_query)
-                         if searxng else search_ddgs(query, per_query))
+                if searxng:
+                    try:
+                        found = search_searxng(client, searxng, query, per_query)
+                    except Exception as searx_error:
+                        LOG.warning("SearXNG unavailable for query; trying alternate index: %s", searx_error)
+                        found = search_ddgs(query, per_query)
+                else:
+                    found = search_ddgs(query, per_query)
                 successful_queries += 1
                 for candidate in found:
                     url = canonicalize(candidate)
