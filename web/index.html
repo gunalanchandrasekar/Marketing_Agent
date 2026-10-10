@@ -547,7 +547,7 @@ function openRecord(i){
       detail('Evidence matched',evidence.matched===undefined?'Not checked':evidence.matched+' / '+evidence.checked)+
     '</div>'+
     '<div class="tender-section"><h3>Project overview</h3><p>'+esc(o.scope_summary||'Not available')+'</p></div>'+
-    '<div class="tender-columns"><section class="tender-section"><h3>Technical requirements</h3>'+bullets(o.technical_requirements)+'</section>'+
+    '<div class="tender-columns"><section class="tender-section"><h3>Technical requirements</h3>'+bullets(o.technical_requirements)+(o.technical_requirements_source==='verbatim_document_fallback'?'<p class="tiny muted">Quoted from extracted PDF text; verify requirements against the source document.</p>':'')+'</section>'+
     '<section class="tender-section"><h3>Eligibility and compliance</h3>'+bullets(o.eligibility_requirements)+'</section></div>'+
     '<div class="tender-section"><h3>Why this opportunity is relevant</h3><p>'+esc(o.why_relevant_to_topic||'Not assessed')+'</p></div>'+
     '<div class="alert">The original tender deadline does not establish current bidding availability. Check official tender updates and corrigenda before taking action.</div>'+
@@ -670,8 +670,11 @@ function updateChatControls(){
  else if(!models.length)modelEl.innerHTML='<option value="qwen3:30b">qwen3:30b (connection not verified)</option>';
  const docs=current?.documents||[];
  E('chat-document').innerHTML='<option value="">All documents in selected run</option>'+docs.filter(d=>d.sha256).map((d,i)=>'<option value="'+esc(d.sha256)+'">PDF '+(i+1)+': '+esc((d.summary_data?.title||d.document_url||'Document').slice(0,80))+'</option>').join('');
- if(activeTenderSha && docs.some(d=>d.sha256===activeTenderSha)) E('chat-document').value=activeTenderSha;
- E('chat-scope-note').textContent=activeTenderTitle ? 'Selected tender: '+activeTenderTitle : 'All documents in this run';
+ const scoped=Boolean(activeTenderSha && docs.some(d=>d.sha256===activeTenderSha));
+ if(scoped) E('chat-document').value=activeTenderSha;
+ E('chat-scope-note').textContent=activeTenderTitle
+   ? (scoped ? 'Opened tender: '+activeTenderTitle : 'Opened tender has no matching extracted PDF. Check Documents first.')
+   : 'All documents in this run';
 }
 function addChat(role,message){
  const node=document.createElement('div');
@@ -688,6 +691,13 @@ async function sendChat(e){
  const question=E('chat-input').value.trim();if(!question)return;
  const model=E('chat-model').value||'qwen3:30b';
  const documentSha=E('chat-document').value||null;
+ if(E('overlay').classList.contains('tender-fullscreen')){
+   const linked=(current?.opportunities||[]).some(o=>o.document_sha256===activeTenderSha && o.title===activeTenderTitle);
+   if(!linked || !documentSha || documentSha!==activeTenderSha){
+     addChat('bot','Select the PDF associated with the opened RFP. No other tender document will be used as a substitute.');
+     return;
+   }
+ }
  addChat('user',question);E('chat-input').value='';
  const pending=addChat('bot','Reading the document and preparing an answer…');
  pending.classList.add('chat-pending');
