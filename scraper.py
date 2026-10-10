@@ -284,6 +284,7 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
         "backend": "searxng" if searxng else "ddgs",
         "queries": queries,
         "unique_candidates": len(urls),
+        "candidates": [{"url": url, "search_queries": sorted(matched), "priority": candidate_priority(url)} for url, matched in sorted(urls.items(), key=lambda pair: candidate_priority(pair[0]), reverse=True)],
         "pages_fetched": len(records),
         "documents_downloaded": len(documents),
         "eligible_document_candidates": len(set(url for _, url in doc_candidates)),
