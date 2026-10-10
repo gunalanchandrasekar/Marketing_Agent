@@ -430,6 +430,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .doc-evidence-item p{font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere;color:#445a76;margin:10px 0 0}
 @media(max-width:900px){.doc-workspace{grid-template-columns:1fr}.doc-file-list{max-height:320px}.doc-review-summary{grid-template-columns:1fr}.doc-pdf-frame{height:500px}}
 @media(max-width:600px){.doc-evidence-form{flex-direction:column}.doc-review-header{flex-direction:column}.doc-pdf-frame{height:390px}}
+.chat-evidence-note{font-size:12px!important;background:#f1f7fd!important;color:#356187!important;border:1px solid #d8e9f8}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
@@ -649,7 +650,7 @@ async function chatWithReviewedDocument(){
  if(!d?.sha256)return;
  activeTenderSha=d.sha256;
  activeTenderTitle=d.summary_data?.title||d.document_url||'Selected document';
- await toggleChat();
+ if(E('chat-window').classList.contains('hidden'))await toggleChat();
  E('chat-document').value=d.sha256;
  E('chat-scope-note').textContent='Selected PDF: '+activeTenderTitle;
 }
@@ -882,6 +883,11 @@ async function sendChat(e){
  try{
    const answer=await api('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({run_id:selected,message:question,model:model,document_sha256:documentSha})});
    pending.textContent=answer.answer;pending.classList.remove('chat-pending');
+   const pages=answer.source_pages||[];
+   if(pages.length && documentSha===reviewedDocumentSha){
+     const evidence=addChat('bot','PDF evidence candidates: '+pages.map(p=>'Page '+p.page).join(', ')+'. Verify relevant quotations in the Documents viewer.');
+     evidence.classList.add('chat-evidence-note');
+   }
  }catch(error){pending.textContent='Unable to answer: '+error.message;pending.classList.remove('chat-pending')}
  finally{chatBusy=false;E('chat-send').disabled=false;E('chat-state').textContent='Ready to help';E('chat-body').scrollTop=E('chat-body').scrollHeight}
 }
