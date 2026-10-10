@@ -71,6 +71,45 @@ def get_run_dir(run_id: str) -> Path:
     return matches[0].parent
 
 
+
+def is_official_government_url(url: str | None) -> bool:
+    from urllib.parse import urlparse
+    try:
+        host = (urlparse(url or "").hostname or "").lower()
+    except ValueError:
+        return False
+    return host == "gov.in" or host.endswith(".gov.in") or host == "nic.in" or host.endswith(".nic.in")
+
+
+def government_source_records(run: dict, matches: list[dict]) -> list[dict]:
+    import re
+    records = []
+    for item in matches:
+        url = item.get("tender_url") or item.get("official_listing_url")
+        records.append({
+            "title": item.get("title"), "issuing_authority": None,
+            "tender_reference": item.get("tender_reference"), "url": url,
+            "submission_deadline": item.get("submission_deadline"),
+            "deadline_status": item.get("deadline_status"),
+            "category": "Public portal listing",
+            "source_status": "Official government domain" if is_official_government_url(url) else "Unverified domain",
+        })
+    for item in run.get("opportunities", []):
+        issuer = item.get("issuing_authority") or ""
+        if not re.search(r"(?i)\b(?:government|govt|department|ministry|directorate|municipal|national e-governance division|psu)\b", issuer):
+            continue
+        url = item.get("document_url")
+        records.append({
+            "title": item.get("title"), "issuing_authority": issuer,
+            "tender_reference": item.get("tender_reference"), "url": url,
+            "submission_deadline": item.get("submission_deadline"),
+            "deadline_status": item.get("deadline_status"),
+            "category": "Government-issued RFP (AI identified)",
+            "source_status": "Official government domain" if is_official_government_url(url) else "Third-party or unverified document host",
+        })
+    return records
+
+
 def run_detail(run_dir: Path) -> dict:
     result = read_json(run_dir / "opportunities.json")
     if not result:
@@ -132,6 +171,7 @@ def run_detail(run_dir: Path) -> dict:
     listing = read_json(run_dir / "cppp_public_listings.json")
     result["documents"] = docs
     result["public_listing_candidates"] = listing.get("matches", result.get("public_listing_candidates", []))
+    result["government_source_records"] = government_source_records(result, result["public_listing_candidates"])
     return result
 
 
