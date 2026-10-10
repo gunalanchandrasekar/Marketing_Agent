@@ -807,7 +807,7 @@ function updateChatControls(){
  const docs=current?.documents||[];
  E('chat-document').innerHTML='<option value="">All documents in selected run</option>'+docs.filter(d=>d.sha256).map((d,i)=>'<option value="'+esc(d.sha256)+'">PDF '+(i+1)+': '+esc((d.summary_data?.title||d.document_url||'Document').slice(0,80))+'</option>').join('');
  if(activeTenderSha && docs.some(d=>d.sha256===activeTenderSha)) E('chat-document').value=activeTenderSha;
- E('chat-scope-note').textContent=activeTenderTitle ? 'Selected tender: '+activeTenderTitle : 'All documents in this run';
+ E('chat-scope-note').textContent=!docs.length ? 'No extracted PDFs available; check Web Discovery and Documents.' : activeTenderTitle ? 'Selected tender: '+activeTenderTitle : 'All documents in this run';
 }
 function addChat(role,message){
  const node=document.createElement('div');
