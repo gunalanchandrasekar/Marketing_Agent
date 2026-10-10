@@ -288,12 +288,22 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
             progress("fetching", "Inspecting relevant web pages", 37)
         doc_candidates = []
         inspected_attempts = 0
+        inspected_limit = max(80, max_pages * 5)
         for url, matched_queries in balanced_candidates(urls):
-            if len(records) >= max_pages:
+            if len(records) >= max_pages or inspected_attempts >= inspected_limit:
                 break
             inspected_attempts += 1
             if document_url(url):
-                if topic_match(topic, url) and PROCUREMENT_RE.search(url) and not REFERENCE_RE.search(url):
+                path = urlparse(url).path.lower()
+                # Search-index hits sometimes point straight to generic official RFP
+                # PDFs; DigiLocker is in the document body, not its filename.
+                official_host = (urlparse(url).hostname or "").lower()
+                official = official_host.endswith((".gov.in", ".nic.in"))
+                procurement_file = any(word in path for word in (
+                    "tender", "rfp", "rfq", "citizen", "portal", "bid", "procurement"
+                ))
+                if ((topic_match(topic, url) and PROCUREMENT_RE.search(url))
+                    or (official and procurement_file)) and not REFERENCE_RE.search(url):
                     doc_candidates.append((candidate_priority(url), url))
                 continue
             try:
