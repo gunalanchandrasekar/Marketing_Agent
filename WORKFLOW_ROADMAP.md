@@ -28,7 +28,8 @@ visually maps that target and explicitly reports what is implemented.
 ## UI build order
 
 - **Phase W1 (this commit)**: Navigate full workflow; render five channels and eight stages, use *real selected-run metrics*; visibly mark unimplemented stages.
-- **Phase W2**: Add unified Source Registry and Normalized Signals backend.
+- **Phase W2.1–W2.2 implemented (initial version)**: `signal_store.py` writes `signals.json` per run, canonicalizes URLs, deduplicates saved source records, retains provenance and provides explainable `accepted` / `needs_review` / `rejected` deterministic triage. Existing runs are backfilled on dashboard load. The sidebar now includes **Signal Intelligence** for review. It is intentionally conservative and is not a lead-scoring model.
+- **Phase W2.3 next**: A dedicated government/partner/developer Source Registry with per-source coverage, crawl constraints, confidence, audit history and direct portal adapters.
 - **Phase W3**: Add correlation and explainable scores with tests and ground truth data.
 - **Phase W4**: Build searchable top-ten list, dossiers and review actions.
 - **Phase W5**: Connect more sources and CRM after reliability/privacy checks.
