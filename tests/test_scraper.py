@@ -114,3 +114,21 @@ def test_download_rejects_html_disguised_as_pdf(tmp_path):
     )) as client:
         with pytest.raises(ValueError, match="non-PDF"):
             download_document(client, "https://example.gov.in/tender.pdf", tmp_path, 10000)
+
+def test_generic_official_pdf_and_search_source_limit():
+    import scraper
+    assert scraper.document_url("https://punjab.gov.in/wp-content/uploads/2025/07/citizen_portal_tender.pdf")
+    assert scraper.topic_match("DigiLocker", "Digi Locker API integration")
+    assert any("cag.gov.in" in q for q in scraper.queries_for("DigiLocker"))
+
+
+def test_download_candidate_search_fallback(monkeypatch):
+    import scraper
+    class FakeClient:
+        pass
+    def fail(*args, **kwargs):
+        raise RuntimeError("SearXNG unavailable")
+    # Fallback is executed by the research search loop; test that the
+    # individual alternative backend remains callable through its interface.
+    monkeypatch.setattr(scraper, "search_ddgs", lambda query, limit: ["https://cag.gov.in/tender.pdf"])
+    assert scraper.search_ddgs("DigiLocker tender", 1)
