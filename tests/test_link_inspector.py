@@ -85,3 +85,21 @@ def test_link_intelligence_screen_exists():
     assert 'id="view-links"' in html
     assert "function submitLinkInspection(event)" in html
     assert "function openLinkInspection(id)" in html
+
+
+def test_non_pdf_article_is_saved_as_research_signal(monkeypatch, tmp_path):
+    page = b"""<html><head><title>IT company wins API platform award</title>
+    <meta name="description" content="Award for a government digital integration platform"></head>
+    <body><article><p>New system integration project announced.</p></article></body></html>"""
+    monkeypatch.setattr(link_inspector, "validate_public_url", lambda u: u)
+    monkeypatch.setattr(link_inspector, "public_get",
+                        lambda client, url: (page, url, "text/html; charset=utf-8"))
+    result = link_inspector.inspect_links(
+        ["https://news.example/award"], tmp_path, model=None
+    )
+    assert len(result["sources"]) == 1
+    assert result["sources"][0]["title"] == "IT company wins API platform award"
+    assert result["documents"] == []
+    assert result["issues"] == []
+    loaded = link_inspector.load_inspection(tmp_path, result["id"])
+    assert loaded["sources"][0]["description"].startswith("Award for")
