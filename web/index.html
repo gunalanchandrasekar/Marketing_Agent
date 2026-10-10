@@ -171,6 +171,21 @@ body.tender-view-open .chat-window:not(.hidden){right:0;top:0;bottom:0;width:390
  .tender-fullscreen.tender-chat-open .drawer-top{padding-right:15px;padding-left:15px}
  body.tender-view-open .chat-window:not(.hidden){right:0;top:0;bottom:0;width:min(390px,100vw);height:100dvh;box-shadow:-8px 0 30px #14314f25}
 }
+
+.stat-click{text-align:left;cursor:pointer;width:100%;font:inherit;color:inherit;transition:transform .14s,border-color .14s,box-shadow .14s}
+.stat-click:hover,.stat-click:focus-visible{transform:translateY(-2px);border-color:#88cce7;box-shadow:0 9px 24px #368bad1c;outline:none}
+.stat-explore{margin-top:10px;font-size:12px;font-weight:750;color:#287fa8}
+.metric-full{position:fixed;inset:0;z-index:1200;background:#f6f9fc;display:flex;flex-direction:column}
+.metric-top{background:white;border-bottom:1px solid #e1e9ee;padding:17px clamp(18px,5vw,74px);display:flex;align-items:center;justify-content:space-between;gap:15px}
+.metric-top h2{font-size:21px;margin:0}
+.metric-content{overflow-y:auto;flex:1;padding:25px clamp(18px,5vw,74px)}
+.metric-controls{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:0 0 16px}
+.metric-controls .input{flex:1;min-width:240px}
+.metric-entry{border:1px solid #dce8ee;border-radius:12px;padding:16px 18px;background:white;margin-bottom:11px;max-width:1100px;overflow-wrap:anywhere}
+.metric-entry h3{font-size:15px;color:#1e4860;margin:0 0 6px}
+.metric-entry p{font-size:13px;margin:5px 0}
+.metric-entry a{font-size:13px;word-break:break-word}
+.metric-note{background:#fff5df;border:1px solid #eedbb7;color:#8b6224;padding:11px 15px;border-radius:10px;font-size:13px;max-width:1100px;margin-bottom:18px}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
@@ -195,7 +210,7 @@ body.tender-view-open .chat-window:not(.hidden){right:0;top:0;bottom:0;width:390
 <section id="view-sources" class="hidden"><div class="sectionbar"><h2>Official procurement signals</h2><a class="button" href="https://eprocure.gov.in/eprocure/app?page=FrontEndAdvancedSearch&service=page" target="_blank" rel="noopener noreferrer">Open CPPP search ↗</a></div><div class="notice">This public-listing adapter only inspects visible CPPP homepage notices. CAPTCHA-protected searches are not automated, and zero matches does not mean zero available tenders.</div><div id="source-list"></div></section>
 <section id="view-activity" class="hidden"><div class="panel"><div class="panel-head"><div><h2>Run history</h2><p>Choose an earlier execution to inspect its results</p></div></div><div id="history"></div></div><div class="panel"><div class="panel-head"><h2>Issue diagnostics</h2></div><div id="issue-list"></div></div></section>
 <div class="footer-note">VAF AI · Opportunity Intelligence &nbsp; | &nbsp; Tender records and dates are unverified until confirmed on official sources.</div></main></div>
-<div id="overlay" class="drawer-backdrop" onclick="if(event.target===this)closeDrawer()"><div class="drawer"><div class="drawer-top"><div class="eyebrow" id="drawer-eyebrow">Tender details</div><button class="close" onclick="closeDrawer()" aria-label="Close details">×</button></div><div id="drawer-content"></div></div></div>
+<div id="metric-full" class="metric-full hidden"><div class="metric-top"><h2 id="metric-heading">Records</h2><button class="button" onclick="closeMetricDetails()">← Back to overview</button></div><div class="metric-content"><p id="metric-description" class="muted"></p><div class="metric-controls"><input id="metric-search" class="input" placeholder="Filter results by URL, title or status" oninput="renderMetricRecords()"><select id="metric-status" class="input" onchange="renderMetricRecords()"><option value="all">All records</option><option value="official">Official domains only</option><option value="other">Other sources</option></select></div><div id="metric-records"></div></div></div><div id="overlay" class="drawer-backdrop" onclick="if(event.target===this)closeDrawer()"><div class="drawer"><div class="drawer-top"><div class="eyebrow" id="drawer-eyebrow">Tender details</div><button class="close" onclick="closeDrawer()" aria-label="Close details">×</button></div><div id="drawer-content"></div></div></div>
 
 <button id="chat-fab" class="chat-fab" type="button" aria-expanded="false" onclick="toggleChat()" aria-label="Open VAF document assistant" title="Ask VAF AI">
   <span class="chat-fab-icon">✦</span>
@@ -252,7 +267,7 @@ function modelSelect(name='model'){let opts=availableModels.filter(m=>!m.include
 async function refresh(prefer){try{const previousRun=selected;const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' records</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;if(previousRun!==selected){activeTenderSha=null;activeTenderTitle=''}render();updateChatControls()}catch(e){E('health').textContent='Unable to load runs: '+e.message}}
 async function chooseRun(id){selected=id;resetTenderScope();try{current=await api('/api/runs/'+encodeURIComponent(id));render();updateChatControls()}catch(e){alert(e.message)}}
 function navigate(p){currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','Explore scope, eligibility and source-backed procurement research.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
-function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only']].map(row=>'<div class="stat"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div></div>').join('');
+function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="showMetricDetails('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
 E('recent-records').innerHTML=ops.length?ops.slice(0,4).map(o=>recordCard(o)).join(''):'<div class="empty"><h3>No completed AI records in this run</h3><p>'+docs.length+' documents ready. Open the document queue to recover unfinished analysis.</p><button class="button primary" onclick="navigate(\'documents\')">View document queue</button></div>';
 const stages=[['Search discovery',data('discovery').pages_fetched, data('discovery').unique_candidates||1],['Document download',data('discovery').documents_downloaded,Math.max(1,data('discovery').documents_downloaded)],['PDF text extraction',data('extraction').documents_extracted,Math.max(1,data('discovery').documents_downloaded)],['Ollama analysis',data('analysis').documents_analyzed,Math.max(1,data('extraction').documents_extracted)]];
 E('pipeline').innerHTML=stages.map((s,i)=>'<div style="margin-bottom:22px"><div style="display:flex;justify-content:space-between;font-size:12px"><b>'+s[0]+'</b><span class="muted">'+num(s[1])+' completed</span></div><div class="progress"><span style="width:'+Math.round(100*Math.min(1,(s[1]||0)/s[2]))+'%"></span></div></div>').join('');
@@ -328,6 +343,49 @@ async function clearOldData(){
 }
 function exportCsv(){const rows=opp_frame();if(!rows.length)return;const cols=['Title','Reference','Authority','Original deadline','Status','Source URL'];const output=[cols,...rows.map(o=>[o.title,o.tender_reference,o.issuing_authority,o.submission_deadline,status(o)[0],o.document_url])].map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');let a=document.createElement('a'),url=URL.createObjectURL(new Blob([output],{type:'text/csv'}));a.href=url;a.download='vaf-opportunities.csv';a.click();URL.revokeObjectURL(url)}
 function opp_frame(){return current?.opportunities||[]}
+
+
+let activeMetric=0;
+function closeMetricDetails(){E('metric-full').classList.add('hidden')}
+function showMetricDetails(which){
+ activeMetric=which;
+ const names=['Discovered URLs','Inspected web pages','Extracted tender PDFs','Ollama analyses','Official CPPP matches'];
+ E('metric-heading').textContent=names[which];
+ E('metric-search').value='';E('metric-status').value='all';
+ E('metric-full').classList.remove('hidden');
+ renderMetricRecords();
+}
+function officialUrl(url){try{const host=new URL(url).hostname.toLowerCase();return host==='gov.in'||host.endsWith('.gov.in')||host.endsWith('.nic.in')}catch{return false}}
+function metricItems(){
+ const discovery=current?.discovery_details||{};
+ if(activeMetric===0){
+   if(discovery.candidate_urls_saved)return (discovery.candidates||[]).map(x=>({...x,kind:'Candidate URL'}));
+   return (discovery.pages||[]).map(x=>({...x,kind:'Inspected page (legacy run)'}));
+ }
+ if(activeMetric===1)return (discovery.pages||[]).map(x=>({...x,kind:'Inspected page'}));
+ if(activeMetric===2)return (current?.documents||[]).map(x=>({...x,url:x.document_url,title:x.summary_data?.title||'Tender PDF',kind:'Extracted document'}));
+ if(activeMetric===3)return (current?.opportunities||[]).map(x=>({...x,url:x.document_url,kind:'AI analyzed tender'}));
+ return (current?.public_listing_candidates||[]).map(x=>({...x,url:x.tender_url||x.official_listing_url,kind:'Public CPPP listing'}));
+}
+function renderMetricRecords(){
+ const records=metricItems(),search=E('metric-search').value.trim().toLowerCase(),filter=E('metric-status').value;
+ const filtered=records.filter(r=>{
+  const url=r.url||'',isOfficial=officialUrl(url);
+  return (filter==='all'||(filter==='official'&&isOfficial)||(filter==='other'&&!isOfficial)) &&
+   [url,r.title,r.tender_reference,r.classification,r.kind,...(r.search_queries||[])].join(' ').toLowerCase().includes(search);
+ });
+ const legacy=activeMetric===0&&!current?.discovery_details?.candidate_urls_saved;
+ E('metric-description').textContent=filtered.length+' of '+records.length+' saved records displayed. '+(legacy?'This older run did not save every discovered candidate; showing the inspected pages that are available.':'Results shown are from this selected pipeline run.');
+ E('metric-records').innerHTML=(legacy?'<div class="metric-note">Older runs did not preserve all search URLs. Run a new scan to see the complete discovered URL list with search queries.</div>':'')+
+ (filtered.length?filtered.slice(0,600).map((r,i)=>{
+  const url=link(r.url),official=url&&officialUrl(url);
+  const badge=official?pill('Official government domain','green'):pill('Unverified external source','grey');
+  const kind=esc(r.kind||'Record');
+  const subtitle=esc(r.classification||r.extraction_status||r.tender_reference||'');
+  const query=(r.search_queries||[]).slice(0,3).join(' · ');
+  return '<article class="metric-entry"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">'+pill(kind,'grey')+badge+'</div><h3 style="margin-top:10px">'+esc(r.title||r.tender_reference||r.url||'Record '+(i+1))+'</h3>'+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+esc(url)+'</a>':'<p>No public URL saved</p>')+(subtitle?'<p>'+subtitle+'</p>':'')+(query?'<p><b>Found using:</b> '+esc(query)+'</p>':'')+(r.page_count?'<p><b>Pages:</b> '+num(r.page_count)+'</p>':'')+'</article>';
+ }).join(''):'<div class="empty">No matching saved records. Try a different filter or new scan.</div>');
+}
 
 let chatBusy=false;
 let activeTenderSha=null;
