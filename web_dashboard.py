@@ -182,8 +182,13 @@ def run_detail(run_dir: Path) -> dict:
         if not signal_data or stale:
             signal_data = build_signals(run_dir)
         result["signal_intelligence"] = signal_data
-    except (OSError, ValueError) as exc:
-        result["signal_intelligence"] = {"total": 0, "counts": {}, "signals": [], "error": str(exc)}
+    except Exception as exc:
+        # Signal enrichment is additive. A malformed legacy page must not
+        # suppress successfully saved PDFs, opportunities or discovery data.
+        result["signal_intelligence"] = {
+            "total": 0, "counts": {}, "signals": [],
+            "error": f"Signal filtering unavailable: {exc}",
+        }
     result["documents"] = docs
     result["public_listing_candidates"] = listing.get("matches", result.get("public_listing_candidates", []))
     result["government_source_records"] = government_source_records(result, result["public_listing_candidates"])
