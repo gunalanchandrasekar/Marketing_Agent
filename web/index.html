@@ -404,6 +404,38 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .loader-progress span,.loader-track div{background:linear-gradient(90deg,var(--vaf-orange),var(--vaf-blue))}
 .loader-percent{color:var(--vaf-navy)}
 
+
+/* Web Discovery: restored after removing the experimental Workflow screen. */
+.rfp-intro{padding:24px 27px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.rfp-intro .eyebrow{color:var(--vaf-orange)}
+.rfp-intro h2{font-family:var(--font-display);font-size:20px;line-height:1.32;margin:8px 0}
+.rfp-intro p{font-size:13px;color:#60728e}
+.rfp-summary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));max-width:610px;gap:14px;margin:20px 0}
+.rfp-kpi{text-align:left;display:flex;flex-direction:column;gap:6px;border:1px solid var(--vaf-border);border-radius:14px;padding:18px;background:#fff;cursor:pointer}
+.rfp-kpi span{font-size:12px;color:#586b88;font-weight:650}
+.rfp-kpi b{font:800 30px var(--font-display);color:var(--vaf-navy)}
+.rfp-kpi small{font-size:12px;color:#196bac;font-weight:700}
+.rfp-kpi:hover{border-color:#82bae2;box-shadow:0 5px 20px #18365c12}
+.rfp-tabs{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--vaf-border);margin:21px 0 17px}
+.rfp-tabs button{appearance:none;border:0;border-bottom:3px solid transparent;background:transparent;color:#5d708c;font:650 13px var(--font-body);cursor:pointer;padding:12px 15px;display:flex;align-items:center;gap:8px}
+.rfp-tabs button.active{border-bottom-color:var(--vaf-orange);color:#104e88}
+.rfp-tabs button:hover{color:var(--vaf-navy);background:#eaf2fb}
+.rfp-tabs button span{font-size:11px;padding:3px 7px;background:#ecf1f8;color:#456685;border-radius:7px}
+.rfp-data-panel{overflow:hidden}
+.rfp-data-head{display:flex;align-items:center;justify-content:space-between;gap:15px;padding:21px 24px;border-bottom:1px solid var(--vaf-border)}
+.rfp-data-head h2{font-size:18px;margin:0 0 6px}
+.rfp-data-head p{font-size:12px;line-height:1.65;color:#697a93;max-width:710px}
+.rfp-data-head .input{max-width:320px;min-width:220px}
+.rfp-evidence-list{padding:15px 24px}
+.rfp-result{padding:18px 0;border-bottom:1px solid #e6eaf1;overflow-wrap:anywhere}
+.rfp-result:last-child{border:0}
+.rfp-result h3{font-size:14px;margin:9px 0;color:#132b51}
+.rfp-result p{font-size:13px;color:#61738e}
+.rfp-result a{font-size:12px;color:#1671ae}
+.rfp-result-top{display:flex;gap:7px;flex-wrap:wrap}
+.rfp-result-meta,.rfp-query,.rfp-result-count{font-size:12px;color:#6d7f98;margin:8px 0}
+.rfp-hint{background:#fff5ea;color:#83552e;border:1px solid #f5d1ae;padding:13px;border-radius:10px;font-size:12px}
+@media(max-width:720px){.rfp-intro,.rfp-data-head{flex-direction:column;align-items:stretch}.rfp-data-head .input{max-width:none;min-width:0}}
 /* W2 Signal Intelligence - VAF brand palette */
 .signal-intro{padding:23px 27px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .signal-intro .eyebrow{color:#e87b22}
@@ -555,9 +587,24 @@ const link=u=>{try{let p=new URL(u);return p.protocol==='https:'||p.protocol==='
 async function api(path,options){let r=await fetch(path,options);let json=await r.json().catch(()=>({}));if(!r.ok)throw Error(json.detail||('HTTP '+r.status));return json}
 async function loadModels(){try{let r=await api('/api/models');availableModels=r.models||[];return r}catch(e){return {models:[],connected:false,error:e.message}}}
 function modelSelect(name='model'){let opts=availableModels.filter(m=>!m.includes(':cloud'));return opts.length?'<select class="input" name="'+name+'">'+opts.map(m=>'<option value="'+esc(m)+'" '+(m==='qwen3:30b'?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select>':'<input class="input" name="'+name+'" value="qwen3:30b" placeholder="Ollama model" />'}
-async function refresh(prefer){try{const previousRun=selected;const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' records</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;if(previousRun!==selected){activeTenderSha=null;activeTenderTitle=''}render();updateChatControls()}catch(e){E('health').textContent='Unable to load runs: '+e.message}}
-async function chooseRun(id){selected=id;resetTenderScope();try{current=await api('/api/runs/'+encodeURIComponent(id));render();updateChatControls()}catch(e){alert(e.message)}}
-function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['rfp-intelligence','signals','overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={signals:['Signal Filtering','Review normalized and deduplicated signals with explicit acceptance and rejection reasons.'],'rfp-intelligence':['Web Discovery','Inspect saved search candidates and topic-relevant pages without confusing them with analyzed tenders.'],overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Analysis','Read AI-extracted tender scope, eligibility, dates, caveats and evidence.'],documents:['Document Review','Read downloaded PDF summaries and retry unfinished document analysis.'],sources:['Government Sources','Verify which notices were government-issued and which URLs use official government domains.'],activity:['Run History & Diagnostics','Review scan history, processing problems, failed requests and model connectivity.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
+function showRunError(message){
+ const node=E('job-state');
+ node.classList.remove('hidden');
+ node.classList.add('attention');
+ node.innerHTML='<b>Unable to load intelligence data</b><p style="margin:9px 0">'+esc(message)+'</p><button class="button" onclick="refresh()">Retry loading runs →</button>';
+ console.error('VAF Intelligence data loading:',message);
+}
+async function refresh(prefer){try{const previousRun=selected;E('job-state').classList.add('hidden');const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' records</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;if(previousRun!==selected){activeTenderSha=null;activeTenderTitle=''}render();updateChatControls()}catch(e){showRunError(e.message)}}
+async function chooseRun(id){
+ selected=id;resetTenderScope();
+ try{
+  current=await api('/api/runs/'+encodeURIComponent(id));
+  E('runPicker').value=id;
+  E('job-state').classList.add('hidden');
+  render();updateChatControls();
+ }catch(e){showRunError(e.message)}
+}
+function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['rfp-intelligence','signals','overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={signals:['Signal Filtering','Review normalized and deduplicated signals with explicit acceptance and rejection reasons.'],'rfp-intelligence':['Web Discovery','Inspect saved search candidates and topic-relevant pages without confusing them with analyzed tenders.'],overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Analysis','Read AI-extracted tender scope, eligibility, dates, caveats and evidence.'],documents:['Document Review','Read downloaded PDF summaries and retry unfinished document analysis.'],sources:['Government Sources','Verify which notices were government-issued and which URLs use official government domains.'],activity:['Run History & Diagnostics','Review scan history, processing problems, failed requests and model connectivity.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];render()}
 function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}renderRfpWorkspace();renderSignalWorkspace();E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="openMetricDestination('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
 ['candidates','pages','documents','analysis','official'].forEach((key,i)=>{
  const n=[data('discovery').unique_candidates,data('discovery').pages_fetched,data('extraction').documents_extracted,data('analysis').documents_analyzed,data('cppp_public_listings').matches][i];
@@ -572,9 +619,6 @@ const scanSteps=[
 ];
 E('scan-activity').innerHTML=scanSteps.map(row=>'<div class="activity-line"><span class="activity-dot '+(row[1]?'ok':'pending')+'"></span><span>'+esc(row[0])+'</span></div>').join('');
 E('recent-records').innerHTML=ops.length?ops.slice(0,4).map(o=>recordCard(o)).join(''):'<div class="empty"><h3>No completed AI records in this run</h3><p>'+docs.length+' documents ready. Open the document queue to recover unfinished analysis.</p><button class="button primary" onclick="navigate(\'documents\')">View document queue</button></div>';
-const stages=[['Search discovery',data('discovery').pages_fetched, data('discovery').unique_candidates||1],['Document download',data('discovery').documents_downloaded,Math.max(1,data('discovery').documents_downloaded)],['PDF text extraction',data('extraction').documents_extracted,Math.max(1,data('discovery').documents_downloaded)],['Ollama analysis',data('analysis').documents_analyzed,Math.max(1,data('extraction').documents_extracted)]];
-E('pipeline').innerHTML=stages.map((s,i)=>'<div style="margin-bottom:22px"><div style="display:flex;justify-content:space-between;font-size:12px"><b>'+s[0]+'</b><span class="muted">'+num(s[1])+' completed</span></div><div class="progress"><span style="width:'+Math.round(100*Math.min(1,(s[1]||0)/s[2]))+'%"></span></div></div>').join('');
-E('health').innerHTML='<div class="detail"><span>Recorded issues</span><b style="font-size:24px">'+issues.length+'</b></div><div style="height:12px"></div>'+pill(docs.length-ops.length>0?'AI analysis needs attention':'Results available',docs.length-ops.length>0?'warn':'green')+'<p style="font-size:12px;margin-top:14px">A downloaded document is not automatically a qualified or currently open lead.</p>';
 E('record-count').textContent=ops.length+' records';renderRecords();
 E('doc-list').innerHTML=docs.length?docs.map(d=>{
  const u=link(d.document_url),info=d.summary_data;
