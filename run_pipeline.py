@@ -20,6 +20,7 @@ from scraper import run as scrape
 from extract_tenders import extract
 from analyze_tenders import analyze
 from cppp_adapter import discover_public_listings
+from relevance import precheck_document, qualify_analysis
 
 load_dotenv()
 LOG = logging.getLogger("marketing_agent.pipeline")
@@ -125,13 +126,28 @@ def execute(
         analysis_result = {"results": []}
 
     opportunities = []
+    review_records = []
+    excluded_records = []
+    extracted_by_sha = {d.get("sha256"): d for d in extracted_result.get("documents", [])}
+    extracted_by_url = {d.get("document_url"): d for d in extracted_result.get("documents", [])}
     seen: set[str] = set()
     for row in analysis_result.get("results", []):
         facts = row.get("analysis", {})
-        key = str(facts.get("tender_reference") or row.get("sha256") or row.get("document_url")).strip().lower()
+        document = extracted_by_sha.get(row.get("sha256")) or extracted_by_url.get(row.get("document_url")) or {}
+        decision = qualify_analysis(topic, facts, document)
+        key = str(row.get("sha256") or row.get("document_url") or facts.get("tender_reference")).strip().lower()
         if key in seen:
+            excluded_records.append({"document_url": row.get("document_url"), "reason": "Duplicate source document"})
             continue
         seen.add(key)
+        if decision["status"] != "candidate":
+            (review_records if decision["status"] == "review" else excluded_records).append({
+                "document_url": row.get("document_url"),
+                "title": facts.get("tender_title"),
+                "reason": decision["reason"],
+                "document_sha256": row.get("sha256"),
+            })
+            continue
         opportunities.append({
             "topic": topic,
             "title": facts.get("tender_title"),
@@ -153,6 +169,14 @@ def execute(
         })
 
     report('saving', 'Saving results', 97)
+    state["review_records"] = review_records
+    state["excluded_records"] = excluded_records
+    state["qualification_summary"] = {
+        "qualified_candidates": len(opportunities),
+        "needs_review": len(review_records),
+        "excluded": len(excluded_records),
+        "model_analyses": len(analysis_result.get("results", [])),
+    }
     state["opportunities"] = opportunities
     state["opportunity_count"] = len(opportunities)
     state["finished_at"] = datetime.now(timezone.utc).isoformat()
