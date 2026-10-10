@@ -114,7 +114,9 @@ def relevant_documents(page: dict, source_url: str, max_documents: int = 8) -> l
     for row in page.get("linked_urls", []):
         url = row["url"]
         path = urlparse(url).path.lower()
-        if not path.endswith((".pdf", ".docx")):
+        # Portals commonly use /download?id=123 rather than .pdf URLs.
+        dynamic_download = bool(re.search(r"/(?:download|downloadfile|attachment|getdocument)(?:/|$)", path))
+        if not path.endswith((".pdf", ".docx")) and not dynamic_download:
             continue
         link_text = " ".join((url, row.get("anchor_text", ""), row.get("context", "")))
         # Avoid site banners, reports unrelated to the document subject and manuals.
