@@ -467,6 +467,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 /* The overview routes to each specialized screen instead of duplicate record overlays. */
 .rfp-summary{grid-template-columns:repeat(2,minmax(0,1fr));max-width:590px}
 @media(max-width:600px){.rfp-summary{grid-template-columns:1fr 1fr}}
+.intro>.button.primary{display:none}.overview-active .intro>.button.primary{display:inline-flex}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
@@ -498,7 +499,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 </section>
 <section id="view-rfp-intelligence" class="hidden">
  <div class="rfp-intro panel">
-   <div><div class="eyebrow">DISCOVERY / SEARCH SOURCES</div><h2>Web Discovery & Page Inspection</h2><p id="rfp-run-context">Review where the search found URLs and which pages were inspected.</p></div>
+   <div><div class="eyebrow">DISCOVERY / SEARCH SOURCES</div><h2>Source discovery audit</h2><p id="rfp-run-context">Review where the search found URLs and which pages were inspected.</p></div>
    <button class="button primary" onclick="openScan()">＋ Run new search</button>
  </div>
  <div class="rfp-summary" id="rfp-summary"></div>
@@ -662,7 +663,7 @@ function renderRfpWorkspace(){
  const evidence=rfpEvidence(),d=current?.discovery_details||{},raw=data('discovery').unique_candidates||0;
  const names={candidates:'Discovered URLs',pages:'Inspected web pages'};
  const desc={
-  candidates:d.candidate_urls_saved?'These are raw unique search-engine candidates, not verified tenders. Open each source and inspect the underlying evidence.':'This older run did not preserve every candidate URL. Showing saved inspected pages; run a new scan to retain the full list.',
+  candidates:!current?'Select an existing run or start a new scan to inspect discovered source URLs.':d.candidate_urls_saved?'These are raw unique search-engine candidates, not verified tenders. Open each source and inspect the underlying evidence.':'This older run did not preserve every candidate URL. Showing saved inspected pages; run a new scan to retain the full list.',
   pages:'Pages fetched and selected as topic-relevant by the scraper. Relevance is not proof of an active tender.'
  };
  E('rfp-run-context').textContent=(current?.topic||'No run selected')+' · '+(selected||'')+' · evidence is provisional until official verification.';
@@ -682,7 +683,7 @@ function renderRfpEvidence(){
  const q=(E('rfp-search')?.value||'').toLowerCase().trim(),evidence=rfpEvidence();
  const full=evidence[rfpStage]||[],data=full.filter(x=>[x.display_url,x.title,x.tender_reference,x.description,x.classification,...(x.search_queries||[])].join(' ').toLowerCase().includes(q));
  const total=data.length;
- const legacy=rfpStage==='candidates'&&!current?.discovery_details?.candidate_urls_saved;
+ const legacy=Boolean(current)&&rfpStage==='candidates'&&!current?.discovery_details?.candidate_urls_saved;
  let prefix=legacy?'<div class="rfp-hint">Historical run: full search candidates were not saved at the time. These are the inspected pages still available.</div>':'';
  if(!full.length){E('rfp-evidence-list').innerHTML=prefix+'<div class="empty"><h3>No saved records at this stage</h3><p>'+esc((current?.topic||'This run')+' has no records in this category. You can start a new scan or select another run.')+'</p></div>';return}
  prefix+='<p class="rfp-result-count">Showing '+num(Math.min(total,250))+' of '+num(total)+' matching saved records'+(total>250?' (first 250 shown)':'')+'</p>';
