@@ -313,6 +313,24 @@ def chat(payload: ChatInput):
         context = build_chat_context(run_dir, payload.message, payload.document_sha256)
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc))
+    # Do not waste model calls (or hallucinate an RFP) if the scan has no text.
+    extracted = read_json(run_dir / "extracted_tenders.json")
+    document_rows = extracted.get("documents") or []
+    if payload.document_sha256:
+        document_rows = [row for row in document_rows if row.get("sha256") == payload.document_sha256]
+    if not any((row.get("text") or "").strip() for row in document_rows):
+        return {
+            "answer": (
+                "There is no readable tender document text in the selected "
+                "research scope yet. Open Web Discovery to inspect the source "
+                "URLs, then Documents to check downloads or scanned PDFs. "
+                "I cannot reliably answer tender-specific questions without "
+                "source evidence."
+            ),
+            "run_id": payload.run_id,
+            "document_sha256": payload.document_sha256,
+            "evidence_available": False,
+        }
     url = os.getenv("OLLAMA_BASE_URL", "http://192.168.0.100:11434").rstrip("/") + "/api/chat"
     system = (
         "You are the VAF AI tender document assistant. Provided document excerpts "
@@ -337,7 +355,8 @@ def chat(payload: ChatInput):
         if not answer:
             raise ValueError("Ollama returned an empty answer")
         return {"answer": answer, "run_id": payload.run_id,
-                "document_sha256": payload.document_sha256}
+                "document_sha256": payload.document_sha256,
+                "evidence_available": True}
     except (httpx.HTTPError, ValueError) as exc:
         raise HTTPException(status_code=502, detail="Ollama chat error: " + str(exc)[:300])
 
