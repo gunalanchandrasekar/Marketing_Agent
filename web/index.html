@@ -404,64 +404,6 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .loader-progress span,.loader-track div{background:linear-gradient(90deg,var(--vaf-orange),var(--vaf-blue))}
 .loader-percent{color:var(--vaf-navy)}
 
-/* Workflow map: uses the final VAF navy/orange/blue theme. */
-.workflow-intro{padding:26px 28px;background:linear-gradient(120deg,#12224b,#1c4782);color:white}
-.workflow-intro .eyebrow{color:#ffab64}
-.workflow-intro h2{color:white;font-size:clamp(20px,2vw,27px);margin:10px 0}
-.workflow-intro p{color:#d3e1f5;font-size:14px;max-width:800px}
-.wf-strip{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:23px}
-.wf-strip div{background:#ffffff16;border:1px solid #ffffff28;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700}
-.wf-strip span{color:#ffad72}
-.wf-section-head{margin:30px 0 15px}
-.wf-section-head h2{font-size:19px}
-.wf-section-head p{font-size:13px;color:#75839b}
-.workflow-channels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
-.wf-card{background:white;border:1px solid #dfe6f1;border-radius:15px;padding:19px;display:flex;flex-direction:column;gap:9px;min-height:260px}
-.wf-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.wf-number{color:#e97621;font:800 15px var(--font-display)}
-.wf-status{font-size:10px;font-weight:700;background:#edf1f7;color:#6a7890;padding:5px 9px;border-radius:999px;white-space:nowrap}
-.wf-status.live{background:#e7f5fe;color:#196eaa}
-.wf-card h3{font-size:16px;margin:4px 0 0;color:#142749}
-.wf-card p{font-size:13px;color:#526783}
-.wf-meta{font-size:12px;color:#78869c;line-height:1.6}
-.wf-bottom{margin-top:auto;padding-top:10px;border-top:1px solid #e9edf5;display:flex;justify-content:space-between;gap:8px;align-items:center;color:#345878;font-size:12px;font-weight:650}
-.wf-bottom .button{font-size:11px;min-height:32px;padding:6px 9px}
-.workflow-stages{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.wf-stage{display:flex;align-items:flex-start;gap:13px;background:#fff;border:1px solid #e1e6ef;padding:17px;border-radius:13px}
-.wf-stage-number{background:#fff0e6;color:#e46f1e;border-radius:9px;font:800 14px var(--font-display);min-width:33px;height:33px;display:grid;place-items:center}
-.wf-stage h3{font-size:14px;color:#16294e;margin:0 0 6px}
-.wf-stage p{font-size:12px;color:#6b7c95;line-height:1.6}
-.wf-stage .wf-status{margin-left:auto}
-.workflow-evidence{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
-.wf-evidence-card{text-align:left;background:#fff;border:1px solid #dfe6f1;border-radius:13px;padding:17px;cursor:pointer;display:flex;flex-direction:column;gap:6px}
-.wf-evidence-card span{font-size:12px;color:#657893}
-.wf-evidence-card strong{font:800 28px var(--font-display);color:#14244b}
-.wf-evidence-card small{color:#247aa9;font-weight:700}
-.wf-warning{grid-column:1/-1;border:1px solid #f3d6b8;border-radius:11px;background:#fff8ee;padding:15px;color:#855a2e;font-size:13px}
-@media(max-width:1140px){.workflow-channels{grid-template-columns:repeat(2,minmax(0,1fr))}.workflow-stages{grid-template-columns:1fr}}
-@media(max-width:680px){.workflow-channels,.workflow-evidence{grid-template-columns:1fr}.wf-stage{flex-wrap:wrap}.wf-stage .wf-status{margin-left:0}}
-
-.rfp-intro{padding:24px 27px;display:flex;align-items:center;justify-content:space-between;gap:15px}
-.rfp-intro .eyebrow{color:#ea7826}.rfp-intro h2{font-size:22px;margin:9px 0}.rfp-intro p{font-size:13px;color:#61748e}
-.rfp-summary{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:19px 0}
-.rfp-kpi{text-align:left;display:flex;flex-direction:column;gap:4px;background:#fff;border:1px solid #dfe5ef;border-radius:12px;padding:15px;cursor:pointer}
-.rfp-kpi span{font-size:11px;color:#62758e;font-weight:650}.rfp-kpi b{font:800 28px var(--font-display);color:#13254d}
-.rfp-kpi small{font-size:11px;color:#2675af;font-weight:700}
-.rfp-kpi:hover{border-color:#78b7e0}
-.rfp-tabs{display:flex;flex-wrap:wrap;gap:6px;border-bottom:1px solid #dfe8f2;margin:22px 0 15px}
-.rfp-tabs button{border:none;background:none;padding:10px 12px 13px;color:#60728e;font-size:12px;font-weight:650;cursor:pointer;border-bottom:3px solid transparent}
-.rfp-tabs button.active{color:#195e9a;border-bottom-color:#ff791e}
-.rfp-tabs button span{padding:2px 6px;background:#eff2f8;border-radius:7px;margin-left:4px}
-.rfp-data-head{padding:19px 22px;border-bottom:1px solid #e3e8ef;display:flex;align-items:center;justify-content:space-between;gap:15px}
-.rfp-data-head h2{font-size:18px}.rfp-data-head p{font-size:12px;color:#687a94;max-width:600px}.rfp-data-head .input{max-width:310px}
-.rfp-evidence-list{padding:15px 22px}.rfp-result{padding:16px 0;border-bottom:1px solid #e5eaf2;overflow-wrap:anywhere}.rfp-result:last-child{border:0}
-.rfp-result h3{font-size:14px;margin:9px 0 5px;color:#142951}.rfp-result p{font-size:13px;color:#5d718b}
-.rfp-result a{font-size:12px;color:#1468a7}.rfp-result-top{display:flex;gap:8px}.rfp-result-meta,.rfp-query,.rfp-result-count{font-size:12px;color:#6c7e95;margin:7px 0}
-.rfp-hint{background:#fff4e8;border:1px solid #f6d5b4;padding:12px;border-radius:10px;color:#865b31;font-size:12px}
-.rfp-result-actions{margin:12px 0}
-@media(max-width:1100px){.rfp-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
-@media(max-width:720px){.rfp-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.rfp-intro,.rfp-data-head{flex-direction:column;align-items:stretch}.rfp-data-head .input{max-width:none}}
-
 /* W2 Signal Intelligence - VAF brand palette */
 .signal-intro{padding:23px 27px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .signal-intro .eyebrow{color:#e87b22}
@@ -490,6 +432,9 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .signal-footnote{padding:12px;font-size:12px;color:#667993}
 @media(max-width:1120px){.signal-summary{grid-template-columns:repeat(3,minmax(0,1fr))}}
 @media(max-width:740px){.signal-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.signal-intro,.signal-toolbar{flex-direction:column;align-items:stretch}.signal-filters{flex-direction:column}.signal-filters input{min-width:0}}
+/* The overview routes to each specialized screen instead of duplicate record overlays. */
+.rfp-summary{grid-template-columns:repeat(2,minmax(0,1fr));max-width:590px}
+@media(max-width:600px){.rfp-summary{grid-template-columns:1fr 1fr}}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
@@ -556,7 +501,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <section id="view-sources" class="hidden"><div class="sectionbar"><h2>Government issuer & source verification</h2><a class="button" href="https://eprocure.gov.in/eprocure/app?page=FrontEndAdvancedSearch&service=page" target="_blank" rel="noopener noreferrer">Open CPPP search ↗</a></div><div class="notice">This page combines AI-identified government-issued tender records with available CPPP notices. An official issuing authority is not the same as an officially hosted or currently open tender. Verify original documents, updates and corrigenda.</div><div id="source-list"></div></section>
 <section id="view-activity" class="hidden"><div class="panel"><div class="panel-head"><div><h2>Run history</h2><p>Choose an earlier execution to inspect its results</p></div></div><div id="history"></div></div><div class="panel"><div class="panel-head"><h2>Issue diagnostics</h2></div><div id="issue-list"></div></div></section>
 <div class="footer-note">VAF AI · Opportunity Intelligence &nbsp; | &nbsp; Tender records and dates are unverified until confirmed on official sources.</div></main></div>
-<div id="metric-full" class="metric-full hidden"><div class="metric-top"><h2 id="metric-heading">Records</h2><button class="button" onclick="closeMetricDetails()">← Back to overview</button></div><div class="metric-content"><p id="metric-description" class="muted"></p><div class="metric-controls"><input id="metric-search" class="input" placeholder="Filter results by URL, title or status" oninput="renderMetricRecords()"><select id="metric-status" class="input" onchange="renderMetricRecords()"><option value="all">All records</option><option value="official">Official domains only</option><option value="other">Other sources</option></select></div><div id="metric-records"></div></div></div><div id="overlay" class="drawer-backdrop" onclick="if(event.target===this)closeDrawer()"><div class="drawer"><div class="drawer-top"><div class="eyebrow" id="drawer-eyebrow">Tender details</div><button class="close" onclick="closeDrawer()" aria-label="Close details">×</button></div><div id="drawer-content"></div></div></div>
+<div id="overlay" class="drawer-backdrop" onclick="if(event.target===this)closeDrawer()"><div class="drawer"><div class="drawer-top"><div class="eyebrow" id="drawer-eyebrow">Tender details</div><button class="close" onclick="closeDrawer()" aria-label="Close details">×</button></div><div id="drawer-content"></div></div></div>
 
 <button id="chat-fab" class="chat-fab" type="button" aria-expanded="false" onclick="toggleChat()" aria-label="Open VAF document assistant" title="Ask VAF AI">
   <span class="chat-fab-icon">✦</span>
@@ -814,47 +759,6 @@ function openMetricDestination(index){
  navigate(destinations[index]||'overview');
  if(index<=1)setRfpStage(index===0?'candidates':'pages');
 }
-function closeMetricDetails(){E('metric-full').classList.add('hidden')}
-function showMetricDetails(which){
- activeMetric=which;
- const names=['Discovered URLs','Inspected web pages','Extracted tender PDFs','Ollama analyses','Official CPPP matches'];
- E('metric-heading').textContent=names[which];
- E('metric-search').value='';E('metric-status').value='all';
- E('metric-full').classList.remove('hidden');
- renderMetricRecords();
-}
-function officialUrl(url){try{const host=new URL(url).hostname.toLowerCase();return host==='gov.in'||host.endsWith('.gov.in')||host.endsWith('.nic.in')}catch{return false}}
-function metricItems(){
- const discovery=current?.discovery_details||{};
- if(activeMetric===0){
-   if(discovery.candidate_urls_saved)return (discovery.candidates||[]).map(x=>({...x,kind:'Candidate URL'}));
-   return (discovery.pages||[]).map(x=>({...x,kind:'Inspected page (legacy run)'}));
- }
- if(activeMetric===1)return (discovery.pages||[]).map(x=>({...x,kind:'Inspected page'}));
- if(activeMetric===2)return (current?.documents||[]).map(x=>({...x,url:x.document_url,title:x.summary_data?.title||'Tender PDF',kind:'Extracted document'}));
- if(activeMetric===3)return (current?.opportunities||[]).map(x=>({...x,url:x.document_url,kind:'AI analyzed tender'}));
- return (current?.public_listing_candidates||[]).map(x=>({...x,url:x.tender_url||x.official_listing_url,kind:'Public CPPP listing'}));
-}
-function renderMetricRecords(){
- const records=metricItems(),search=E('metric-search').value.trim().toLowerCase(),filter=E('metric-status').value;
- const filtered=records.filter(r=>{
-  const url=r.url||'',isOfficial=officialUrl(url);
-  return (filter==='all'||(filter==='official'&&isOfficial)||(filter==='other'&&!isOfficial)) &&
-   [url,r.title,r.tender_reference,r.classification,r.kind,...(r.search_queries||[])].join(' ').toLowerCase().includes(search);
- });
- const legacy=activeMetric===0&&!current?.discovery_details?.candidate_urls_saved;
- E('metric-description').textContent=filtered.length+' of '+records.length+' saved records displayed. '+(legacy?'This older run did not save every discovered candidate; showing the inspected pages that are available.':'Results shown are from this selected pipeline run.');
- E('metric-records').innerHTML=(legacy?'<div class="metric-note">Older runs did not preserve all search URLs. Run a new scan to see the complete discovered URL list with search queries.</div>':'')+
- (filtered.length?filtered.slice(0,600).map((r,i)=>{
-  const url=link(r.url),official=url&&officialUrl(url);
-  const badge=official?pill('Official government domain','green'):pill('Unverified external source','grey');
-  const kind=esc(r.kind||'Record');
-  const subtitle=esc(r.classification||r.extraction_status||r.tender_reference||'');
-  const query=(r.search_queries||[]).slice(0,3).join(' · ');
-  return '<article class="metric-entry"><div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap">'+pill(kind,'grey')+badge+'</div><h3 style="margin-top:10px">'+esc(r.title||r.tender_reference||r.url||'Record '+(i+1))+'</h3>'+(url?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">'+esc(url)+'</a>':'<p>No public URL saved</p>')+(subtitle?'<p>'+subtitle+'</p>':'')+(query?'<p><b>Found using:</b> '+esc(query)+'</p>':'')+(r.page_count?'<p><b>Pages:</b> '+num(r.page_count)+'</p>':'')+'</article>';
- }).join(''):'<div class="empty">No matching saved records. Try a different filter or new scan.</div>');
-}
-
 function searchWorkspace(){
  const q=E('global-search').value.trim();
  if(!q){E('global-search').focus();return}
