@@ -70,7 +70,15 @@ def queries_for(topic: str) -> list[str]:
         f'site:gov.in {q} tender',
         f'site:nic.in {q} tender',
     ]
-    regional = [f'{q} {state} tender RFP eprocurement'
+    # Prioritize actual IT consultancy work, not merely the presence of a topic.
+    general = [
+        f'{q} software development systems integration government tender',
+        f'{q} API integration digital portal RFP',
+        f'{q} IT services application modernization procurement',
+        f'{q} database cybersecurity cloud implementation tender',
+    ] + general
+    regional = [f'{q} {state} software API portal integration tender RFP'
+
                 for state in (*INDIAN_STATES, *UNION_TERRITORIES)]
     if topic.lower().replace(" ", "") == "pan":
         general += [
