@@ -21,6 +21,7 @@ from urllib.parse import urljoin, urlparse, urldefrag, parse_qsl, urlencode, url
 import httpx
 from bs4 import BeautifulSoup
 from dotenv import load_dotenv
+from relevance import topic_present
 
 load_dotenv()
 LOG = logging.getLogger("marketing_agent")
@@ -68,6 +69,15 @@ def queries_for(topic: str) -> list[str]:
     ]
     regional = [f'{q} {state} tender RFP eprocurement'
                 for state in (*INDIAN_STATES, *UNION_TERRITORIES)]
+    if topic.lower().replace(" ", "") == "pan":
+        general += [
+            '"Permanent Account Number" "request for proposal"',
+            '"PAN card" "tender" government',
+            '"PAN verification" "RFP" India',
+            '"PAN services" procurement',
+            'site:incometax.gov.in PAN procurement',
+            'site:protean-tinpan.com PAN tender',
+        ]
     if topic.lower().replace(" ", "") == "digilocker":
         general += [
             '"DigiLocker" "citizen portal" procurement',
@@ -109,6 +119,8 @@ def topic_match(topic: str, text: str) -> bool:
         return False
     normalized = re.sub(r"[^a-z0-9]+", "", text.lower())
     phrase = "".join(terms)
+    if phrase == "pan":
+        return topic_present("PAN", text)
     return phrase in normalized or (phrase == "digilocker" and "digitallocker" in normalized)
 
 
