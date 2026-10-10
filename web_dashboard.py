@@ -421,7 +421,7 @@ def chat(payload: ChatInput):
                 match = find_document(run_dir, payload.document_sha256, extracted.get("documents", []))
                 cited_pages = page_evidence(match["path"], payload.message, limit=4)
                 if cited_pages:
-                    context += "\\n\\nPAGE-NUMBERED PDF EXCERPTS (cite these page numbers only if directly supporting the answer):\\n" + "\\n".join(
+                    context += "\n\nPAGE-NUMBERED PDF EXCERPTS (cite these page numbers only if directly supporting the answer):\n" + "\n".join(
                         f"[PDF PAGE {p['page']}] {p['excerpt']}" for p in cited_pages
                     )
             except (ValueError, OSError):
