@@ -59,9 +59,9 @@ def qualify_analysis(topic: str, facts: dict, document: dict) -> dict:
     combined = " ".join(str(x or "") for x in (
         title, scope, facts.get("why_relevant_to_topic"), source_text
     ))
-    if not topic_present(topic, combined):
+    if not topic_present(topic, source_text):
         return {"status": "rejected", "reason": "No source-backed match to searched topic"}
-    if not (PROCUREMENT.search(combined) or facts.get("tender_reference")):
+    if not (PROCUREMENT.search(source_text) or (facts.get("tender_reference") and PROCUREMENT.search(str(title) + " " + str(scope)))):
         return {"status": "review", "reason": "No procurement/tender evidence in document"}
     if not meaningful_title(title):
         return {"status": "review", "reason": "Missing meaningful tender title; retain PDF for review"}
