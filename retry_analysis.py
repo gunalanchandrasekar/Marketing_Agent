@@ -27,6 +27,7 @@ def consolidate(state: dict, analysis: dict) -> dict:
             "deadline_status": facts.get("deadline_status"),
             "scope_summary": facts.get("scope_summary"),
             "technical_requirements": facts.get("technical_requirements", []),
+            "technical_requirements_source": facts.get("technical_requirements_source", "ai_extracted_unverified"),
             "eligibility_requirements": facts.get("eligibility_requirements", []),
             "emd_requirements": facts.get("emd_requirements"),
             "bid_validity": facts.get("bid_validity"),
