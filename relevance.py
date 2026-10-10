@@ -6,6 +6,7 @@ Every exclusion is auditable; document files and raw AI results remain saved.
 from __future__ import annotations
 import re
 from typing import Any
+from it_fit import it_fit
 
 PROCUREMENT = re.compile(
     r"\b(?:tenders?|rfps?|rfqs?|reoi|eoi|rfe|procurement|bidding|bidder|"
@@ -69,4 +70,9 @@ def qualify_analysis(topic: str, facts: dict, document: dict) -> dict:
         return {"status": "review", "reason": "Tender scope not sufficiently extracted"}
     if not topic_present(topic, str(title) + " " + str(scope) + " " + source_text):
         return {"status": "rejected", "reason": "Topic appears only in unsupported AI claim"}
-    return {"status": "candidate", "reason": "Topic and procurement context found in source; official status unverified"}
+    fit = it_fit(title, scope, facts.get("technical_requirements") or [])
+    if fit["status"] == "non_it":
+        return {"status": "rejected", "reason": "Not an IT services opportunity: " + fit["reason"]}
+    if fit["status"] != "it_candidate":
+        return {"status": "review", "reason": "IT relevance not established: " + fit["reason"]}
+    return {"status": "candidate", "reason": "Topic, tender and explicit IT service deliverables found; official status unverified"}
