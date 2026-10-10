@@ -338,7 +338,72 @@ p{font-size:14px;line-height:1.67}
 .vaf-showcase .eyebrow{font-size:10px;letter-spacing:.11em}
 .vaf-showcase p{font-size:14px;line-height:1.7;max-width:460px}
 @media(max-width:600px){.vaf-showcase h2{font-size:25px;line-height:1.3;letter-spacing:-.025em}}
-.loader-symbol{width:70px;height:70px;border-radius:21px;margin:0 auto 15px;display:grid;place-items:center;color:#237fa9;background:linear-gradient(140deg,#fff2df 0%,#e5f6ff 100%);border:1px solid #dfebef;box-shadow:0 9px 22px #194b7f0d}.loader-symbol svg{filter:drop-shadow(0 2px 1px #ffffffaa)}</style></head><body>
+.loader-symbol{width:70px;height:70px;border-radius:21px;margin:0 auto 15px;display:grid;place-items:center;color:#237fa9;background:linear-gradient(140deg,#fff2df 0%,#e5f6ff 100%);border:1px solid #dfebef;box-shadow:0 9px 22px #194b7f0d}.loader-symbol svg{filter:drop-shadow(0 2px 1px #ffffffaa)}
+/* Final VAF brand system — consistent across dashboard, detail view, and assistant. */
+:root{
+ --vaf-navy:#101c40;
+ --vaf-navy-soft:#1b315d;
+ --vaf-blue:#2186c0;
+ --vaf-blue-light:#e8f4fc;
+ --vaf-orange:#ff791e;
+ --vaf-orange-soft:#fff0e4;
+ --vaf-canvas:#f3f5fb;
+ --vaf-border:#e0e6f0;
+ --vaf-text:#152247;
+ --vaf-muted:#62738f;
+ --bg:var(--vaf-canvas);
+ --ink:var(--vaf-text);
+ --muted:var(--vaf-muted);
+ --line:var(--vaf-border);
+ --brand:var(--vaf-orange);
+}
+.panel,.smallcard,.record,.metric-entry,.tender-section{border-color:var(--vaf-border)}
+a,.stat-explore{color:#1265a7}
+a:hover,.stat-explore:hover{color:#0c4d88}
+.button.primary,div.stButton>button[kind="primary"]{background:var(--vaf-orange);border-color:var(--vaf-orange);color:white;box-shadow:0 5px 15px #ed7d2030}
+.button.primary:hover{background:#e96510;border-color:#e96510;color:#fff}
+.button:focus-visible,.navbtn:focus-visible,.chat-fab:focus-visible,.chat-suggestions button:focus-visible{outline:3px solid #5fb8ed;outline-offset:3px}
+.badge,.pill{font-weight:700}
+.chat-fab{
+ background:var(--vaf-orange)!important;
+ color:#fff;
+ border:2px solid #fff;
+ box-shadow:0 9px 25px #ff791e43;
+}
+.chat-fab:hover{background:#ed6910!important;transform:translateY(-2px)}
+.chat-fab-icon{background:transparent;color:white}
+.chat-window{background:#fff;border-color:var(--vaf-border);box-shadow:0 18px 55px #101c4029}
+.chat-head{background:var(--vaf-navy)!important;border-bottom:3px solid var(--vaf-orange)}
+.chat-head h3{color:white!important}
+.chat-head p{color:#c4d4ed!important}
+.chat-initial{background:var(--vaf-orange)!important;color:white!important}
+.chat-close{background:#ffffff1a;border-color:#ffffff36;color:white}
+.chat-close:hover{background:#ffffff30}
+.chat-context{background:#f8fbff;border-color:var(--vaf-border)}
+.chat-context label,.chat-model-label{color:#4d6081}
+.chat-context select,.chat-controls select{border-color:#dce4ee;color:var(--vaf-text)}
+.chat-scope-note{color:#2677b3}
+.chat-body{background:#f7f9fd}
+.chat-msg.bot{background:#fff0e4;color:#654223}
+.chat-msg.user{background:#e8f3fe;color:var(--vaf-navy)}
+.chat-suggestions button{color:#164a7a;border:1px solid #cbdff1;background:#fff}
+.chat-suggestions button:hover{background:var(--vaf-blue-light);border-color:#78bce4}
+.chat-controls{background:#fff;border-color:var(--vaf-border)}
+.chat-compose:focus-within{border-color:var(--vaf-blue);box-shadow:0 0 0 3px #2186c01c}
+.chat-compose button{background:var(--vaf-orange)!important;box-shadow:none}
+.chat-compose button:hover:not(:disabled){background:#e96510!important}
+.chat-foot #chat-state{color:#245c92}
+.tender-fullscreen .drawer-top{border-color:var(--vaf-border)}
+.tender-fullscreen .detail{border-color:var(--vaf-border)}
+.tender-fullscreen .drawer-top .close{background:var(--vaf-blue-light);color:#124777}
+.metric-top{background:#fff;border-color:var(--vaf-border)}
+.metric-note{background:var(--vaf-orange-soft);border-color:#fed1b5;color:#915116}
+.loader-box{border:1px solid #ecf0f6}
+.loader-symbol{color:var(--vaf-blue);background:var(--vaf-blue-light);border-color:#d6e9f6}
+.loader-spinner{border-top-color:var(--vaf-orange);border-right-color:var(--vaf-blue)}
+.loader-progress span,.loader-track div{background:linear-gradient(90deg,var(--vaf-orange),var(--vaf-blue))}
+.loader-percent{color:var(--vaf-navy)}
+</style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
