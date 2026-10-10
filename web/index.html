@@ -186,6 +186,20 @@ body.tender-view-open .chat-window:not(.hidden){right:0;top:0;bottom:0;width:390
 .metric-entry p{font-size:13px;margin:5px 0}
 .metric-entry a{font-size:13px;word-break:break-word}
 .metric-note{background:#fff5df;border:1px solid #eedbb7;color:#8b6224;padding:11px 15px;border-radius:10px;font-size:13px;max-width:1100px;margin-bottom:18px}
+
+/* Keep the workspace navigation visible while scrolling dashboard content. */
+.topbar{
+  position:sticky;
+  top:0;
+  z-index:15;
+  background:rgba(247,250,252,.96);
+  backdrop-filter:blur(12px);
+  -webkit-backdrop-filter:blur(12px);
+  border-bottom:1px solid #dfe8ee;
+  box-shadow:0 5px 16px rgba(35,78,112,.045);
+}
+.metric-top{position:sticky;top:0;z-index:2}
+.chat-window .chat-head{position:sticky;top:0;z-index:2}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
