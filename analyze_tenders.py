@@ -16,6 +16,7 @@ from pathlib import Path
 
 import httpx
 from dotenv import load_dotenv
+from technical_requirements import extract_technical_requirements
 
 load_dotenv()
 
@@ -75,6 +76,12 @@ def select_context(text: str, topic: str, max_chars: int = MAX_CONTEXT) -> str:
         r"technical\s+evaluation",
         r"bid\s+security\s*/\s*emd",
         r"scope\s+of\s+work",
+        r"technical\s+(?:requirements?|specifications?)",
+        r"functional\s+(?:requirements?|specifications?)",
+        r"system\s+requirements?",
+        r"deliverables?",
+        r"integration\s+with",
+        r"implementation\s+scope",
         r"AI\s+agents\s+for\s+Government",
         r"no\s+earnest\s+money\s+deposit",
         re.escape(topic),
@@ -112,9 +119,12 @@ Use null for missing scalar facts and [] for missing list facts.
 technical_requirements, eligibility_requirements, important_caveats are arrays of strings.
 emd_requirements, bid_validity, rate_card_acceptance are short factual strings or null.
 For publication_date prefer the activity table's 'Release of RFE' date.
-Technical requirements must reference actual work such as OCR, AI agents,
-LLM inference, RAG and MLOps when present; do not leave the array empty
-if those sections are supplied.
+Technical requirements must be concrete obligations explicitly written in the
+source document, extracted from Scope of Work, Technical/Functional
+Specifications, Deliverables or Implementation sections. Do NOT add OCR,
+AI, cloud, RAG or any other technology unless the source supports it.
+Do not leave the array empty if relevant requirements are supplied.
+For technical requirements include supporting verbatim quotes in evidence.
 Do not describe an RFE for AI/ML resource empanelment as a direct
 DigiLocker-only API integration tender.
 scope_summary and why_relevant_to_topic are brief strings.
@@ -227,6 +237,15 @@ def analyze(input_path: Path, output_path: Path, model: str, base_url: str, time
         try:
             facts = ollama_analyze(item["text"], source.get("topic") or "", model, base_url, timeout)
             facts["eligibility_requirements"], facts["rejected_eligibility_items"] = clean_eligibility(facts.get("eligibility_requirements"))
+            raw_technical = facts.get("technical_requirements")
+            clean_technical = [x.strip() for x in raw_technical if isinstance(x, str) and x.strip()] if isinstance(raw_technical, list) else []
+            if clean_technical:
+                facts["technical_requirements"] = clean_technical
+                facts["technical_requirements_source"] = "ai_extracted_unverified"
+            else:
+                recovered = extract_technical_requirements(item["text"])
+                facts["technical_requirements"] = recovered
+                facts["technical_requirements_source"] = "verbatim_document_fallback" if recovered else "not_found_in_extracted_text"
             facts["deadline_status"] = deadline_status(facts.get("submission_deadline"))
             facts["evidence_validation"] = validate_evidence(facts.get("evidence"), item["text"])
             results.append({
