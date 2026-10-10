@@ -36,7 +36,7 @@ def topic_present(topic: str, text: str) -> bool:
     if not terms:
         return False
     # Multiple-word topic may have different whitespace/punctuation.
-    expression = r"\b" + r"[\W_]*".join(map(re.escape, terms)) + r"\b"
+    expression = r"\b" + r"[\W_]*".join(map(re.escape, terms)) + r"(?:s|es)?\b"
     return bool(re.search(expression, text, re.I))
 
 def meaningful_title(value: Any) -> bool:
