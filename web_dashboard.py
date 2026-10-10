@@ -24,6 +24,7 @@ from retry_analysis import retry
 from cleanup_data import cleanup
 from chat_context import build_chat_context
 from technical_requirements import extract_technical_requirements
+from relevance import qualify_analysis
 
 BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
@@ -163,6 +164,40 @@ def run_detail(run_dir: Path) -> dict:
             "publication_date": opportunity.get("publication_date"),
             "why_relevant_to_topic": opportunity.get("why_relevant_to_topic"),
         })
+    # Apply the same evidence gate to historical runs, including the user's
+    # already-saved PAN scan. Do not rewrite or delete old pipeline artifacts.
+    visible = []
+    review = list(result.get("review_records") or [])
+    excluded = list(result.get("excluded_records") or [])
+    for opportunity in result.get("opportunities", []):
+        document_text = (
+            extracted_by_hash.get(opportunity.get("document_sha256"))
+            or extracted_by_url.get(opportunity.get("document_url"))
+            or ""
+        )
+        verdict = qualify_analysis(result.get("topic", ""), {
+            "tender_title": opportunity.get("title"),
+            "scope_summary": opportunity.get("scope_summary"),
+            "tender_reference": opportunity.get("tender_reference"),
+            "why_relevant_to_topic": opportunity.get("why_relevant_to_topic"),
+        }, {"text": document_text})
+        if verdict["status"] == "candidate":
+            visible.append(opportunity)
+        else:
+            (review if verdict["status"] == "review" else excluded).append({
+                "title": opportunity.get("title"),
+                "document_url": opportunity.get("document_url"),
+                "reason": verdict["reason"],
+            })
+    result["opportunities"] = visible
+    result["review_records"] = review
+    result["excluded_records"] = excluded
+    result["qualification_summary"] = {
+        "qualified_candidates": len(visible),
+        "needs_review": len(review),
+        "excluded": len(excluded),
+        "model_analyses": (result.get("steps", {}).get("analysis") or {}).get("documents_analyzed", 0),
+    }
     docs = []
     for item in extract_data.get("documents", []):
         key = item.get("sha256") or item.get("document_url")
