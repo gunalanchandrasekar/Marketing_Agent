@@ -73,3 +73,58 @@ def test_tender_view_chat_requires_exact_document_binding():
     assert "documentSha!==activeTenderSha" in page
     assert "Opened tender has no matching extracted PDF" in page
     assert "setActiveTender(o)" in page
+
+
+def test_chat_selected_pdf_is_only_context_sent_to_ollama(monkeypatch, tmp_path):
+    run_id = "20261010T071000000000Z"
+    run = tmp_path / "digilocker" / run_id
+    run.mkdir(parents=True)
+    (run / "opportunities.json").write_text(json.dumps({"topic": "DigiLocker", "run_id": run_id, "opportunities": []}))
+    (run / "extracted_tenders.json").write_text(json.dumps({
+        "documents": [
+            {"sha256": "alpha", "document_url": "https://example.gov.in/alpha.pdf",
+             "text": "Tender A requires DigiLocker integration with the citizen portal."},
+            {"sha256": "beta", "document_url": "https://example.gov.in/beta.pdf",
+             "text": "Tender B requires purchasing agricultural tractors."},
+        ],
+    }))
+    monkeypatch.setattr(web_dashboard, "RUNS", tmp_path)
+    captured = {}
+    class Response:
+        def raise_for_status(self): pass
+        def json(self): return {"message": {"content": "DigiLocker integration is required."}}
+    def fake_post(url, json, **kwargs):
+        captured["request"] = json
+        return Response()
+    monkeypatch.setattr(web_dashboard.httpx, "post", fake_post)
+    res = TestClient(web_dashboard.app).post("/api/chat", json={
+        "run_id": run_id, "message": "What must we integrate?",
+        "document_sha256": "alpha", "model": "qwen3:30b",
+    })
+    assert res.status_code == 200
+    source = captured["request"]["messages"][1]["content"]
+    assert "DigiLocker integration" in source
+    assert "agricultural tractors" not in source
+    assert res.json()["document_sha256"] == "alpha"
+
+
+def test_ollama_connection_failure_has_actionable_error(monkeypatch, tmp_path):
+    import httpx
+    run_id = "20261010T071000000001Z"
+    run = tmp_path / "digilocker" / run_id
+    run.mkdir(parents=True)
+    (run / "opportunities.json").write_text(json.dumps({"topic": "DigiLocker", "run_id": run_id, "opportunities": []}))
+    (run / "extracted_tenders.json").write_text(json.dumps({
+        "documents": [{"sha256": "alpha", "text": "RFP for DigiLocker API integration portal."}],
+    }))
+    monkeypatch.setattr(web_dashboard, "RUNS", tmp_path)
+    def fail(url, **kwargs):
+        request = httpx.Request("POST", url)
+        raise httpx.ConnectError("connection failed", request=request)
+    monkeypatch.setattr(web_dashboard.httpx, "post", fail)
+    res = TestClient(web_dashboard.app).post("/api/chat", json={
+        "run_id": run_id, "message": "Summarize technical requirements",
+        "document_sha256": "alpha", "model": "qwen3:30b",
+    })
+    assert res.status_code == 503
+    assert "OLLAMA_BASE_URL" in res.json()["detail"]
