@@ -439,6 +439,10 @@ def chat(payload: ChatInput):
         "using only the extracted run context. If evidence is unavailable, say so. "
         "Distinguish historical original deadlines from verified current tender status. "
         "Never claim a tender is currently open without official confirmation. "
+        "You are assisting an IT company. Emphasize software, API, cloud, data, security, "
+        "integration and implementation requirements where supported; distinguish unrelated "
+        "physical supply or civil work. Do not claim VAF meets eligibility unless verified. "
+        "When a single document is selected, never use details from any other tender. "
         "Provide a concise useful answer and identify the document URL when possible. "
         "When page-numbered PDF evidence is present, cite the matching PDF page number. "
         "Do not invent page references."
@@ -454,14 +458,31 @@ def chat(payload: ChatInput):
             ],
         }, timeout=httpx.Timeout(300, connect=10))
         response.raise_for_status()
-        answer = response.json().get("message", {}).get("content", "").strip()
+        payload_data = response.json()
+        answer = str((payload_data.get("message") or {}).get("content") or "").strip()
         if not answer:
             raise ValueError("Ollama returned an empty answer")
         return {"answer": answer, "run_id": payload.run_id,
                 "document_sha256": payload.document_sha256,
                 "source_pages": cited_pages}
-    except (httpx.HTTPError, ValueError) as exc:
-        raise HTTPException(status_code=502, detail="Ollama chat error: " + str(exc)[:300])
+    except httpx.TimeoutException:
+        raise HTTPException(
+            status_code=504,
+            detail=f"Ollama model '{payload.model}' timed out. Try the benchmark-recommended model or a shorter question; the selected PDF remains available."
+        )
+    except httpx.ConnectError:
+        raise HTTPException(
+            status_code=503,
+            detail="Cannot reach the local Ollama server. Check OLLAMA_BASE_URL and that Ollama is running."
+        )
+    except httpx.HTTPStatusError as exc:
+        code = exc.response.status_code
+        raise HTTPException(
+            status_code=502,
+            detail=f"Ollama returned HTTP {code} for model '{payload.model}'. Check that this model is installed and loaded."
+        )
+    except (httpx.HTTPError, ValueError, KeyError) as exc:
+        raise HTTPException(status_code=502, detail="Ollama could not produce a valid answer: " + str(exc)[:240])
 
 
 @app.get("/api/jobs/{job_id}")
