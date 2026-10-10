@@ -23,6 +23,7 @@ from run_pipeline import execute, safe_topic
 from retry_analysis import retry
 from cleanup_data import cleanup
 from chat_context import build_chat_context
+from technical_requirements import extract_technical_requirements
 
 BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
@@ -127,7 +128,32 @@ def run_detail(run_dir: Path) -> dict:
                 "publication_date": facts.get("publication_date"),
                 "why_relevant_to_topic": facts.get("why_relevant_to_topic"),
             }
+    # Backfill missing technical requirements from already extracted PDF text
+    # without downloading anything or altering the saved analysis.
+    extracted_by_hash = {
+        doc.get("sha256"): doc.get("text", "")
+        for doc in extract_data.get("documents", [])
+        if doc.get("sha256")
+    }
+    extracted_by_url = {
+        doc.get("document_url"): doc.get("text", "")
+        for doc in extract_data.get("documents", [])
+        if doc.get("document_url")
+    }
     for opportunity in result.get("opportunities", []):
+        if not opportunity.get("technical_requirements"):
+            source_text = (
+                extracted_by_hash.get(opportunity.get("document_sha256"))
+                or extracted_by_url.get(opportunity.get("document_url"))
+                or ""
+            )
+            recovered = extract_technical_requirements(source_text)
+            opportunity["technical_requirements"] = recovered
+            opportunity["technical_requirements_source"] = (
+                "verbatim_document_fallback" if recovered else "not_found_in_extracted_text"
+            )
+        else:
+            opportunity.setdefault("technical_requirements_source", "ai_extracted_unverified")
         key = opportunity.get("document_sha256") or opportunity.get("document_url")
         summaries.setdefault(key, {
             "title": opportunity.get("title"),
