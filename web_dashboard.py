@@ -26,6 +26,7 @@ from chat_context import build_chat_context
 from technical_requirements import extract_technical_requirements
 from relevance import qualify_analysis
 from document_review import find_document, page_evidence
+from link_inspector import inspect_links, load_inspection, validate_public_url
 
 BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
@@ -257,6 +258,12 @@ class ScanInput(BaseModel):
     max_documents: int = Field(default=10, ge=1, le=12)
 
 
+class LinkInspectInput(BaseModel):
+    urls: list[str] = Field(min_length=1, max_length=5)
+    model: str | None = Field(default=None, max_length=100)
+    max_documents: int = Field(default=8, ge=1, le=12)
+
+
 class RetryInput(BaseModel):
     model: str = Field(default="qwen3:30b", min_length=2, max_length=100)
     timeout: int = Field(default=1200, ge=60, le=3600)
@@ -349,6 +356,72 @@ def runs():
 @app.get("/api/runs/{run_id}")
 def details(run_id: str):
     return run_detail(get_run_dir(run_id))
+
+
+@app.post("/api/links/inspect")
+def inspect_user_links(params: LinkInspectInput):
+    for address in params.urls:
+        try:
+            validate_public_url(address)
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc))
+    def action(progress):
+        result = inspect_links(
+            params.urls, BASE / "data" / "link_inspections",
+            model=params.model,
+            ollama_url=os.getenv("OLLAMA_BASE_URL", "http://192.168.0.100:11434"),
+            max_documents=params.max_documents, progress=progress,
+        )
+        return {"inspection_id": result["id"], "sources": len(result["sources"]),
+                "documents": len(result["documents"]),
+                "needs_attention": bool(result["issues"])}
+    return start_job("link_inspection", action)
+
+
+@app.get("/api/links/history")
+def link_inspection_history():
+    root = BASE / "data" / "link_inspections"
+    results = []
+    for path in sorted(root.glob("*/inspection.json"), reverse=True)[:50]:
+        try:
+            item = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        results.append({
+            "id": item.get("id"), "created_at": item.get("created_at"),
+            "sources": len(item.get("sources") or []),
+            "documents": len(item.get("documents") or []),
+            "title": (item.get("sources") or [{}])[0].get("title") or (item.get("urls") or ["Link inspection"])[0],
+        })
+    return {"inspections": results}
+
+
+@app.get("/api/links/{inspection_id}")
+def link_inspection_details(inspection_id: str):
+    try:
+        result = load_inspection(BASE / "data" / "link_inspections", inspection_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    for item in result.get("documents", []):
+        item.pop("text", None)
+        item.pop("path", None)
+    return result
+
+
+@app.get("/api/links/{inspection_id}/pdf/{sha256}")
+def inspected_link_pdf(inspection_id: str, sha256: str):
+    from document_review import find_document
+    try:
+        result = load_inspection(BASE / "data" / "link_inspections", inspection_id)
+        directory = BASE / "data" / "link_inspections" / inspection_id
+        match = find_document(directory, sha256, [
+            {"sha256": doc.get("sha256"), "local_path": doc.get("path")}
+            for doc in result.get("documents", [])
+        ])
+    except (ValueError, OSError) as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
+    return FileResponse(match["path"], media_type="application/pdf",
+                        headers={"Content-Disposition": "inline"})
 
 
 @app.post("/api/scans")
