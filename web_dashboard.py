@@ -178,8 +178,8 @@ def run_detail(run_dir: Path) -> dict:
 class ScanInput(BaseModel):
     topic: str = Field(min_length=2, max_length=120)
     model: str = Field(default="qwen3:30b", min_length=2, max_length=100)
-    max_pages: int = Field(default=20, ge=1, le=60)
-    max_documents: int = Field(default=5, ge=1, le=12)
+    max_pages: int = Field(default=40, ge=1, le=60)
+    max_documents: int = Field(default=10, ge=1, le=12)
 
 
 class RetryInput(BaseModel):
@@ -255,6 +255,7 @@ def scan(params: ScanInput):
             topic, RUNS, model=params.model,
             ollama_url=os.getenv("OLLAMA_BASE_URL", "http://192.168.0.100:11434"),
             max_pages=params.max_pages, max_documents=params.max_documents, timeout=1200,
+            searxng=os.getenv("SEARXNG_URL") or None,
             progress=progress,
         )
         return {"run_id": result["run_id"], "opportunities": result["opportunity_count"], "needs_attention": result.get("run_status") == "needs_attention"}
