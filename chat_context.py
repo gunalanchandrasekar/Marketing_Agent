@@ -22,6 +22,16 @@ def relevant_passages(text: str, question: str, limit: int = 15000) -> str:
         "the", "what", "which", "that", "this", "tell", "about", "with", "from",
         "please", "document", "tender", "have", "does", "summarize"
     }
+    lower_question = question.lower()
+    if any(phrase in lower_question for phrase in (
+        "technical", "specification", "architecture", "scope", "deliverable",
+        "integration", "software", "api", "functional requirement"
+    )):
+        tokens.update({
+            "scope", "work", "technical", "functional", "specification",
+            "requirements", "deliverable", "integrate", "integration",
+            "software", "system", "service", "implementation"
+        })
     chunks = [text[i:i+1800] for i in range(0, len(text), 1800)]
     scored = sorted(enumerate(chunks), key=lambda row: (
         -sum(row[1].lower().count(token) for token in tokens), row[0]
