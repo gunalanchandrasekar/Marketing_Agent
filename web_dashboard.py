@@ -21,7 +21,7 @@ from pydantic import BaseModel, Field
 
 from run_pipeline import execute, safe_topic
 from retry_analysis import retry
-from cleanup_data import cleanup
+from cleanup_data import cleanup, archive_topic
 from chat_context import build_chat_context
 from technical_requirements import extract_technical_requirements
 from relevance import qualify_analysis
@@ -342,6 +342,26 @@ def retry_run(run_id: str, params: RetryInput):
         progress("saving", "Updated analysis results", 95)
         return {"run_id": run_id, "opportunities": result["opportunity_count"], "needs_attention": any(x.get("stage") == "analysis" for x in result.get("issues", []))}
     return start_job("retry", action)
+
+
+class TopicArchiveInput(BaseModel):
+    topic: str = Field(min_length=2, max_length=120)
+    confirm_topic: str | None = None
+
+
+@app.post("/api/data/topic/preview")
+def preview_topic_archive(params: TopicArchiveInput):
+    return archive_topic(BASE / "data", params.topic, confirm=False)
+
+
+@app.post("/api/data/topic/archive")
+def archive_topic_runs(params: TopicArchiveInput):
+    if params.confirm_topic != params.topic:
+        raise HTTPException(status_code=400, detail="Type the exact topic name to confirm")
+    with jobs_lock:
+        if any(job["status"] in ("queued", "running") for job in jobs.values()):
+            raise HTTPException(status_code=409, detail="Wait for running scans to finish")
+    return archive_topic(BASE / "data", params.topic, confirm=True)
 
 
 @app.post("/api/data/cleanup")
