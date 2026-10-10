@@ -136,6 +136,23 @@ def relevant_documents(page: dict, source_url: str, max_documents: int = 8) -> l
     return sorted(candidates, key=lambda x: -x["score"])[:max_documents]
 
 
+def relevant_detail_pages(page: dict, parent_url: str, limit: int = 4) -> list[dict]:
+    """Follow a few specifically relevant notice/detail links, never arbitrary site navigation."""
+    origin = urlparse(parent_url).hostname
+    results = []
+    for link in page.get("linked_urls", []):
+        target = link.get("url", "")
+        parsed = urlparse(target)
+        if parsed.hostname != origin or parsed.path.lower().endswith((".pdf", ".doc", ".docx")):
+            continue
+        label = " ".join([link.get("anchor_text", ""), link.get("context", ""), parsed.path])
+        if re.search(r"(?i)\b(?:tender detail|tender notice|rfp|rfq|eoi|view tender|bid notice|procurement notice|download tender documents)\b", label):
+            results.append(link)
+        if len(results) >= limit:
+            break
+    return results
+
+
 def save_pdf(content: bytes, uri: str, folder: Path) -> dict:
     if not content.lstrip().startswith(b"%PDF-"):
         raise ValueError("This document link did not return a valid PDF")
@@ -186,6 +203,25 @@ def inspect_links(
                                   "description": page["description"], "text": page["text"][:12000],
                                   "linked_urls": page["linked_urls"]}
                         attachments = relevant_documents(page, resolved, max_documents)
+                        # A tender list often links to individual notice pages that
+                        # themselves hold the RFP download button.
+                        child_pages = []
+                        for detail in relevant_detail_pages(page, resolved):
+                            try:
+                                child_content, child_url, child_type = public_get(client, detail["url"])
+                                if "html" not in child_type and b"<html" not in child_content[:200].lower():
+                                    continue
+                                child = parse_source(child_url, child_content)
+                                child_pages.append({
+                                    "url": child_url, "title": child["title"],
+                                    "description": child["description"],
+                                    "text": child["text"][:6000],
+                                })
+                                attachments.extend(relevant_documents(child, child_url, max_documents))
+                            except Exception as child_exc:
+                                result["issues"].append({"stage": "linked_page", "url": detail["url"],
+                                                        "error": str(child_exc)[:250]})
+                        source["related_detail_pages"] = child_pages
                     else:
                         source = {"url": address, "resolved_url": resolved, "kind": "Other",
                                   "title": resolved, "description": "", "text": content.decode("utf-8", "replace")[:12000],
