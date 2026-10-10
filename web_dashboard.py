@@ -23,6 +23,7 @@ from run_pipeline import execute, safe_topic
 from retry_analysis import retry
 from cleanup_data import cleanup
 from chat_context import build_chat_context
+from signal_store import generate as build_signals
 
 BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
@@ -169,6 +170,14 @@ def run_detail(run_dir: Path) -> dict:
         "errors": discovery.get("errors", []),
     }
     listing = read_json(run_dir / "cppp_public_listings.json")
+    try:
+        # Build on demand for older runs without rerunning the scraper or model.
+        signal_data = read_json(run_dir / "signals.json")
+        if not signal_data or (run_dir / "results.json").stat().st_mtime > (run_dir / "signals.json").stat().st_mtime:
+            signal_data = build_signals(run_dir)
+        result["signal_intelligence"] = signal_data
+    except (OSError, ValueError) as exc:
+        result["signal_intelligence"] = {"total": 0, "counts": {}, "signals": [], "error": str(exc)}
     result["documents"] = docs
     result["public_listing_candidates"] = listing.get("matches", result.get("public_listing_candidates", []))
     result["government_source_records"] = government_source_records(result, result["public_listing_candidates"])
