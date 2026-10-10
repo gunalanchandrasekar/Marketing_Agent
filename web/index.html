@@ -493,7 +493,6 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
-<button class="navbtn" data-page="workflow" onclick="navigate('workflow')">◇ &nbsp; Workflow Map</button>
 <button class="navbtn" data-page="rfp-intelligence" onclick="navigate('rfp-intelligence')">▤ &nbsp; RFP Intelligence</button>
 <button class="navbtn" data-page="signals" onclick="navigate('signals')">◉ &nbsp; Signal Intelligence</button>
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
@@ -506,18 +505,6 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <div class="intro"><div><div class="eyebrow">Opportunity discovery platform</div><h1 id="page-title">Intelligence Overview</h1><p class="subtitle" id="page-subtitle">Understand your latest tender research and discover the next opportunity.</p></div><button class="button primary" onclick="openScan()">＋ &nbsp; New intelligence scan</button></div>
 <div id="job-state" class="job hidden"></div>
 <div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear old generated runs</button></div>
-<section id="view-workflow" class="hidden">
- <div class="workflow-intro panel"><div class="eyebrow">VAF AI / END-TO-END INTELLIGENCE</div>
- <h2>From market signals to sales-ready opportunities</h2>
- <p>Five discovery channels feed one evidence store. AI correlates signals, qualifies prospects and prepares dossiers for human review.</p>
- <div class="wf-strip"><div>Discover</div><span>→</span><div>Normalize</div><span>→</span><div>Analyze</div><span>→</span><div>Correlate</div><span>→</span><div>Score</div><span>→</span><div>Review</div></div></div>
- <div class="wf-section-head"><h2>Lead mining channels</h2><p>Capabilities and readiness reflect what the current repository actually supports.</p></div>
- <div id="workflow-channels" class="workflow-channels"></div>
- <div class="wf-section-head"><h2>Intelligence & execution</h2><p>Stages required to turn collected source signals into CRM-ready actions.</p></div>
- <div id="workflow-stages" class="workflow-stages"></div>
- <div class="wf-section-head"><h2>Selected run — evidence summary</h2><p>Grounded metrics from your selected search rather than wireframe examples.</p></div>
- <div id="workflow-evidence" class="workflow-evidence"></div>
-</section>
 <section id="view-signals" class="hidden">
  <div class="signal-intro panel">
   <div><div class="eyebrow">W2 / EVIDENCE-BASED DISCOVERY</div><h2>Signal Intelligence</h2><p>Normalize, deduplicate and explain every saved source candidate before AI lead qualification.</p></div>
@@ -534,17 +521,14 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 </section>
 <section id="view-rfp-intelligence" class="hidden">
  <div class="rfp-intro panel">
-   <div><div class="eyebrow">LEAD MINING / CHANNEL 01</div><h2>RFP & Public Bid Intelligence</h2><p id="rfp-run-context">Choose a scan to inspect its evidence from discovery through AI analysis.</p></div>
+   <div><div class="eyebrow">DISCOVERY / SEARCH SOURCES</div><h2>Web Discovery & Page Inspection</h2><p id="rfp-run-context">Review where the search found URLs and which pages were inspected.</p></div>
    <button class="button primary" onclick="openScan()">＋ Run new search</button>
  </div>
  <div class="rfp-summary" id="rfp-summary"></div>
  <div class="rfp-tabs" role="group" aria-label="RFP evidence stages">
    <button type="button" data-rfp-stage="candidates" onclick="setRfpStage('candidates')">Discovered URLs <span id="rfp-count-candidates">0</span></button>
    <button type="button" data-rfp-stage="pages" onclick="setRfpStage('pages')">Inspected pages <span id="rfp-count-pages">0</span></button>
-   <button type="button" data-rfp-stage="documents" onclick="setRfpStage('documents')">Documents <span id="rfp-count-documents">0</span></button>
-   <button type="button" data-rfp-stage="analyses" onclick="setRfpStage('analyses')">AI analyses <span id="rfp-count-analyses">0</span></button>
-   <button type="button" data-rfp-stage="official" onclick="setRfpStage('official')">Government sources <span id="rfp-count-official">0</span></button>
- </div>
+    </div>
  <div class="panel rfp-data-panel">
    <div class="rfp-data-head"><div><h2 id="rfp-stage-title">Discovered URLs</h2><p id="rfp-stage-description"></p></div><input class="input" type="search" id="rfp-search" placeholder="Filter URLs, titles or references" aria-label="Filter research data" oninput="renderRfpEvidence()"></div>
    <div id="rfp-evidence-list" class="rfp-evidence-list"></div>
@@ -628,8 +612,8 @@ async function loadModels(){try{let r=await api('/api/models');availableModels=r
 function modelSelect(name='model'){let opts=availableModels.filter(m=>!m.includes(':cloud'));return opts.length?'<select class="input" name="'+name+'">'+opts.map(m=>'<option value="'+esc(m)+'" '+(m==='qwen3:30b'?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select>':'<input class="input" name="'+name+'" value="qwen3:30b" placeholder="Ollama model" />'}
 async function refresh(prefer){try{const previousRun=selected;const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' records</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;if(previousRun!==selected){activeTenderSha=null;activeTenderTitle=''}render();updateChatControls()}catch(e){E('health').textContent='Unable to load runs: '+e.message}}
 async function chooseRun(id){selected=id;resetTenderScope();try{current=await api('/api/runs/'+encodeURIComponent(id));render();updateChatControls()}catch(e){alert(e.message)}}
-function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['workflow','rfp-intelligence','signals','overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={signals:['Signal Intelligence','Understand which discovered candidates were accepted, rejected or require review.'],'rfp-intelligence':['RFP Intelligence','Inspect actual DigiLocker or other topic discovery evidence across each pipeline stage.'],workflow:['Intelligence Workflow','Five source channels, AI analysis, lead qualification, and human review.'],overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','Explore scope, eligibility and source-backed procurement research.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
-function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}renderWorkflow();renderRfpWorkspace();renderSignalWorkspace();E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="showMetricDetails('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
+function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['rfp-intelligence','signals','overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={signals:['Signal Intelligence','Understand which discovered candidates were accepted, rejected or require review.'],'rfp-intelligence':['RFP Intelligence','Inspect actual DigiLocker or other topic discovery evidence across each pipeline stage.'],overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','Explore scope, eligibility and source-backed procurement research.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
+function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}renderRfpWorkspace();renderSignalWorkspace();E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="showMetricDetails('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
 ['candidates','pages','documents','analysis','official'].forEach((key,i)=>{
  const n=[data('discovery').unique_candidates,data('discovery').pages_fetched,data('extraction').documents_extracted,data('analysis').documents_analyzed,data('cppp_public_listings').matches][i];
  const el=E('funnel-'+key);if(el)el.textContent=num(n);
@@ -667,16 +651,10 @@ function rfpEvidence(){
  const d=current?.discovery_details||{};
  const c=d.candidates||[];
  const p=d.pages||[];
- const documents=current?.documents||[];
- const analyses=current?.opportunities||[];
- const government=current?.government_source_records||[];
  return {
   candidates: d.candidate_urls_saved ? c.map(x=>({...x,display_url:x.url,kind:'Search candidate'}))
    : p.map(x=>({...x,display_url:x.url,kind:'Inspected page from legacy run'})),
-  pages:p.map(x=>({...x,display_url:x.url,kind:'Inspected page'})),
-  documents:documents.map(x=>({...x,display_url:x.document_url,kind:'Downloaded PDF',title:x.summary_data?.title||x.document_url,description:x.summary_data?.summary||'Summary pending AI analysis'})),
-  analyses:analyses.map(x=>({...x,display_url:x.document_url,kind:'AI-analyzed record',description:x.scope_summary,original_deadline:x.submission_deadline})),
-  official:government.map(x=>({...x,display_url:x.url,kind:x.category,description:x.issuing_authority,original_deadline:x.submission_deadline}))
+  pages:p.map(x=>({...x,display_url:x.url,kind:'Inspected page'}))
  };
 }
 function setRfpStage(stage){
@@ -687,21 +665,18 @@ function setRfpStage(stage){
 function renderRfpWorkspace(){
  if(!E('rfp-evidence-list'))return;
  const evidence=rfpEvidence(),d=current?.discovery_details||{},raw=data('discovery').unique_candidates||0;
- const names={candidates:'Discovered URLs',pages:'Inspected web pages',documents:'Extracted tender documents',analyses:'AI-analyzed tender records',official:'Government-issued and official-source records'};
+ const names={candidates:'Discovered URLs',pages:'Inspected web pages'};
  const desc={
   candidates:d.candidate_urls_saved?'These are raw unique search-engine candidates, not verified tenders. Open each source and inspect the underlying evidence.':'This older run did not preserve every candidate URL. Showing saved inspected pages; run a new scan to retain the full list.',
-  pages:'Pages fetched and selected as topic-relevant by the scraper. Relevance is not proof of an active tender.',
-  documents:'Downloaded PDFs with extraction metadata and any available AI summaries.',
-  analyses:'Structured AI extraction from downloaded documents. Original deadlines are not verified current availability.',
-  official:'Government-issued tenders from analyzed documents, plus CPPP public-page results. A government issuer does not mean the linked file is hosted on an official portal.'
+  pages:'Pages fetched and selected as topic-relevant by the scraper. Relevance is not proof of an active tender.'
  };
  E('rfp-run-context').textContent=(current?.topic||'No run selected')+' · '+(selected||'')+' · evidence is provisional until official verification.';
- const counts={candidates:raw,pages:evidence.pages.length,documents:evidence.documents.length,analyses:evidence.analyses.length,official:evidence.official.length};
+ const counts={candidates:raw,pages:evidence.pages.length};
  for(const key of Object.keys(counts)){
   E('rfp-count-'+key).textContent=num(counts[key]);
  }
  E('rfp-summary').innerHTML=Object.keys(counts).map((key,i)=>
-  '<button class="rfp-kpi" onclick="setRfpStage(\''+key+'\')"><span>'+esc(['Candidate URLs','Relevant pages','Downloaded PDFs','AI analyses','Govt source records'][i])+'</span><b>'+num(counts[key])+'</b><small>Inspect →</small></button>'
+  '<button class="rfp-kpi" onclick="setRfpStage(\''+key+'\')"><span>'+esc(['Candidate URLs','Inspected pages'][i])+'</span><b>'+num(counts[key])+'</b><small>Inspect →</small></button>'
  ).join('');
  document.querySelectorAll('[data-rfp-stage]').forEach(b=>b.classList.toggle('active',b.dataset.rfpStage===rfpStage));
  E('rfp-stage-title').textContent=names[rfpStage];
@@ -720,14 +695,13 @@ function renderRfpEvidence(){
   const rawUrl=item.display_url,url=link(rawUrl),kind=item.kind||'Source',official=url&&officialUrl(url);
   const classification=item.classification||item.extraction_status||item.source_status||'Not classified';
   const qs=(item.search_queries||[]).slice(0,2);
-  const recordIndex=rfpStage==='analyses'?(current?.opportunities||[]).indexOf(item):-1;
   return '<article class="rfp-result"><div class="rfp-result-top">'+pill(kind,'grey')+(official?pill('Government domain','green'):pill('Unverified source','grey'))+'</div>'+
    '<h3>'+esc(item.title||item.tender_reference||rawUrl||'Untitled record')+'</h3>'+
    (item.description?'<p>'+esc(item.description)+'</p>':'')+
    '<div class="rfp-result-meta">'+esc(classification)+(item.original_deadline?' · Original deadline '+fmtDate(item.original_deadline):'')+'</div>'+
    (url?'<a href="'+esc(url)+'" rel="noopener noreferrer" target="_blank">'+esc(url)+'</a>':'<span class="muted">No public URL recorded</span>')+
    (qs.length?'<div class="rfp-query">Discovered with: '+esc(qs.join(' · '))+'</div>':'')+
-   (rfpStage==='analyses' ? '<div class="rfp-result-actions"><button class="button" onclick="openRecord('+((current?.opportunities||[]).findIndex(o=>o.document_url===item.document_url))+')">View tender details →</button></div>':'')+
+   
    '</article>';
  }).join('')||'<div class="empty">No matching records. Try another search.</div>');
 }
@@ -769,40 +743,6 @@ function renderSignalRecords(){
    ((x.search_queries||[]).length?'<p class="signal-record-meta"><b>Search terms:</b> '+esc(x.search_queries.slice(0,3).join(' · '))+'</p>':'')+
    '</article>';
  }).join('')+(selected.length>300?'<p class="signal-footnote">Showing the first 300 matching records. Narrow your search to see more.</p>':''):'<div class="empty"><h3>No matching signals</h3><p>Try another filter or start a new scan.</p></div>';
-}
-
-function renderWorkflow(){
- const channels=[
-  {name:'RFP & Public Bid Listener',description:'Search public procurement sources, download tender documents, extract requirements and identify relevant bids.',state:'Operational · limited coverage',detail:'Web-index discovery and public CPPP homepage adapter. Not an exhaustive state-portal crawl.',target:'rfp-intelligence',count:(current?.discovery_details?.candidates?.length||data('discovery').unique_candidates||0)+' candidate URLs'},
-  {name:'Empanelled Agency Directories',description:'Identify approved vendors, system integrators, partner capabilities and empanelment evidence.',state:'Planned · no adapter yet',detail:'Directory ingestion, entity deduplication and partner mapping are not implemented.',target:null,count:'No collected directory records'},
-  {name:'Developer Portals & Forums',description:'Identify pre-RFP technical demand from developer ecosystems, repositories and API discussion.',state:'Planned · no adapter yet',detail:'GitHub, community forum, Reddit and developer portal connectors are not implemented.',target:null,count:'No collected developer signals'},
-  {name:'Awarded Contract & SI Tracking',description:'Find contract awards and map winning system integrators to downstream implementation opportunities.',state:'Planned · classification only',detail:'Some award notices may be classified; award tracking and SI relationship mapping are not built.',target:null,count:'No verified award pipeline'},
-  {name:'LinkedIn & Corporate Intelligence',description:'Track company announcements, new programmes, hiring and leadership changes.',state:'Planned · no adapter yet',detail:'No corporate-feed ingestion, verified leadership data or LinkedIn integration.',target:null,count:'No collected corporate signals'}
- ];
- const stages=[
-  ['1','Ingestion & normalization','Downloaded source records and PDFs are saved in run folders. A unified cross-channel entity store is not built.',true],
-  ['2','Hybrid AI analysis','A selected local Ollama model extracts tender details. Cloud fallback is not configured.',true],
-  ['3','Evidence validation','Evidence-matching checks and deadline warnings exist; official corrigenda verification remains manual.',true],
-  ['4','Signal correlation','Combine procurement, partner, developer and corporate signals by buyer/project.',false],
-  ['5','Lead qualification · 1–10','Explainable VAF-fit, intent, urgency and freshness scoring after data quality checks.',false],
-  ['6','100 → 10 shortlist','Rank and prioritize high-intent prospects with an auditable qualification explanation.',false],
-  ['7','Opportunity dossier','Unify sources, requirements, buyer, SI route, confidence and next steps.',false],
-  ['8','Human review & CRM action','Approve, reject, assign or watch only after human review; CRM integrations later.',false]
- ];
- E('workflow-channels').innerHTML=channels.map((c,i)=>
-  '<article class="wf-card"><div class="wf-card-top"><span class="wf-number">0'+(i+1)+'</span><span class="wf-status '+(i?'future':'live')+'">'+esc(c.state)+'</span></div><h3>'+esc(c.name)+'</h3><p>'+esc(c.description)+'</p><div class="wf-meta">'+esc(c.detail)+'</div><div class="wf-bottom">'+esc(c.count)+(c.target?'<button class="button" onclick="navigate(\''+c.target+'\')">View real data →</button>':'')+'</div></article>'
- ).join('');
- E('workflow-stages').innerHTML=stages.map(st=>
-  '<article class="wf-stage"><div class="wf-stage-number">'+st[0]+'</div><div><h3>'+esc(st[1])+'</h3><p>'+esc(st[2])+'</p></div><span class="wf-status '+(st[3]?'live':'future')+'">'+(st[3]?'Partial / operational':'Planned')+'</span></article>'
- ).join('');
- const counts=[
-  ['Discovered candidates',data('discovery').unique_candidates||0],
-  ['Inspected pages',data('discovery').pages_fetched||0],
-  ['Documents extracted',data('extraction').documents_extracted||0],
-  ['Analyzed tenders',data('analysis').documents_analyzed||0]
- ];
- E('workflow-evidence').innerHTML=counts.map((x,i)=>'<button class="wf-evidence-card" onclick="navigate(\'overview\');showMetricDetails('+i+')"><span>'+esc(x[0])+'</span><strong>'+num(x[1])+'</strong><small>View source records →</small></button>').join('')+
- '<div class="wf-warning">The wireframe examples (such as 100 → 10 and scores like 8.7) are illustrative targets, not verified results from this scan. Scoring and enrichment will be added after their source adapters and rules are implemented.</div>';
 }
 
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
