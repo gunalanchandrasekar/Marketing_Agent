@@ -86,12 +86,19 @@ def execute(
             "unique_candidates": discovered["unique_candidates"],
             "pages_fetched": discovered["pages_fetched"],
             "documents_downloaded": discovered["documents_downloaded"],
+            "coverage": discovered.get("coverage", {}),
+            "eligible_document_candidates": discovered.get("eligible_document_candidates", 0),
         }
         state["issues"].extend(discovered.get("errors", []))
     except Exception as exc:
         state["issues"].append({"stage": "discovery", "error": str(exc)})
         discovered = {"documents": []}
 
+    if not discovered.get("documents"):
+        state["issues"].append({
+            "stage": "discovery",
+            "error": "No accessible tender PDFs were downloaded. Review search coverage, page links and portal errors; this is NOT evidence that no tender exists.",
+        })
     report('extracting', 'Extracting PDF text', 55)
     try:
         # Extractor reads paths relative to the current working directory.
@@ -153,7 +160,11 @@ def execute(
     LOG.info("Completed: %s opportunities, %s issues. %s", len(opportunities), len(state["issues"]), consolidated)
     extracted_count = state.get("steps", {}).get("extraction", {}).get("documents_extracted", 0)
     analyzed_count = state.get("steps", {}).get("analysis", {}).get("documents_analyzed", 0)
-    if extracted_count > analyzed_count:
+    if not state.get("steps", {}).get("discovery", {}).get("documents_downloaded", 0):
+        state["run_status"] = "needs_attention"
+        state["run_message"] = "No accessible tender documents downloaded; inspect coverage and download diagnostics."
+        report("needs_attention", state["run_message"], 100)
+    elif extracted_count > analyzed_count:
         state["run_status"] = "needs_attention"
         state["run_message"] = f"{extracted_count - analyzed_count} extracted document(s) still require AI analysis."
         report("needs_attention", state["run_message"], 100)
