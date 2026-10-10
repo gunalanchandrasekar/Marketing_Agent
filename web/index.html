@@ -403,9 +403,47 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .loader-spinner{border-top-color:var(--vaf-orange);border-right-color:var(--vaf-blue)}
 .loader-progress span,.loader-track div{background:linear-gradient(90deg,var(--vaf-orange),var(--vaf-blue))}
 .loader-percent{color:var(--vaf-navy)}
+
+/* Workflow map: uses the final VAF navy/orange/blue theme. */
+.workflow-intro{padding:26px 28px;background:linear-gradient(120deg,#12224b,#1c4782);color:white}
+.workflow-intro .eyebrow{color:#ffab64}
+.workflow-intro h2{color:white;font-size:clamp(20px,2vw,27px);margin:10px 0}
+.workflow-intro p{color:#d3e1f5;font-size:14px;max-width:800px}
+.wf-strip{display:flex;align-items:center;flex-wrap:wrap;gap:10px;margin-top:23px}
+.wf-strip div{background:#ffffff16;border:1px solid #ffffff28;border-radius:9px;padding:8px 12px;font-size:12px;font-weight:700}
+.wf-strip span{color:#ffad72}
+.wf-section-head{margin:30px 0 15px}
+.wf-section-head h2{font-size:19px}
+.wf-section-head p{font-size:13px;color:#75839b}
+.workflow-channels{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.wf-card{background:white;border:1px solid #dfe6f1;border-radius:15px;padding:19px;display:flex;flex-direction:column;gap:9px;min-height:260px}
+.wf-card-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.wf-number{color:#e97621;font:800 15px var(--font-display)}
+.wf-status{font-size:10px;font-weight:700;background:#edf1f7;color:#6a7890;padding:5px 9px;border-radius:999px;white-space:nowrap}
+.wf-status.live{background:#e7f5fe;color:#196eaa}
+.wf-card h3{font-size:16px;margin:4px 0 0;color:#142749}
+.wf-card p{font-size:13px;color:#526783}
+.wf-meta{font-size:12px;color:#78869c;line-height:1.6}
+.wf-bottom{margin-top:auto;padding-top:10px;border-top:1px solid #e9edf5;display:flex;justify-content:space-between;gap:8px;align-items:center;color:#345878;font-size:12px;font-weight:650}
+.wf-bottom .button{font-size:11px;min-height:32px;padding:6px 9px}
+.workflow-stages{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wf-stage{display:flex;align-items:flex-start;gap:13px;background:#fff;border:1px solid #e1e6ef;padding:17px;border-radius:13px}
+.wf-stage-number{background:#fff0e6;color:#e46f1e;border-radius:9px;font:800 14px var(--font-display);min-width:33px;height:33px;display:grid;place-items:center}
+.wf-stage h3{font-size:14px;color:#16294e;margin:0 0 6px}
+.wf-stage p{font-size:12px;color:#6b7c95;line-height:1.6}
+.wf-stage .wf-status{margin-left:auto}
+.workflow-evidence{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.wf-evidence-card{text-align:left;background:#fff;border:1px solid #dfe6f1;border-radius:13px;padding:17px;cursor:pointer;display:flex;flex-direction:column;gap:6px}
+.wf-evidence-card span{font-size:12px;color:#657893}
+.wf-evidence-card strong{font:800 28px var(--font-display);color:#14244b}
+.wf-evidence-card small{color:#247aa9;font-weight:700}
+.wf-warning{grid-column:1/-1;border:1px solid #f3d6b8;border-radius:11px;background:#fff8ee;padding:15px;color:#855a2e;font-size:13px}
+@media(max-width:1140px){.workflow-channels{grid-template-columns:repeat(2,minmax(0,1fr))}.workflow-stages{grid-template-columns:1fr}}
+@media(max-width:680px){.workflow-channels,.workflow-evidence{grid-template-columns:1fr}.wf-stage{flex-wrap:wrap}.wf-stage .wf-status{margin-left:0}}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
+<button class="navbtn" data-page="workflow" onclick="navigate('workflow')">◇ &nbsp; Workflow Map</button>
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
 <button class="navbtn" data-page="opportunities" onclick="navigate('opportunities')">◈ &nbsp; Opportunities <span class="mini" id="side-count">0</span></button>
 <button class="navbtn" data-page="documents" onclick="navigate('documents')">▤ &nbsp; Documents</button>
@@ -416,6 +454,18 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <div class="intro"><div><div class="eyebrow">Opportunity discovery platform</div><h1 id="page-title">Intelligence Overview</h1><p class="subtitle" id="page-subtitle">Understand your latest tender research and discover the next opportunity.</p></div><button class="button primary" onclick="openScan()">＋ &nbsp; New intelligence scan</button></div>
 <div id="job-state" class="job hidden"></div>
 <div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear old generated runs</button></div>
+<section id="view-workflow" class="hidden">
+ <div class="workflow-intro panel"><div class="eyebrow">VAF AI / END-TO-END INTELLIGENCE</div>
+ <h2>From market signals to sales-ready opportunities</h2>
+ <p>Five discovery channels feed one evidence store. AI correlates signals, qualifies prospects and prepares dossiers for human review.</p>
+ <div class="wf-strip"><div>Discover</div><span>→</span><div>Normalize</div><span>→</span><div>Analyze</div><span>→</span><div>Correlate</div><span>→</span><div>Score</div><span>→</span><div>Review</div></div></div>
+ <div class="wf-section-head"><h2>Lead mining channels</h2><p>Capabilities and readiness reflect what the current repository actually supports.</p></div>
+ <div id="workflow-channels" class="workflow-channels"></div>
+ <div class="wf-section-head"><h2>Intelligence & execution</h2><p>Stages required to turn collected source signals into CRM-ready actions.</p></div>
+ <div id="workflow-stages" class="workflow-stages"></div>
+ <div class="wf-section-head"><h2>Selected run — evidence summary</h2><p>Grounded metrics from your selected search rather than wireframe examples.</p></div>
+ <div id="workflow-evidence" class="workflow-evidence"></div>
+</section>
 <section id="view-overview">
 <div class="hero vaf-showcase">
  <div class="hero-copy"><div class="eyebrow">OPPORTUNITY DISCOVERY PLATFORM</div><h2>From public tenders to<br>qualified opportunities</h2><p>Understand your latest tender research, inspect downloaded evidence, and prioritize actionable procurement signals.</p>
@@ -494,8 +544,8 @@ async function loadModels(){try{let r=await api('/api/models');availableModels=r
 function modelSelect(name='model'){let opts=availableModels.filter(m=>!m.includes(':cloud'));return opts.length?'<select class="input" name="'+name+'">'+opts.map(m=>'<option value="'+esc(m)+'" '+(m==='qwen3:30b'?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select>':'<input class="input" name="'+name+'" value="qwen3:30b" placeholder="Ollama model" />'}
 async function refresh(prefer){try{const previousRun=selected;const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' records</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;if(previousRun!==selected){activeTenderSha=null;activeTenderTitle=''}render();updateChatControls()}catch(e){E('health').textContent='Unable to load runs: '+e.message}}
 async function chooseRun(id){selected=id;resetTenderScope();try{current=await api('/api/runs/'+encodeURIComponent(id));render();updateChatControls()}catch(e){alert(e.message)}}
-function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','Explore scope, eligibility and source-backed procurement research.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
-function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="showMetricDetails('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
+function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['workflow','overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={workflow:['Intelligence Workflow','Five source channels, AI analysis, lead qualification, and human review.'],overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','Explore scope, eligibility and source-backed procurement research.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
+function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}renderWorkflow();E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="showMetricDetails('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
 ['candidates','pages','documents','analysis','official'].forEach((key,i)=>{
  const n=[data('discovery').unique_candidates,data('discovery').pages_fetched,data('extraction').documents_extracted,data('analysis').documents_analyzed,data('cppp_public_listings').matches][i];
  const el=E('funnel-'+key);if(el)el.textContent=num(n);
@@ -526,6 +576,41 @@ E('source-list').innerHTML=governmentRecords.length?governmentRecords.map(x=>{
 E('history').innerHTML=runs.map(r=>'<div class="runbox"><div class="run-left"><div class="run-number">'+esc(r.topic.slice(0,1).toUpperCase())+'</div><div><h4>'+esc(r.topic)+'</h4><p>'+esc(r.run_id)+' · '+r.opportunities+' analyzed records</p></div></div><button class="button" onclick="chooseRun(\''+esc(r.run_id)+'\')">Open</button></div>').join('');
 E('issue-list').innerHTML=issues.length?issues.map(x=>'<div class="runbox"><div><h4>'+esc(x.stage||'Pipeline issue')+'</h4><p>'+esc(x.error||'No detail')+'</p><span class="tiny muted">'+esc(x.document_url||x.url||x.query||'')+'</span></div>'+pill('Review','warn')+'</div>').join(''):'<div class="empty">No issues reported.</div>';
 }
+
+function renderWorkflow(){
+ const channels=[
+  {name:'RFP & Public Bid Listener',description:'Search public procurement sources, download tender documents, extract requirements and identify relevant bids.',state:'Operational · limited coverage',detail:'Web-index discovery and public CPPP homepage adapter. Not an exhaustive state-portal crawl.',target:'opportunities',count:(current?.discovery_details?.candidates?.length||data('discovery').unique_candidates||0)+' candidate URLs'},
+  {name:'Empanelled Agency Directories',description:'Identify approved vendors, system integrators, partner capabilities and empanelment evidence.',state:'Planned · no adapter yet',detail:'Directory ingestion, entity deduplication and partner mapping are not implemented.',target:null,count:'No collected directory records'},
+  {name:'Developer Portals & Forums',description:'Identify pre-RFP technical demand from developer ecosystems, repositories and API discussion.',state:'Planned · no adapter yet',detail:'GitHub, community forum, Reddit and developer portal connectors are not implemented.',target:null,count:'No collected developer signals'},
+  {name:'Awarded Contract & SI Tracking',description:'Find contract awards and map winning system integrators to downstream implementation opportunities.',state:'Planned · classification only',detail:'Some award notices may be classified; award tracking and SI relationship mapping are not built.',target:null,count:'No verified award pipeline'},
+  {name:'LinkedIn & Corporate Intelligence',description:'Track company announcements, new programmes, hiring and leadership changes.',state:'Planned · no adapter yet',detail:'No corporate-feed ingestion, verified leadership data or LinkedIn integration.',target:null,count:'No collected corporate signals'}
+ ];
+ const stages=[
+  ['1','Ingestion & normalization','Downloaded source records and PDFs are saved in run folders. A unified cross-channel entity store is not built.',true],
+  ['2','Hybrid AI analysis','A selected local Ollama model extracts tender details. Cloud fallback is not configured.',true],
+  ['3','Evidence validation','Evidence-matching checks and deadline warnings exist; official corrigenda verification remains manual.',true],
+  ['4','Signal correlation','Combine procurement, partner, developer and corporate signals by buyer/project.',false],
+  ['5','Lead qualification · 1–10','Explainable VAF-fit, intent, urgency and freshness scoring after data quality checks.',false],
+  ['6','100 → 10 shortlist','Rank and prioritize high-intent prospects with an auditable qualification explanation.',false],
+  ['7','Opportunity dossier','Unify sources, requirements, buyer, SI route, confidence and next steps.',false],
+  ['8','Human review & CRM action','Approve, reject, assign or watch only after human review; CRM integrations later.',false]
+ ];
+ E('workflow-channels').innerHTML=channels.map((c,i)=>
+  '<article class="wf-card"><div class="wf-card-top"><span class="wf-number">0'+(i+1)+'</span><span class="wf-status '+(i?'future':'live')+'">'+esc(c.state)+'</span></div><h3>'+esc(c.name)+'</h3><p>'+esc(c.description)+'</p><div class="wf-meta">'+esc(c.detail)+'</div><div class="wf-bottom">'+esc(c.count)+(c.target?'<button class="button" onclick="navigate(\''+c.target+'\')">View real data →</button>':'')+'</div></article>'
+ ).join('');
+ E('workflow-stages').innerHTML=stages.map(st=>
+  '<article class="wf-stage"><div class="wf-stage-number">'+st[0]+'</div><div><h3>'+esc(st[1])+'</h3><p>'+esc(st[2])+'</p></div><span class="wf-status '+(st[3]?'live':'future')+'">'+(st[3]?'Partial / operational':'Planned')+'</span></article>'
+ ).join('');
+ const counts=[
+  ['Discovered candidates',data('discovery').unique_candidates||0],
+  ['Inspected pages',data('discovery').pages_fetched||0],
+  ['Documents extracted',data('extraction').documents_extracted||0],
+  ['Analyzed tenders',data('analysis').documents_analyzed||0]
+ ];
+ E('workflow-evidence').innerHTML=counts.map((x,i)=>'<button class="wf-evidence-card" onclick="navigate(\'overview\');showMetricDetails('+i+')"><span>'+esc(x[0])+'</span><strong>'+num(x[1])+'</strong><small>View source records →</small></button>').join('')+
+ '<div class="wf-warning">The wireframe examples (such as 100 → 10 and scores like 8.7) are illustrative targets, not verified results from this scan. Scoring and enrichment will be added after their source adapters and rules are implemented.</div>';
+}
+
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
 function renderRecords(){const term=(E('record-search').value||'').toLowerCase(),filter=E('record-filter').value;const ops=current?.opportunities||[];const found=ops.filter(o=>{let s=o.deadline_status||'';return (filter==='all'||(filter==='passed'&&s.includes('passed'))||(filter==='future'&&s.includes('future'))||(filter==='other'&&!s.includes('passed')&&!s.includes('future')))&&[o.title,o.issuing_authority,o.tender_reference].join(' ').toLowerCase().includes(term)});E('all-records').innerHTML=found.length?found.map(recordCard).join(''):'<div class="empty"><h3>No records match the selected filters</h3><p>Try another keyword or select a different pipeline run.</p></div>'}
 function detail(label,value){return '<div class="detail"><span>'+label+'</span><b>'+esc(value||'Not available')+'</b></div>'}
