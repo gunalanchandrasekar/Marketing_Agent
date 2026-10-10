@@ -291,7 +291,13 @@ def models():
         response = httpx.get(url + "/api/tags", timeout=7)
         response.raise_for_status()
         names = [m.get("name") for m in response.json().get("models", []) if m.get("name") and "embedding" not in m.get("capabilities", [])]
-        return {"models": names, "connected": True, "server": url}
+        benchmark = read_json(BASE / "data" / "model_benchmark.json")
+        recommended = benchmark.get("recommended_model")
+        if recommended not in names:
+            recommended = None
+        return {"models": names, "connected": True, "server": url,
+                "recommended_model": recommended,
+                "benchmark": benchmark.get("results", [])}
     except (httpx.HTTPError, ValueError) as exc:
         return {"models": [], "connected": False, "server": url, "error": str(exc)}
 
