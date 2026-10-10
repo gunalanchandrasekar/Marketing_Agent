@@ -403,7 +403,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .loader-spinner{border-top-color:var(--vaf-orange);border-right-color:var(--vaf-blue)}
 .loader-progress span,.loader-track div{background:linear-gradient(90deg,var(--vaf-orange),var(--vaf-blue))}
 .loader-percent{color:var(--vaf-navy)}
-</style></head><body>
+.opportunity-review{border-top:1px solid #e0e7f2;margin-top:7px}.opportunity-review-header{padding:20px 24px 12px;background:#f8faff}.opportunity-review-header h3{font-size:16px;color:#142951}.opportunity-review-header p{color:#5d728f;font-size:12px;margin-top:5px}.opportunity-review-row{padding:15px 24px;border-top:1px solid #edf0f6;display:flex;align-items:flex-start;gap:13px}.opportunity-review-row>div{flex:1;min-width:0}.opportunity-review-row b{font-size:13px;color:#192e54}.opportunity-review-row p{font-size:12px;color:#66758a;margin:5px 0}.opportunity-review-row a{font-size:12px;color:#196caa;overflow-wrap:anywhere}.opportunity-review-empty{padding:16px 24px;color:#73829a;font-size:12px}.opportunity-review .pill{flex-shrink:0}</style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
@@ -433,7 +433,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
   <div class="panel"><div class="panel-head"><div><h2>Latest opportunity records</h2><p>Research findings from the selected scan</p></div><button class="button ghost" onclick="navigate('opportunities')">View all →</button></div><div id="recent-records"></div></div>
   <div class="panel activity-card"><div class="panel-head"><div><h2>Scan activity</h2><p>Actual research progress and source verification</p></div></div><div id="scan-activity" class="panel-inner"></div></div>
  </div></section>
-<section id="view-opportunities" class="hidden"><div class="toolbar"><input id="record-search" class="input search" placeholder="Search by title, authority or tender reference..." oninput="renderRecords()"/><select id="record-filter" class="input" onchange="renderRecords()"><option value="all">All statuses</option><option value="passed">Original deadline passed</option><option value="future">Future original deadline</option><option value="other">Needs verification</option></select><button class="button" onclick="exportCsv()">↓ Export CSV</button></div><div class="panel"><div class="panel-head"><div><h2>Analyzed tender opportunities</h2><p>Expand a record to view requirements and evidence quality</p></div><span class="pill" id="record-count">0 records</span></div><div id="all-records"></div></div></section>
+<section id="view-opportunities" class="hidden"><div class="toolbar"><input id="record-search" class="input search" placeholder="Search by title, authority or tender reference..." oninput="renderRecords()"/><select id="record-filter" class="input" onchange="renderRecords()"><option value="all">All statuses</option><option value="passed">Original deadline passed</option><option value="future">Future original deadline</option><option value="other">Needs verification</option></select><button class="button" onclick="exportCsv()">↓ Export CSV</button></div><div class="panel"><div class="panel-head"><div><h2>Analyzed tender opportunities</h2><p>Expand a record to view requirements and evidence quality</p></div><span class="pill" id="record-count">0 records</span></div><div id="all-records"></div><div id="opportunity-review" class="opportunity-review"></div></div></section>
 <section id="view-documents" class="hidden"><div class="sectionbar"><h2>Downloaded document queue</h2><button class="button primary" onclick="retryOpen()">↻ &nbsp; Retry unfinished AI analysis</button></div><div class="notice">Documents remain available after an Ollama timeout. Retrying uses the extracted PDF text and does not download files again.</div><div id="doc-list" class="cards"></div></section>
 <section id="view-sources" class="hidden"><div class="sectionbar"><h2>Official procurement signals</h2><a class="button" href="https://eprocure.gov.in/eprocure/app?page=FrontEndAdvancedSearch&service=page" target="_blank" rel="noopener noreferrer">Open CPPP search ↗</a></div><div class="notice">This public-listing adapter only inspects visible CPPP homepage notices. CAPTCHA-protected searches are not automated, and zero matches does not mean zero available tenders.</div><div id="source-list"></div></section>
 <section id="view-activity" class="hidden"><div class="panel"><div class="panel-head"><div><h2>Run history</h2><p>Choose an earlier execution to inspect its results</p></div></div><div id="history"></div></div><div class="panel"><div class="panel-head"><h2>Nationwide discovery coverage</h2><p>Search visibility is not the same as exhaustive state-portal coverage</p></div><div id="discovery-coverage"></div></div><div class="panel"><div class="panel-head"><h2>Issue diagnostics</h2></div><div id="issue-list"></div></div></section>
@@ -515,7 +515,7 @@ E('recent-records').innerHTML=ops.length?ops.slice(0,4).map(o=>recordCard(o)).jo
 const stages=[['Search discovery',data('discovery').pages_fetched, data('discovery').unique_candidates||1],['Document download',data('discovery').documents_downloaded,Math.max(1,data('discovery').documents_downloaded)],['PDF text extraction',data('extraction').documents_extracted,Math.max(1,data('discovery').documents_downloaded)],['Ollama analysis',data('analysis').documents_analyzed,Math.max(1,data('extraction').documents_extracted)]];
 E('pipeline').innerHTML=stages.map((s,i)=>'<div style="margin-bottom:22px"><div style="display:flex;justify-content:space-between;font-size:12px"><b>'+s[0]+'</b><span class="muted">'+num(s[1])+' completed</span></div><div class="progress"><span style="width:'+Math.round(100*Math.min(1,(s[1]||0)/s[2]))+'%"></span></div></div>').join('');
 E('health').innerHTML='<div class="detail"><span>Recorded issues</span><b style="font-size:24px">'+issues.length+'</b></div><div style="height:12px"></div>'+pill(docs.length-ops.length>0?'AI analysis needs attention':'Results available',docs.length-ops.length>0?'warn':'green')+'<p style="font-size:12px;margin-top:14px">A downloaded document is not automatically a qualified or currently open lead.</p>';
-E('record-count').textContent=ops.length+' records';renderRecords();
+renderRecords();
 E('doc-list').innerHTML=docs.length?docs.map(d=>{
  const u=link(d.document_url),info=d.summary_data;
  const summary=info?'<div class="doc-summary"><h4>'+esc(info.title||'Document summary')+'</h4><p><b>Authority:</b> '+esc(info.issuing_authority||'Not identified')+'</p><p><b>Scope summary:</b> '+esc(info.summary||'Not available')+'</p><p><b>Published:</b> '+fmtDate(info.publication_date)+'</p><p><b>Original deadline:</b> '+fmtDate(info.submission_deadline)+'</p><p><b>Why relevant:</b> '+esc(info.why_relevant_to_topic||'Not assessed')+'</p></div>':'<div class="notice">Summary not available yet. Retry AI analysis for this downloaded document.</div>';
@@ -537,7 +537,35 @@ reviews.slice(0,30).map(x=>'<div class="runbox"><div><h4>'+esc(x.title||'Unquali
 (issues.length?issues.map(x=>'<div class="runbox"><div><h4>'+esc(x.stage||'Pipeline issue')+'</h4><p>'+esc(x.error||'No detail')+'</p><span class="tiny muted">'+esc(x.document_url||x.url||x.query||'')+'</span></div>'+pill('Review','warn')+'</div>').join(''):'<div class="empty">No additional processing errors reported.</div>');
 }
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
-function renderRecords(){const term=(E('record-search').value||'').toLowerCase(),filter=E('record-filter').value;const ops=current?.opportunities||[];const found=ops.filter(o=>{let s=o.deadline_status||'';return (filter==='all'||(filter==='passed'&&s.includes('passed'))||(filter==='future'&&s.includes('future'))||(filter==='other'&&!s.includes('passed')&&!s.includes('future')))&&[o.title,o.issuing_authority,o.tender_reference].join(' ').toLowerCase().includes(term)});E('all-records').innerHTML=found.length?found.map(recordCard).join(''):'<div class="empty"><h3>No records match the selected filters</h3><p>Try another keyword or select a different pipeline run.</p></div>'}
+function renderRecords(){
+ const term=(E('record-search').value||'').trim().toLowerCase(),filter=E('record-filter').value;
+ const ops=current?.opportunities||[];
+ const found=ops.filter(o=>{
+  const state=o.deadline_status||'';
+  return (filter==='all'||(filter==='passed'&&state.includes('passed'))||(filter==='future'&&state.includes('future'))||(filter==='other'&&!state.includes('passed')&&!state.includes('future'))) &&
+  [o.title,o.issuing_authority,o.tender_reference,o.scope_summary].join(' ').toLowerCase().includes(term);
+ });
+ E('record-count').textContent=ops.length+' qualified candidates';
+ E('all-records').innerHTML=found.length?found.map(recordCard).join(''):
+  '<div class="empty"><h3>'+(ops.length?'No qualified opportunities match these filters':'No qualified tender opportunities in this run')+'</h3><p>'+
+  (ops.length?'Try clearing the search or selecting All statuses.':'The analyzed documents may need review or may not match your topic. Check the assessment below.')+'</p></div>';
+ const review=[...(current?.review_records||[]).map(x=>({...x,review_type:'Needs review'})),
+               ...(current?.excluded_records||[]).map(x=>({...x,review_type:'Excluded'}))];
+ const summary=current?.qualification_summary||{};
+ const box=E('opportunity-review');
+ if(!box)return;
+ const analyzed=summary.model_analyses??current?.steps?.analysis?.documents_analyzed??0;
+ const filtered=review.filter(x=>[x.title,x.reason,x.document_url].join(' ').toLowerCase().includes(term));
+ box.innerHTML='<div class="opportunity-review-header"><h3>Analysis & qualification audit</h3><p>'+num(analyzed)+' documents analyzed · '+num(ops.length)+' qualified tender candidates · '+num(summary.needs_review??(current?.review_records||[]).length)+' need review · '+num(summary.excluded??(current?.excluded_records||[]).length)+' excluded</p></div>'+
+ (filtered.length?filtered.slice(0,100).map(x=>{
+   const url=link(x.document_url);
+   return '<div class="opportunity-review-row">'+pill(x.review_type,x.review_type==='Excluded'?'grey':'warn')+
+   '<div><b>'+esc(x.title||'Document title not extracted')+'</b><p>'+esc(x.reason||'Insufficient evidence to qualify as an opportunity')+'</p>'+
+   (url?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">Open source document ↗</a>':'')+'</div></div>';
+ }).join(''):
+ '<p class="opportunity-review-empty">'+(review.length?'No review records match your search.':'No additional excluded or review-needed records were recorded for this run.')+'</p>')+
+ (filtered.length>100?'<p class="opportunity-review-empty">Showing first 100 matching records.</p>':'');
+}
 function detail(label,value){return '<div class="detail"><span>'+label+'</span><b>'+esc(value||'Not available')+'</b></div>'}
 function openRecord(i){
   closeChat();
