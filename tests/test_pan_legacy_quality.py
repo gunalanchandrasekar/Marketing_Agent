@@ -15,7 +15,7 @@ def test_legacy_pan_records_are_not_all_sales_opportunities(tmp_path):
          "document_sha256": "incomplete"},
         {"title": "RFP for PAN Card Verification Services",
          "tender_reference": "PAN-2026-001", "issuing_authority": "IT Department",
-         "scope_summary": "The agency shall provide PAN card validation and verification services.",
+         "scope_summary": "The agency shall develop a PAN verification API integration for the department portal.",
          "document_url": "https://example.gov.in/notices/notice3.pdf",
          "document_sha256": "valid"},
     ]
