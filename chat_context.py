@@ -41,7 +41,11 @@ def build_chat_context(run_dir: Path, question: str, document_sha256: str | None
         docs = [d for d in docs if d.get("sha256") == document_sha256]
         if not docs:
             raise ValueError("Document does not belong to selected run")
+    if not any((d.get("text") or "").strip() for d in docs):
+        raise ValueError("No readable extracted tender text is available for the selected document. Check the Documents page.")
     parts = [f"TOPIC: {run.get('topic', '')}"]
+    if document_sha256:
+        parts.append("DOCUMENT SCOPE: Only the explicitly selected tender document is permitted.")
     permitted = {d.get("sha256") for d in docs}
     for item in run.get("opportunities") or []:
         if document_sha256 and item.get("document_sha256") not in permitted:
