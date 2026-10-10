@@ -259,8 +259,14 @@ def run(topic: str, searxng: str | None, output: Path, max_pages: int, max_docs:
             if progress:
                 progress("searching", f"Searching source queries {query_number}/{len(queries)}", 20 + int(16 * query_number / max(1, len(queries))))
             try:
-                found = (search_searxng(client, searxng, query, per_query)
-                         if searxng else search_ddgs(query, per_query))
+                if searxng:
+                    try:
+                        found = search_searxng(client, searxng, query, per_query)
+                    except Exception as primary_exc:
+                        LOG.warning("SearXNG failed for %s (%s), falling back to DDGS", query, primary_exc)
+                        found = search_ddgs(query, per_query)
+                else:
+                    found = search_ddgs(query, per_query)
                 for candidate in found:
                     url = canonicalize(candidate)
                     if url:
