@@ -672,6 +672,7 @@ function updateChatControls(){
  E('chat-document').innerHTML='<option value="">All documents in selected run</option>'+docs.filter(d=>d.sha256).map((d,i)=>'<option value="'+esc(d.sha256)+'">PDF '+(i+1)+': '+esc((d.summary_data?.title||d.document_url||'Document').slice(0,80))+'</option>').join('');
  const scoped=Boolean(activeTenderSha && docs.some(d=>d.sha256===activeTenderSha));
  if(scoped) E('chat-document').value=activeTenderSha;
+ E('chat-document').disabled=E('overlay').classList.contains('tender-fullscreen');
  E('chat-scope-note').textContent=activeTenderTitle
    ? (scoped ? 'Opened tender: '+activeTenderTitle : 'Opened tender has no matching extracted PDF. Check Documents first.')
    : 'All documents in this run';
