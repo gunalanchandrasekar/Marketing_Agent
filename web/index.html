@@ -436,7 +436,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .rfp-result-meta,.rfp-query,.rfp-result-count{font-size:12px;color:#6d7f98;margin:8px 0}
 .rfp-hint{background:#fff5ea;color:#83552e;border:1px solid #f5d1ae;padding:13px;border-radius:10px;font-size:12px}
 @media(max-width:720px){.rfp-intro,.rfp-data-head{flex-direction:column;align-items:stretch}.rfp-data-head .input{max-width:none;min-width:0}}
-/* W2 Signal Intelligence - VAF brand palette */
+/* W2 Signal Intelligence - VAF brand palette (unused styling retained for compatibility) */
 .signal-intro{padding:23px 27px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .signal-intro .eyebrow{color:#e87b22}
 .signal-intro h2{font-size:22px;margin:9px 0}
@@ -473,7 +473,6 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
 <button class="navbtn" data-page="rfp-intelligence" onclick="navigate('rfp-intelligence')">⌕ &nbsp; Web Discovery</button>
-<button class="navbtn" data-page="signals" onclick="navigate('signals')">◉ &nbsp; Signal Filtering</button>
 <button class="navbtn" data-page="opportunities" onclick="navigate('opportunities')">◈ &nbsp; Tender Analysis <span class="mini" id="side-count">0</span></button>
 <button class="navbtn" data-page="documents" onclick="navigate('documents')">▤ &nbsp; Documents</button>
 <button class="navbtn" data-page="sources" onclick="navigate('sources')">⌁ &nbsp; Government Sources</button>
@@ -483,20 +482,6 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <div class="intro"><div><div class="eyebrow">Opportunity discovery platform</div><h1 id="page-title">Intelligence Overview</h1><p class="subtitle" id="page-subtitle">Understand your latest tender research and discover the next opportunity.</p></div><button class="button primary" onclick="openScan()">＋ &nbsp; New intelligence scan</button></div>
 <div id="job-state" class="job hidden"></div>
 <div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear old generated runs</button></div>
-<section id="view-signals" class="hidden">
- <div class="signal-intro panel">
-  <div><div class="eyebrow">W2 / EVIDENCE-BASED DISCOVERY</div><h2>Signal Intelligence</h2><p>Normalize, deduplicate and explain every saved source candidate before AI lead qualification.</p></div>
-  <button class="button primary" onclick="navigate('rfp-intelligence')">Explore RFP evidence →</button>
- </div>
- <div id="signal-summary" class="signal-summary"></div>
- <div class="panel">
-  <div class="signal-toolbar"><div><h2>Research signals</h2><p id="signal-summary-line"></p></div><div class="signal-filters">
-   <select id="signal-status" class="input" onchange="renderSignalRecords()"><option value="all">All statuses</option><option value="accepted">Accepted</option><option value="needs_review">Needs review</option><option value="rejected">Rejected</option></select>
-   <input type="search" id="signal-search" class="input" placeholder="Search source, title, reason" oninput="renderSignalRecords()">
-  </div></div>
-  <div id="signal-records" class="signal-records"></div>
- </div>
-</section>
 <section id="view-rfp-intelligence" class="hidden">
  <div class="rfp-intro panel">
    <div><div class="eyebrow">DISCOVERY / SEARCH SOURCES</div><h2>Source discovery audit</h2><p id="rfp-run-context">Review where the search found URLs and which pages were inspected.</p></div>
@@ -611,8 +596,8 @@ async function chooseRun(id){
   render();updateChatControls();
  }catch(e){showRunError(e.message)}
 }
-function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['rfp-intelligence','signals','overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={signals:['Signal Filtering','Review normalized and deduplicated signals with explicit acceptance and rejection reasons.'],'rfp-intelligence':['Web Discovery','Inspect saved search candidates and topic-relevant pages without confusing them with analyzed tenders.'],overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Analysis','Read AI-extracted tender scope, eligibility, dates, caveats and evidence.'],documents:['Document Review','Read downloaded PDF summaries and retry unfinished document analysis.'],sources:['Government Sources','Verify which notices were government-issued and which URLs use official government domains.'],activity:['Run History & Diagnostics','Review scan history, processing problems, failed requests and model connectivity.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];render()}
-function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob && current){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}renderRfpWorkspace();renderSignalWorkspace();E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="openMetricDestination('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
+function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['rfp-intelligence','overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={'rfp-intelligence':['Web Discovery','Inspect saved search candidates and topic-relevant pages without confusing them with analyzed tenders.'],overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Analysis','Read AI-extracted tender scope, eligibility, dates, caveats and evidence.'],documents:['Document Review','Read downloaded PDF summaries and retry unfinished document analysis.'],sources:['Government Sources','Verify which notices were government-issued and which URLs use official government domains.'],activity:['Run History & Diagnostics','Review scan history, processing problems, failed requests and model connectivity.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];render()}
+function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const remaining=docs.filter(d=>d.extraction_status==="ok").length-ops.length;if(!currentJob && current){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}renderRfpWorkspace();E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="openMetricDestination('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
 ['candidates','pages','documents','analysis','official'].forEach((key,i)=>{
  const n=[data('discovery').unique_candidates,data('discovery').pages_fetched,data('extraction').documents_extracted,data('analysis').documents_analyzed,data('cppp_public_listings').matches][i];
  const el=E('funnel-'+key);if(el)el.textContent=num(n);
@@ -702,44 +687,6 @@ function renderRfpEvidence(){
  }).join('')||'<div class="empty">No matching records. Try another search.</div>');
 }
 
-
-function signalPayload(){return current?.signal_intelligence||{total:0,counts:{},signals:[],coverage:'unknown'}}
-function setSignalFilter(filter){E('signal-status').value=filter;renderSignalRecords()}
-function renderSignalWorkspace(){
- if(!E('signal-summary'))return;
- const result=signalPayload(),counts=result.counts||{};
- const blocks=[
-  ['Total saved',result.total||0,'all'],
-  ['Accepted',counts.accepted||0,'accepted'],
-  ['Needs review',counts.needs_review||0,'needs_review'],
-  ['Rejected',counts.rejected||0,'rejected'],
-  ['Deduplication events',result.duplicate_events||0,'all']
- ];
- E('signal-summary').innerHTML=blocks.map(row=>
-  '<button class="signal-stat" type="button" onclick="setSignalFilter(\''+row[2]+'\')"><span>'+esc(row[0])+'</span><strong>'+num(row[1])+'</strong><small>View records →</small></button>'
- ).join('');
- renderSignalRecords();
-}
-function renderSignalRecords(){
- const payload=signalPayload(),rows=payload.signals||[];
- const status=E('signal-status').value,search=(E('signal-search').value||'').trim().toLowerCase();
- const selected=rows.filter(x=>(status==='all'||x.relevance_status===status)&&
- [x.title,x.source_url,x.reason,x.signal_category,x.issuing_authority,...(x.search_queries||[])].join(' ').toLowerCase().includes(search));
- E('signal-summary-line').textContent=
-  num(selected.length)+' matching of '+num(rows.length)+' unique normalized URLs · '+
-  (payload.coverage==='legacy_partial_candidates'?'Historical run: full candidate set not retained':'Saved candidate coverage')+
-  ' · deterministic preliminary triage, not verified lead scoring.';
- E('signal-records').innerHTML=selected.length?selected.slice(0,300).map(x=>{
-  const url=link(x.source_url),statusColor=x.relevance_status==='accepted'?'green':x.relevance_status==='rejected'?'grey':'warn';
-  const labels={accepted:'Accepted',needs_review:'Needs review',rejected:'Rejected'};
-  return '<article class="signal-record"><div class="signal-record-flags">'+pill(labels[x.relevance_status]||x.relevance_status,statusColor)+' '+pill(x.source_type==='official_government_domain'?'Official-domain URL':'Unverified / other domain','grey')+' '+pill(x.processing_status||'discovered','grey')+'</div>'+
-   '<h3>'+esc(x.title||x.source_url||'Untitled signal')+'</h3><p><b>Decision:</b> '+esc(x.reason||'Not classified')+'</p>'+
-   '<p class="signal-record-meta"><b>Category:</b> '+esc(x.signal_category||'unknown')+' · <b>Origins:</b> '+esc((x.origins||[]).join(', '))+'</p>'+
-   (url?'<a target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">'+esc(url)+'</a>':'')+
-   ((x.search_queries||[]).length?'<p class="signal-record-meta"><b>Search terms:</b> '+esc(x.search_queries.slice(0,3).join(' · '))+'</p>':'')+
-   '</article>';
- }).join('')+(selected.length>300?'<p class="signal-footnote">Showing the first 300 matching records. Narrow your search to see more.</p>':''):'<div class="empty"><h3>No matching signals</h3><p>Try another filter or start a new scan.</p></div>';
-}
 
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
 function renderRecords(){const term=(E('record-search').value||'').toLowerCase(),filter=E('record-filter').value;const ops=current?.opportunities||[];const found=ops.filter(o=>{let s=o.deadline_status||'';return (filter==='all'||(filter==='passed'&&s.includes('passed'))||(filter==='future'&&s.includes('future'))||(filter==='other'&&!s.includes('passed')&&!s.includes('future')))&&[o.title,o.issuing_authority,o.tender_reference].join(' ').toLowerCase().includes(term)});E('all-records').innerHTML=found.length?found.map(recordCard).join(''):'<div class="empty"><h3>No records match the selected filters</h3><p>Try another keyword or select a different pipeline run.</p></div>'}
