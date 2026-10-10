@@ -432,12 +432,35 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 @media(max-width:600px){.doc-evidence-form{flex-direction:column}.doc-review-header{flex-direction:column}.doc-pdf-frame{height:390px}}
 .chat-evidence-note{font-size:12px!important;background:#f1f7fd!important;color:#356187!important;border:1px solid #d8e9f8}
 .doc-summary-section{grid-column:span 1}.doc-summary-section ul{padding-left:16px;margin:8px 0;color:#506783;font-size:12px}.doc-summary-section li{margin:6px 0}.doc-summary-section .muted{font-size:12px}
+
+.li-header{padding:25px 28px;margin:14px 0 19px}.li-header h2{font-size:22px;margin:8px 0}.li-header p{font-size:13px;color:#657993;max-width:830px}
+.li-header .eyebrow{color:#ee771d}.li-form{margin-top:19px}.li-label{display:block;font-size:12px;font-weight:750;color:#1b3558;margin-bottom:8px}
+.li-form textarea{width:100%;border:1px solid #dbe4ef;border-radius:12px;min-height:110px;resize:vertical;padding:13px 14px;color:#173052;background:#fbfcff;font:13px/1.6 monospace}
+.li-form textarea:focus{outline:3px solid #cfe6f8;border-color:#2889c0}.li-options{display:flex;align-items:center;gap:17px;flex-wrap:wrap;margin-top:13px}
+.li-options label{font-size:12px;color:#405b79}.li-options select{margin-left:5px;border-radius:8px;border:1px solid #d8e1ed;padding:8px;background:white}
+.li-options .li-check{display:flex;gap:8px;align-items:center}.li-options button{margin-left:auto}
+.li-info,.li-note{font-size:12px;color:#6a7c93;line-height:1.7;margin-top:13px}.li-workspace{display:grid;grid-template-columns:280px minmax(0,1fr);gap:15px;align-items:start}
+.li-history,.li-results{min-width:0;overflow:hidden}.li-history .panel-head,.li-results .panel-head{padding:17px 20px}.li-history .panel-head h2,.li-results .panel-head h2{font-size:16px}
+.li-history-item{display:block;width:100%;text-align:left;background:white;border:0;border-bottom:1px solid #edf0f5;padding:15px 18px;cursor:pointer}
+.li-history-item.selected{background:#e9f4fd;box-shadow:inset 3px 0 #f27d24}.li-history-item b{display:block;font-size:12px;color:#1a3357;overflow-wrap:anywhere}
+.li-history-item small{display:block;font-size:11px;color:#73839b;margin-top:7px}.li-result-body{padding:19px 22px}.li-result-body>h3{font-size:15px}
+.li-source,.li-document{border:1px solid #e3e9f2;border-radius:12px;padding:16px;margin:13px 0;background:#fff}
+.li-source-head{display:flex;gap:8px}.li-kind{background:#edf2f9;color:#365779;border-radius:15px;padding:4px 9px;font-size:10px;font-weight:650}
+.li-kind.li-it{background:#e2f3fd;color:#1b79a4}.li-source h3{font-size:14px;margin:9px 0 5px;overflow-wrap:anywhere}
+.li-source p,.li-document p{font-size:12px;color:#59718b;line-height:1.65}.li-source a,.li-document a{font-size:12px;color:#176da7;overflow-wrap:anywhere}
+.li-count,.li-meta{font-size:11px!important;color:#8290a6!important;margin-top:9px}.li-heading{margin:25px 0 12px!important}
+.li-document-top{display:flex;justify-content:space-between;gap:10px;align-items:start}.li-document-top b{font-size:13px;overflow-wrap:anywhere}.li-document-top span{white-space:nowrap;font-size:11px;color:#77879a}
+.li-document ul{font-size:12px;color:#516987;padding-left:17px}.li-document-actions{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-top:15px}
+.li-preview{width:100%;height:540px;border:1px solid #dee6f2;border-radius:12px}.li-issue{padding:10px 12px;background:#fff6f0;border-radius:9px;margin:9px 0;font-size:12px;color:#8e5630;overflow-wrap:anywhere}
+.li-issue p{margin:5px 0 0}.li-note{border-top:1px solid #e7ecf5;padding-top:14px}
+@media(max-width:850px){.li-workspace{grid-template-columns:1fr}.li-options button{margin-left:0}.li-document-top{flex-wrap:wrap}}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
 <button class="navbtn" data-page="opportunities" onclick="navigate('opportunities')">◈ &nbsp; Opportunities <span class="mini" id="side-count">0</span></button>
 <button class="navbtn" data-page="documents" onclick="navigate('documents')">▤ &nbsp; Documents</button>
+<button class="navbtn" data-page="links" onclick="navigate('links')">⌕ &nbsp; Link Intelligence</button>
 <button class="navbtn" data-page="sources" onclick="navigate('sources')">⌁ &nbsp; Government sources</button>
 <button class="navbtn" data-page="activity" onclick="navigate('activity')">◷ &nbsp; Activity & diagnostics</button></div>
 <div class="sidetip"><b>Evidence-first intelligence</b><p>AI analysis is preliminary. Current tender availability always requires an official source check.</p></div></aside>
@@ -445,6 +468,22 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <div class="intro"><div><div class="eyebrow">Opportunity discovery platform</div><h1 id="page-title">Intelligence Overview</h1><p class="subtitle" id="page-subtitle">Understand your latest tender research and discover the next opportunity.</p></div><button class="button primary" onclick="openScan()">＋ &nbsp; New intelligence scan</button></div>
 <div id="job-state" class="job hidden"></div>
 <div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="archiveSelectedTopic()" style="color:#a23d47">Remove topic data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear all generated runs</button></div>
+<section id="view-links" class="hidden">
+ <div class="li-header panel"><div class="eyebrow">SOURCE-DRIVEN INTELLIGENCE</div><h2>Inspect a source link</h2><p>Paste public tender notices, government portal pages, article URLs or a direct RFP PDF. The agent will collect accessible linked documents and extract IT-relevant evidence.</p>
+  <form class="li-form" onsubmit="submitLinkInspection(event)">
+   <label for="link-urls" class="li-label">Source URLs · one per line, up to 5</label>
+   <textarea id="link-urls" required rows="4" spellcheck="false" placeholder="https://eprocure.gov.in/...
+https://etenders.gov.in/...
+https://example.gov.in/rfp.pdf"></textarea>
+   <div class="li-options"><label for="link-max-docs">PDF limit <select id="link-max-docs"><option value="5">5 documents</option><option value="8" selected>8 documents</option><option value="12">12 documents</option></select></label>
+   <label class="li-check"><input type="checkbox" id="link-ai" checked> Analyze downloaded RFPs with local AI</label>
+   <button type="submit" class="button primary" id="li-submit">Inspect sources →</button></div>
+  </form>
+  <div class="li-info">Supported: public HTTP(S) pages and readable PDFs. Login-only tenders, CAPTCHA, protected portals and unsupported document types are reported, not bypassed. Sources are research signals, not verified active tenders.</div>
+ </div>
+ <div class="li-workspace"><div class="li-history panel"><div class="panel-head"><h2>Saved inspections</h2></div><div id="li-history-list"><div class="empty">No link inspections yet.</div></div></div>
+ <div class="li-results panel"><div class="panel-head"><div><h2>Source details & related documents</h2><p id="li-result-subtitle">Inspect links to see what information is publicly available.</p></div></div><div id="li-result-content" class="li-result-body"><div class="empty"><h3>Ready to inspect</h3><p>Paste URLs above or select a saved inspection.</p></div></div></div></div>
+</section>
 <section id="view-overview">
 <div class="hero vaf-showcase">
  <div class="hero-copy"><div class="eyebrow">OPPORTUNITY DISCOVERY PLATFORM</div><h2>From public tenders to<br>qualified opportunities</h2><p>Understand your latest tender research, inspect downloaded evidence, and prioritize actionable procurement signals.</p>
@@ -543,7 +582,7 @@ async function loadModels(){try{let r=await api('/api/models');availableModels=r
 function modelSelect(name='model'){let opts=availableModels.filter(m=>!m.includes(':cloud'));return opts.length?'<select class="input" name="'+name+'">'+opts.map(m=>'<option value="'+esc(m)+'" '+(m===(recommendedModel||'qwen3:30b')?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select>':'<input class="input" name="'+name+'" value="qwen3:30b" placeholder="Ollama model" />'}
 async function refresh(prefer){try{const previousRun=selected;const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' saved analyses</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;if(previousRun!==selected){activeTenderSha=null;activeTenderTitle=''}render();updateChatControls()}catch(e){E('health').textContent='Unable to load runs: '+e.message}}
 async function chooseRun(id){selected=id;resetTenderScope();try{current=await api('/api/runs/'+encodeURIComponent(id));render();updateChatControls()}catch(e){alert(e.message)}}
-function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['overview','opportunities','documents','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','IT-focused tenders: software, API integration, digital platforms and implementation services.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render()}
+function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['overview','opportunities','documents','links','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','IT-focused tenders: software, API integration, digital platforms and implementation services.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],links:['Link Intelligence','Investigate a supplied public URL and collect accessible related RFP documents.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render();if(p==='links')loadLinkHistory()}
 function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const processed=(current?.steps?.analysis?.documents_analyzed||0);
  const prefiltered=(current?.steps?.prequalification?.documents_excluded_before_ai||0);
  const remaining=Math.max(0,docs.filter(d=>d.extraction_status==="ok").length-processed-prefiltered);if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="showMetricDetails('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
@@ -660,6 +699,66 @@ async function chatWithReviewedDocument(){
  E('chat-scope-note').textContent='Selected PDF: '+activeTenderTitle;
 }
 
+
+let activeLinkInspection=null;
+async function submitLinkInspection(event){
+ event.preventDefault();
+ const urls=E('link-urls').value.split(/\r?\n/).map(u=>u.trim()).filter(Boolean);
+ if(!urls.length || urls.length>5){alert('Enter between 1 and 5 source URLs, one per line.');return}
+ const model=E('link-ai').checked?(recommendedModel||availableModels.find(m=>m==='qwen3:30b')||availableModels[0]||'qwen3:30b'):null;
+ E('li-submit').disabled=true;
+ try{
+  const response=await api('/api/links/inspect',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({urls,model,max_documents:Number(E('link-max-docs').value)})});
+  monitorJob(response.job_id);
+ }catch(error){alert('Unable to inspect links: '+error.message)}
+ finally{E('li-submit').disabled=false}
+}
+async function loadLinkHistory(prefer){
+ try{
+  const records=(await api('/api/links/history')).inspections||[];
+  E('li-history-list').innerHTML=records.length?records.map(x=>'<button type="button" class="li-history-item '+(x.id===activeLinkInspection?'selected':'')+'" onclick="openLinkInspection(\''+esc(x.id)+'\')"><b>'+esc(x.title||'Inspection')+'</b><small>'+esc((x.created_at||'').slice(0,19).replace('T',' '))+' · '+num(x.sources)+' pages · '+num(x.documents)+' PDFs</small></button>').join(''):'<div class="empty">No link inspections yet. Paste a URL above to start.</div>';
+  if(prefer && records.some(x=>x.id===prefer))await openLinkInspection(prefer);
+ }catch(err){E('li-history-list').textContent='Could not load saved inspections: '+err.message}
+}
+async function openLinkInspection(id){
+ try{
+  const data=await api('/api/links/'+encodeURIComponent(id));
+  activeLinkInspection=id;
+  const issues=data.issues||[],sources=data.sources||[],docs=data.documents||[];
+  E('li-result-subtitle').textContent=sources.length+' sources inspected · '+docs.length+' PDFs saved · '+issues.length+' issues';
+  const sourceCards=sources.map(source=>{
+   const url=link(source.resolved_url||source.url);
+   const it=source.it_fit||{};
+   const linked=(source.linked_urls||[]);
+   const isIT=it.status==='it_candidate';
+   return '<article class="li-source"><div class="li-source-head"><span class="li-kind">'+esc(source.kind||'Web page')+'</span><span class="li-kind '+(isIT?'li-it':'')+'">'+esc(isIT?'IT scope indicated':'IT relevance unconfirmed')+'</span></div><h3>'+esc(source.title||source.url)+'</h3>'+
+   '<p>'+esc(source.description||source.text?.slice(0,650)||'No readable page description detected.')+'</p><p class="li-meta">'+esc(it.reason||'')+'</p>'+
+   (url?'<a target="_blank" rel="noopener noreferrer" href="'+esc(url)+'">Open original source ↗</a>':'')+
+   '<div class="li-count">'+linked.length+' collected page links (not all are tender PDFs)</div></article>';
+  }).join('');
+  const docCards=docs.map(d=>{
+   const pdf='/api/links/'+encodeURIComponent(id)+'/pdf/'+encodeURIComponent(d.sha256);
+   const info=d.analysis||{},fields=[...(info.technical_requirements||[])].slice(0,6);
+   return '<article class="li-document"><div class="li-document-top"><b>'+esc(info.tender_title||d.url?.split('/').pop()||'PDF document')+'</b><span>'+num(d.page_count)+' pages · '+num(d.text_characters)+' characters</span></div>'+
+   '<p><b>Authority:</b> '+esc(info.issuing_authority||'Not established')+' · <b>Original deadline:</b> '+fmtDate(info.submission_deadline)+'</p>'+
+   '<p><b>Scope:</b> '+esc(info.scope_summary||'No structured AI summary; inspect PDF')+'</p>'+
+   (fields.length?'<p><b>Technical requirements:</b></p><ul>'+fields.map(x=>'<li>'+esc(x)+'</li>').join('')+'</ul>':'')+
+   '<div class="li-document-actions"><a class="button" target="_blank" rel="noopener noreferrer" href="'+pdf+'">Open saved PDF ↗</a>'+
+   '<button class="button" onclick="showLinkedPdf(\''+esc(pdf)+'\')">Preview PDF</button>'+
+   (link(d.url)?'<a target="_blank" rel="noopener noreferrer" href="'+esc(link(d.url))+'">Source ↗</a>':'')+'</div></article>';
+  }).join('');
+  E('li-result-content').innerHTML='<h3>Investigated pages</h3>'+(sourceCards||'<div class="notice">No accessible source pages collected.</div>')+
+   '<h3 class="li-heading">Downloaded PDF evidence ('+docs.length+')</h3>'+(docCards||'<div class="notice">No publicly accessible PDFs found. The page may require a portal search/login or expose no PDF links.</div>')+
+   '<iframe id="li-pdf-preview" class="li-preview hidden" title="Related RFP PDF preview"></iframe>'+
+   '<h3 class="li-heading">Access & processing diagnostics ('+issues.length+')</h3>'+
+   (issues.length?issues.map(x=>'<div class="li-issue"><b>'+esc(x.stage||'Source issue')+'</b> · '+esc(x.error||'Unavailable')+'<p>'+esc(x.url||'')+'</p></div>').join(''):'<p class="li-meta">No issues reported.</p>')+
+   '<p class="li-note">IT relevance and AI-extracted tender facts are provisional. Confirm publication, amendments and current status on the official issuer portal.</p>';
+  await loadLinkHistory();
+ }catch(error){E('li-result-content').textContent='Could not open inspection: '+error.message}
+}
+function showLinkedPdf(url){const frame=E('li-pdf-preview');frame.classList.remove('hidden');frame.src=url;frame.scrollIntoView({behavior:'smooth',block:'center'})}
+
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
 function renderRecords(){
  const term=(E('record-search').value||'').trim().toLowerCase(),filter=E('record-filter').value;
@@ -736,7 +835,7 @@ function showGlobalLoader(j){
 }
 function hideGlobalLoader(){E('global-loader').classList.add('hidden')}
 function monitorJob(id){currentJob=id;showGlobalLoader({stage:"starting",message:"Starting your request...",percent:1,status:"running"});E('job-state').classList.remove('hidden');pollJob(id)}
-async function pollJob(id){if(currentJob!==id)return;try{let j=await api('/api/jobs/'+id);showGlobalLoader(j);E('job-state').innerHTML='<div><span class="spinner" style="'+(j.status==='complete'||j.status==='failed'||j.status==='needs_attention'?'display:none':'')+'"></span><b>'+esc((j.stage||j.kind).replace(/_/g,' ').toUpperCase())+'</b> · '+esc(j.message)+'</div><div class="jobbar"><span style="width:'+Number(j.percent||0)+'%"></span></div><div style="font-size:12px;margin-top:6px">'+Number(j.percent||0)+'% · '+esc(j.status)+'</div>';if(j.status==='complete'||j.status==='needs_attention'){hideGlobalLoader();currentJob=null;await refresh(j.result?.run_id);return}if(j.status==='failed'){hideGlobalLoader();currentJob=null;alert('Process failed: '+j.message);return}setTimeout(()=>pollJob(id),3000)}catch(e){hideGlobalLoader();E('job-state').textContent='Job status unavailable: '+e.message}}
+async function pollJob(id){if(currentJob!==id)return;try{let j=await api('/api/jobs/'+id);showGlobalLoader(j);E('job-state').innerHTML='<div><span class="spinner" style="'+(j.status==='complete'||j.status==='failed'||j.status==='needs_attention'?'display:none':'')+'"></span><b>'+esc((j.stage||j.kind).replace(/_/g,' ').toUpperCase())+'</b> · '+esc(j.message)+'</div><div class="jobbar"><span style="width:'+Number(j.percent||0)+'%"></span></div><div style="font-size:12px;margin-top:6px">'+Number(j.percent||0)+'% · '+esc(j.status)+'</div>';if(j.status==='complete'||j.status==='needs_attention'){hideGlobalLoader();currentJob=null;if(j.kind==='link_inspection'){await loadLinkHistory(j.result?.inspection_id);if(j.result?.inspection_id)await openLinkInspection(j.result.inspection_id)}else{await refresh(j.result?.run_id)}return}if(j.status==='failed'){hideGlobalLoader();currentJob=null;alert('Process failed: '+j.message);return}setTimeout(()=>pollJob(id),3000)}catch(e){hideGlobalLoader();E('job-state').textContent='Job status unavailable: '+e.message}}
 async function archiveSelectedTopic(){
  if(!selected||!current?.topic){alert('Select a topic run first.');return}
  const topic=current.topic;
