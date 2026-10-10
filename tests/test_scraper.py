@@ -1,4 +1,4 @@
-from scraper import canonicalize, document_url, extract_page, queries_for, topic_match, eligible_document, candidate_priority, classify_page
+from scraper import canonicalize, document_url, extract_page, queries_for, topic_match, eligible_document, eligible_page_document, candidate_priority, classify_page
 
 
 def test_canonicalize():
@@ -22,7 +22,9 @@ def test_html_extraction():
     """)
     assert title == "RFP Notice"
     assert "DigiLocker API integration" in text
-    assert documents == [{"url": "https://example.org/files/rfp.pdf", "anchor_text": "RFP"}]
+    assert len(documents) == 1
+    assert documents[0]["url"] == "https://example.org/files/rfp.pdf"
+    assert documents[0]["anchor_text"] == "RFP"
 
 
 def test_document_link():
@@ -80,3 +82,21 @@ def test_generic_download_link_on_rfp():
 def test_awards_not_active_procurement():
     assert classify_page("Final List of Agencies Selected for DigiLocker Integration", "") == "award_or_selection"
 
+
+def test_ration_card_plural_and_generic_portal_attachment():
+    assert topic_match("Ration Card", "Government tenders for Ration Cards")
+    row = {"url": "https://state.gov.in/uploads/12345.pdf", "anchor_text": "Download",
+           "context": "Tender for printing and personalization of Ration Cards Download"}
+    assert eligible_page_document(row, "Ration Card", "Tender Notices")
+    assert not eligible_page_document({"url":"https://state.gov.in/manual.pdf",
+           "anchor_text":"Download", "context":"Ration Card API user manual"},
+           "Ration Card", "Tender Notices")
+
+def test_invalid_pdf_download_refused(tmp_path):
+    import httpx
+    from scraper import download_document
+    transport=httpx.MockTransport(lambda request: httpx.Response(200, content=b"<html>login page</html>"))
+    with httpx.Client(transport=transport) as client:
+        import pytest
+        with pytest.raises(ValueError, match="valid PDF"):
+            download_document(client, "https://state.gov.in/tender.pdf", tmp_path, 10240)
