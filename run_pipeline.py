@@ -114,11 +114,38 @@ def execute(
         state["issues"].append({"stage": "extraction", "error": str(exc)})
         extracted_result = {"documents": []}
 
-    report('analyzing', 'Analyzing tender text using Ollama', 72)
+    report('analyzing', 'Analyzing topic-relevant tender text using Ollama', 72)
+    rejected_before_ai = []
+    prepared = []
+    seen_hashes = set()
+    for document in extracted_result.get("documents", []):
+        ok, reason = precheck_document(topic, document)
+        digest = document.get("sha256") or document.get("document_url")
+        if digest in seen_hashes:
+            rejected_before_ai.append({"document_url": document.get("document_url"),
+                                       "reason": "Duplicate downloaded PDF content"})
+            continue
+        seen_hashes.add(digest)
+        if ok:
+            prepared.append(document)
+        else:
+            rejected_before_ai.append({"document_url": document.get("document_url"), "reason": reason})
+    state["steps"]["prequalification"] = {
+        "documents_to_analyze": len(prepared),
+        "documents_excluded_before_ai": len(rejected_before_ai),
+    }
+    if rejected_before_ai:
+        (run_dir / "document_triage.json").write_text(
+            json.dumps({"topic": topic, "excluded": rejected_before_ai}, indent=2),
+            encoding="utf-8"
+        )
+    filtered_extract = run_dir / "extracted_for_analysis.json"
+    filtered_extract.write_text(json.dumps({"topic": topic, "documents": prepared},
+                                           ensure_ascii=False), encoding="utf-8")
     try:
         if not extracted.exists():
             extracted.write_text(json.dumps({"topic": topic, "documents": []}), encoding="utf-8")
-        analysis_result = analyze(extracted, analyzed, model, ollama_url, timeout)
+        analysis_result = analyze(filtered_extract, analyzed, model, ollama_url, timeout)
         state["steps"]["analysis"] = {"documents_analyzed": len(analysis_result.get("results", []))}
         state["issues"].extend({**e, "stage": "analysis"} for e in analysis_result.get("errors", []))
     except Exception as exc:
@@ -127,7 +154,7 @@ def execute(
 
     opportunities = []
     review_records = []
-    excluded_records = []
+    excluded_records = list(rejected_before_ai)
     extracted_by_sha = {d.get("sha256"): d for d in extracted_result.get("documents", [])}
     extracted_by_url = {d.get("document_url"): d for d in extracted_result.get("documents", [])}
     seen: set[str] = set()
