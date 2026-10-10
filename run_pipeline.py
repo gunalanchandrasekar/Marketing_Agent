@@ -143,6 +143,7 @@ def execute(
             "deadline_status": facts.get("deadline_status"),
             "scope_summary": facts.get("scope_summary"),
             "technical_requirements": facts.get("technical_requirements", []),
+            "technical_requirements_source": facts.get("technical_requirements_source", "ai_extracted_unverified"),
             "eligibility_requirements": facts.get("eligibility_requirements", []),
             "why_relevant_to_topic": facts.get("why_relevant_to_topic"),
             "document_url": row.get("document_url"),
