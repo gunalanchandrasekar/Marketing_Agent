@@ -275,6 +275,7 @@ def scan(params: ScanInput):
             topic, RUNS, model=params.model,
             ollama_url=os.getenv("OLLAMA_BASE_URL", "http://192.168.0.100:11434"),
             max_pages=params.max_pages, max_documents=params.max_documents, timeout=1200,
+            searxng=os.getenv("SEARXNG_URL") or None,
             progress=progress,
         )
         return {"run_id": result["run_id"], "opportunities": result["opportunity_count"], "needs_attention": result.get("run_status") == "needs_attention"}
