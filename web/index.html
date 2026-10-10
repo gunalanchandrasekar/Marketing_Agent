@@ -834,7 +834,7 @@ function setActiveTender(op){
 }
 function resetTenderScope(){activeTenderSha=null;activeTenderTitle='';updateChatControls();E('chat-scope-note').textContent='All documents in this run';}
 function closeChat(){E('chat-window').classList.add('hidden');E('chat-fab').setAttribute('aria-expanded','false');E('chat-fab').classList.remove('hidden');E('overlay').classList.remove('tender-chat-open')}
-async function toggleChat(){
+async async function toggleChat(){
  const windowEl=E('chat-window');
  if(!windowEl.classList.contains('hidden')){closeChat();return}
  if(!E('overlay').classList.contains('tender-fullscreen')) closeDrawer();
