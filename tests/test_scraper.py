@@ -100,3 +100,12 @@ def test_invalid_pdf_download_refused(tmp_path):
         import pytest
         with pytest.raises(ValueError, match="valid PDF"):
             download_document(client, "https://state.gov.in/tender.pdf", tmp_path, 10240)
+
+def test_gov_portal_table_row_download_handler():
+    html = b"""<html><head><title>Tenders</title></head><body>
+      <table><tr><td>RFP for Ration Card Printing and Personalisation</td>
+      <td><a href="/download?id=987">Download</a></td></tr></table></body></html>"""
+    _, _, docs = extract_page("https://state.gov.in/notices", html)
+    assert len(docs) == 1
+    assert docs[0]["url"] == "https://state.gov.in/download?id=987"
+    assert eligible_page_document(docs[0], "Ration Card", "Tenders")
