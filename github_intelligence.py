@@ -189,6 +189,49 @@ def _record_issue(topic: str, item: dict) -> dict | None:
     }
 
 
+DISCUSSIONS_QUERY = """
+query($owner: String!, $name: String!) {
+  repository(owner: $owner, name: $name) {
+    discussions(first: 20, orderBy: {field: UPDATED_AT, direction: DESC}) {
+      nodes {title bodyText url createdAt updatedAt comments {totalCount}}
+    }
+  }
+}
+"""
+
+
+def _fetch_discussions(client: httpx.Client, topic: str, repository: str) -> list[dict]:
+    """Fetch relevant public GitHub Discussions for a known matching repository."""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", repository or ""):
+        return []
+    owner, name = repository.split("/", 1)
+    response = client.post(API + "/graphql", json={
+        "query": DISCUSSIONS_QUERY, "variables": {"owner": owner, "name": name},
+    })
+    response.raise_for_status()
+    payload = response.json()
+    if payload.get("errors"):
+        raise ValueError("GraphQL discussions unavailable for " + repository + ": "
+                         + str(payload["errors"][0].get("message", "Unknown error"))[:140])
+    node = (payload.get("data") or {}).get("repository") or {}
+    entries = ((node.get("discussions") or {}).get("nodes") or [])
+    rows = []
+    for entry in entries:
+        title, body = entry.get("title") or "", entry.get("bodyText") or ""
+        score, reason = _priority(topic, title, body, kind="issue")
+        if not score:
+            continue
+        rows.append({
+            "kind": "discussion", "title": title, "description": body[:1200],
+            "url": entry.get("url"), "repository": repository,
+            "state": "discussion", "comments": (entry.get("comments") or {}).get("totalCount", 0),
+            "created_at": entry.get("createdAt"), "updated_at": entry.get("updatedAt"),
+            "score": score, "reason": reason,
+            "evidence": "Discussion title or body directly mentions the topic.",
+        })
+    return rows
+
+
 def search_github(
     topic: str, output_root: Path, *, max_results: int = 20,
     token: str | None = None, progress=None,
@@ -201,9 +244,9 @@ def search_github(
     data = {
         "id": timestamp, "topic": topic,
         "created_at": datetime.now(timezone.utc).isoformat(),
-        "repositories": [], "issues": [], "issues_found": 0,
+        "repositories": [], "issues": [], "discussions": [], "issues_found": 0,
         "repositories_found": 0, "search_queries": [], "errors": [],
-        "note": "Developer activity signals, not verified RFPs or purchase intent. GitHub Discussions and private content are not indexed by these REST searches.",
+        "note": "Public code and developer activity are not confirmed procurement or buyer demand. Discussions are sampled from matching repositories when token access permits.",
     }
     headers = {"Accept": "application/vnd.github+json",
                "X-GitHub-Api-Version": "2022-11-28",
@@ -288,9 +331,39 @@ def search_github(
         -x["score"], x.get("state") != "open"
     ))
     data["repositories"] = repo_order[:max_results]
+    data["discussion_health"] = "not_checked"
+    # Discussions have a separate GraphQL API and may be disabled on some repos.
+    # Search a bounded sample of identified topic-related repositories.
+    if secret and data["repositories"]:
+        discussions = {}
+        targets = [row["title"] for row in data["repositories"][:5]]
+                   if "/" in row.get("title", "")]
+        data["discussion_health"] = "partial"
+        with httpx.Client(headers=headers, timeout=httpx.Timeout(18, connect=8),
+                          follow_redirects=False) as discussion_client:
+            succeeded = 0
+            for repository in targets:
+                try:
+                    for row in _fetch_discussions(discussion_client, topic, repository):
+                        if row.get("url"):
+                            discussions[row["url"]] = row
+                    succeeded += 1
+                except (httpx.HTTPError, ValueError) as exc:
+                    data["errors"].append({
+                        "kind": "discussion", "query": repository,
+                        "message": str(exc)[:260],
+                    })
+            data["discussions"] = sorted(discussions.values(),
+                                         key=lambda x: (-x["score"], x.get("updated_at") or ""))[:max_results]
+            data["discussion_health"] = ("complete" if succeeded == len(targets)
+                                         else "partial" if succeeded else "unavailable")
+    elif not secret:
+        data["discussion_health"] = "token_required"
+
     data["issues"] = issue_order[:max_results]
     data["counts"] = {
         "repositories": len(data["repositories"]), "issues": len(data["issues"]),
+        "discussions": len(data["discussions"]),
         "open_issues": sum(x.get("state") == "open" for x in data["issues"]),
         "developer_requests": sum(x["score"] >= 8 for x in data["issues"]),
         "errors": len(data["errors"]),
