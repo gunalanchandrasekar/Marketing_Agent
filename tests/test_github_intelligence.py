@@ -112,6 +112,11 @@ def test_failed_issue_search_is_not_misreported_as_zero_matches(monkeypatch, tmp
         return {"total_count": 0, "items": []}
     monkeypatch.setattr(gi, "_request", unavailable)
     monkeypatch.setattr(gi, "_fetch_discussions", lambda client, topic, repo: [])
+    import github_web_intelligence
+    monkeypatch.setattr(github_web_intelligence, "search_web",
+                        lambda topic, root, max_results: {
+                            "issues": [], "search_health": "complete", "errors": []
+                        })
     result = gi.search_github("DigiLocker", tmp_path, max_results=10, token="fake")
     assert result["issues"] == []
     assert result["coverage"]["issue_queries_attempted"] == 2
@@ -250,3 +255,30 @@ def test_github_community_ui_and_live_connection_control():
     assert 'data-gh-tab="discussions"' in ui
     assert 'id="gh-connection-result"' in ui
     assert "function checkGithubConnection()" in ui
+
+
+def test_failed_direct_issue_search_recovers_independent_web_issues(monkeypatch, tmp_path):
+    import github_web_intelligence
+    def direct_api(client, endpoint, params):
+        if endpoint == "/search/issues":
+            raise RuntimeError("HTTP 403: fine-grained token scope")
+        return {"total_count": 0, "items": []}
+    monkeypatch.setattr(gi, "_request", direct_api)
+    monkeypatch.setattr(github_web_intelligence, "search_web",
+                        lambda topic, root, max_results: {
+                            "issues": [{
+                                "kind": "issue",
+                                "url": "https://github.com/example/citizen/issues/21",
+                                "title": "DigiLocker API OAuth integration help",
+                                "description": "Developer cannot retrieve documents",
+                                "score": 9, "reason": "Technical implementation request",
+                            }],
+                            "search_health": "complete", "errors": [],
+                        })
+    result = gi.search_github("DigiLocker", tmp_path, max_results=10, token="fake")
+    assert result["coverage"]["issue_queries_succeeded"] == 0
+    assert result["coverage"]["web_issue_fallback_attempted"]
+    assert result["coverage"]["web_issue_fallback_saved"] == 1
+    assert result["search_health"] == "fallback"
+    assert result["counts"]["issues"] == 1
+    assert result["issues"][0]["source"].startswith("Indexed web search")
