@@ -466,7 +466,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .gh-explanation{padding:8px 20px 12px;font-size:12px;color:#74839a;line-height:1.7}.gh-entry{padding:18px 20px;border-top:1px solid #e6ebf3}.gh-entry h3{font-size:14px;color:#142e52;margin:9px 0 7px;line-height:1.4;overflow-wrap:anywhere}.gh-entry p{font-size:12px;line-height:1.6;color:#506b87;overflow-wrap:anywhere;margin:7px 0}.gh-entry-top{display:flex;gap:7px;flex-wrap:wrap}.gh-pill{display:inline-block;font-size:10px;font-weight:700;padding:4px 9px;border-radius:14px;background:#edf2f8;color:#4d6a8a}.gh-pill.gh-score{background:#e7f3ff;color:#1a6da0}.gh-reason{background:#f7faff;border-radius:8px;padding:9px 10px}.gh-entry-foot{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:11px;color:#8091a8;flex-wrap:wrap}.gh-entry-foot a{color:#1a70ac;font-size:12px;font-weight:700}.gh-error{background:#fff6f2}.gh-error small{color:#826750;overflow-wrap:anywhere}
 @media(max-width:1000px){.gh-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.gh-workspace{grid-template-columns:1fr}}
 @media(max-width:700px){.gh-form{flex-direction:column;align-items:stretch}.gh-field.gh-limit{flex:auto}.gh-form button{width:100%}}
-.gh-health{margin:10px 19px;padding:12px 14px;border:1px solid #dbe9f3;background:#f1f7fc;border-radius:10px;color:#385f80;font-size:12px;line-height:1.6}.gh-health-warning,.gh-search-warning{background:#fff5eb;border-color:#f5d2af;color:#855126}.gh-search-warning{border:1px solid #f5d2af;padding:13px 17px;border-radius:10px;margin:10px 20px;font-size:12px;line-height:1.6}</style></head><body>
+.gh-health{margin:10px 19px;padding:12px 14px;border:1px solid #dbe9f3;background:#f1f7fc;border-radius:10px;color:#385f80;font-size:12px;line-height:1.6}.gh-health-warning,.gh-search-warning{background:#fff5eb;border-color:#f5d2af;color:#855126}.gh-search-warning{border:1px solid #f5d2af;padding:13px 17px;border-radius:10px;margin:10px 20px;font-size:12px;line-height:1.6}.gh-method{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:20px}.gh-method-choice{border:1px solid #e0e8f3;border-radius:12px;text-align:left;background:#f8fbff;padding:15px 17px;cursor:pointer;color:#17365a;display:flex;flex-direction:column;gap:6px}.gh-method-choice b{font-size:13px}.gh-method-choice small{font-size:11px;color:#6e8096;line-height:1.5}.gh-method-choice.active{border:1px solid #ff8a38;box-shadow:inset 3px 0 #f77e24;background:#fff8f2}.gh-method-note{font-size:12px;color:#607897;margin:10px 0 0!important}@media(max-width:700px){.gh-method{grid-template-columns:1fr}}</style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
@@ -483,18 +483,23 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="archiveSelectedTopic()" style="color:#a23d47">Remove topic data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear all generated runs</button></div>
 <section id="view-github" class="hidden">
  <div class="gh-intro panel"><div class="eyebrow">DEVELOPER COMMUNITY / CHANNEL 03</div><h2>GitHub Intelligence</h2><p>Discover repositories and developer requests connected to a topic. Identify reusable open-source work and potential technical delivery needs—without confusing community discussions with formal tenders.</p>
+ <div class="gh-method" role="group" aria-label="GitHub search method">
+ <button class="gh-method-choice active" data-gh-mode="direct" type="button" onclick="setGithubMode('direct')"><b>Direct GitHub</b><small>Live GitHub API · repositories, issues, sampled discussions</small></button>
+ <button class="gh-method-choice" data-gh-mode="web" type="button" onclick="setGithubMode('web')"><b>Web Search</b><small>Public search engines · indexed GitHub pages and communities</small></button>
+ </div>
+ <p class="gh-method-note" id="gh-method-note">Live GitHub repository, developer issue and discussion searches. Token access may be required for discussions.</p>
  <form class="gh-form" onsubmit="startGitHubSearch(event)">
   <div class="gh-field"><label for="gh-topic">Technology or problem to investigate</label><input class="input" id="gh-topic" required placeholder="e.g. DigiLocker, API Setu, PAN verification" maxlength="100"></div>
   <div class="gh-field gh-limit"><label for="gh-limit">Results per category</label><select class="input" id="gh-limit"><option value="10">10</option><option value="20" selected>20</option><option value="30">30</option></select></div>
   <button class="button" type="button" onclick="checkGithubConnection()">Test GitHub connection</button><button class="button primary" type="submit" id="gh-search-button">Search GitHub →</button>
- </form><div id="gh-connection-result" class="gh-health hidden"></div><p class="gh-notice">Only public GitHub repositories and issues are searched. Pull requests are excluded. GitHub Discussions, private repositories and messages requiring access are not included. A developer issue is an early technical signal—not evidence of purchasing intent.</p>
+ </form><div id="gh-connection-result" class="gh-health hidden"></div><p class="gh-notice">Public GitHub information only. Direct API search and indexed web search have different coverage; both report failures. Community activity is not proof of a contract or buying intent.</p>
  </div>
  <div class="gh-workspace">
   <div class="panel gh-sidebar"><div class="panel-head"><div><h2>Research history</h2><p>Saved topic searches</p></div></div><div id="gh-history"><div class="empty">No GitHub scans yet</div></div></div>
   <div class="panel gh-main"><div class="panel-head"><div><h2 id="gh-result-title">Topic research results</h2><p id="gh-result-detail">Run a GitHub search or open a previous search.</p></div></div>
     <div id="gh-summary" class="gh-summary"></div>
     <div id="gh-health" class="gh-health hidden"></div>
-    <div id="gh-controls" class="gh-controls hidden"><div class="gh-tabs"><button type="button" data-gh-tab="issues" class="active" onclick="setGhTab('issues')">Developer requests <span id="gh-issue-count">0</span></button><button type="button" data-gh-tab="repositories" onclick="setGhTab('repositories')">Repositories <span id="gh-repo-count">0</span></button><button type="button" data-gh-tab="discussions" onclick="setGhTab('discussions')">Discussions <span id="gh-discussion-count">0</span></button><button type="button" data-gh-tab="diagnostics" onclick="setGhTab('diagnostics')">Diagnostics <span id="gh-error-count">0</span></button></div>
+    <div id="gh-controls" class="gh-controls hidden"><div class="gh-tabs"><button type="button" data-gh-tab="issues" class="active" onclick="setGhTab('issues')">Developer requests <span id="gh-issue-count">0</span></button><button type="button" data-gh-tab="repositories" onclick="setGhTab('repositories')">Repositories <span id="gh-repo-count">0</span></button><button type="button" data-gh-tab="discussions" onclick="setGhTab('discussions')">Discussions <span id="gh-discussion-count">0</span></button><button type="button" id="gh-web-tab" data-gh-tab="web_results" class="hidden" onclick="setGhTab('web_results')">Other GitHub pages <span id="gh-web-count">0</span></button><button type="button" data-gh-tab="diagnostics" onclick="setGhTab('diagnostics')">Diagnostics <span id="gh-error-count">0</span></button></div>
       <input class="input" type="search" id="gh-filter" oninput="renderGitHubItems()" placeholder="Filter repository, issue, description, language"></div>
     <div id="gh-results"><div class="empty"><h3>No research selected</h3><p>Search for DigiLocker, PAN verification, Ration Card API, or another technology.</p></div></div>
   </div>
@@ -810,6 +815,16 @@ async function checkGithubConnection(){
    ).join('')+'</div>';
  }catch(e){target.textContent='Connection test error: '+e.message}
 }
+let ghMode='direct';
+function setGithubMode(mode){
+ if(mode!=='direct' && mode!=='web')return;
+ ghMode=mode;
+ document.querySelectorAll('[data-gh-mode]').forEach(x=>x.classList.toggle('active',x.dataset.ghMode===mode));
+ E('gh-method-note').textContent=mode==='direct'
+ ? 'Live GitHub API: public repositories, issues, and sampled Discussions. Uses your configured GitHub token where permitted.'
+ : 'Independent indexed-web search for public GitHub repositories, issues, discussions, and technical documentation. Works without GitHub API access but search-engine coverage may be incomplete.';
+ E('gh-search-button').textContent=mode==='web'?'Search Web Index →':'Search GitHub API →';
+}
 let ghRun=null,ghData=null,ghTab='issues';
 async function startGitHubSearch(ev){
  ev.preventDefault();
@@ -818,7 +833,7 @@ async function startGitHubSearch(ev){
  E('gh-search-button').disabled=true;
  try{
   const r=await api('/api/github/search',{method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({topic,max_results:Number(E('gh-limit').value)})});
+   body:JSON.stringify({topic,max_results:Number(E('gh-limit').value),mode:ghMode})});
   monitorJob(r.job_id);
  }catch(e){alert('GitHub search failed: '+e.message)}
  finally{E('gh-search-button').disabled=false}
@@ -827,7 +842,7 @@ async function loadGithubHistory(){
  try{
   const items=(await api('/api/github/history')).scans||[];
   E('gh-history').innerHTML=items.length?items.map(x=>
-   '<button type="button" class="gh-history-item '+(ghRun===x.id?'selected':'')+'" onclick="openGithubScan(\''+esc(x.id)+'\')"><b>'+esc(x.topic||'Topic')+'</b><small>'+esc((x.created_at||'').slice(0,16).replace('T',' '))+' · '+num(x.issues)+' issues · '+num(x.repositories)+' repositories</small></button>'
+   '<button type="button" class="gh-history-item '+(ghRun===x.id?'selected':'')+'" onclick="openGithubScan(\''+esc(x.id)+'\')"><b>'+esc(x.topic||'Topic')+'</b><small>'+esc((x.mode||'direct')==='web'?'Web Search':'Direct GitHub')+' · '+esc((x.created_at||'').slice(0,16).replace('T',' '))+' · '+num(x.issues)+' issues · '+num(x.repositories)+' repositories</small></button>'
   ).join(''):'<div class="empty">No GitHub searches saved yet.</div>';
  }catch(err){E('gh-history').textContent='Could not load GitHub search history: '+err.message}
 }
@@ -835,8 +850,9 @@ async function openGithubScan(id){
  try{
   ghData=await api('/api/github/'+encodeURIComponent(id));ghRun=id;ghTab='issues';
   E('gh-topic').value=ghData.topic||'';
+  setGithubMode(ghData.mode||'direct');
   E('gh-result-title').textContent='GitHub research: '+(ghData.topic||'Topic');
-  E('gh-result-detail').textContent='Public GitHub activity · '+(ghData.created_at||'').slice(0,16).replace('T',' ')+' · Not a tender availability check';
+  E('gh-result-detail').textContent=(ghData.mode==='web'?'Indexed Web Search':'Direct GitHub API')+' · Public GitHub activity · '+(ghData.created_at||'').slice(0,16).replace('T',' ')+' · Not a tender availability check';
   const counts=ghData.counts||{},fields=[
    ['Relevant repositories',counts.repositories||0],
    ['Matching issues',counts.issues||0],
@@ -845,10 +861,13 @@ async function openGithubScan(id){
   ];
   E('gh-summary').innerHTML=fields.map(x=>'<div class="gh-stat"><span>'+esc(x[0])+'</span><b>'+num(x[1])+'</b></div>').join('');
   const coverage=ghData.coverage||{};
-  const issueUnavailable=ghData.search_health==='issues_unavailable'||
-   (!ghData.search_health && counts.issues===0 && (ghData.errors||[]).some(x=>x.kind==='issue'));
+  const webMode=ghData.mode==='web';
+  const issueUnavailable=!webMode && (ghData.search_health==='issues_unavailable'||
+   (!ghData.search_health && counts.issues===0 && (ghData.errors||[]).some(x=>x.kind==='issue')));
   const partial=issueUnavailable||ghData.search_health==='partial'||Boolean((ghData.errors||[]).length);
-  const msg=issueUnavailable
+  const msg=webMode
+   ? ghData.search_health==='unavailable'?'Web index searches failed. Check Diagnostics; no GitHub results were confirmed.':'Indexed-web discovery is partial and may miss unindexed or recently updated GitHub activity.'
+   : issueUnavailable
    ? 'GitHub issue search did not complete. Zero saved issues is NOT a confirmed zero-match result. Inspect Diagnostics and configure GITHUB_TOKEN if rate-limited.'
    : partial
     ? 'Partial GitHub results: some API queries failed. Counts below cover only successful searches.'
@@ -863,6 +882,8 @@ async function openGithubScan(id){
      (publicFallback?' Public access fallback used for '+num(publicFallback)+' restricted token request(s).':'')
    : '');
   E('gh-issue-count').textContent=issueUnavailable?'!':num(counts.issues||0);
+  E('gh-web-count').textContent=num(counts.web_results||0);
+  E('gh-web-tab').classList.toggle('hidden',!webMode);
   E('gh-repo-count').textContent=num(counts.repositories||0);
   E('gh-error-count').textContent=num(counts.errors||0);
   E('gh-discussion-count').textContent=num(counts.discussions||0);
@@ -889,10 +910,11 @@ function renderGitHubItems(){
     E('gh-results').innerHTML='<div class="gh-search-warning">GitHub Discussions require a usable GitHub token for GraphQL. Verify GITHUB_TOKEN in your local .env file and restart the server.</div>';
     return;
   }
- const items=(ghTab==='issues'?ghData.issues:ghTab==='discussions'?ghData.discussions:ghData.repositories)||[];
+ const items=(ghTab==='issues'?ghData.issues:ghTab==='discussions'?ghData.discussions:ghTab==='web_results'?ghData.web_results:ghData.repositories)||[];
  const matching=items.filter(x=>[x.title,x.description,x.language,x.repository,x.reason,x.owner].join(' ').toLowerCase().includes(filter));
  const header=ghTab==='issues'?'Public developer issues and technical requests, not verified customer leads.':
-  ghTab==='discussions'?'Public GitHub Discussions sampled from relevant repositories where GraphQL access permits. Not confirmed buying intent.':
+  ghTab==='discussions'?'Public GitHub Discussions indexed or sampled from relevant repositories. Not confirmed buying intent.':
+  ghTab==='web_results'?'Other indexed GitHub pages, including documentation or code paths. Follow source links to validate relevance.':
   'Public repositories that may offer implementations, integrations, competitors or potential collaborators.';
  const issueSearchUnavailable=ghTab==='issues' &&
   (ghData.search_health==='issues_unavailable'||
@@ -905,15 +927,15 @@ function renderGitHubItems(){
  (matching.length?matching.map(x=>{
   const target=link(x.url);
   const state=x.kind==='issue'?(x.state==='open'?'Open issue':'Closed issue'):
-   x.kind==='discussion'?'Community discussion':x.is_archived?'Archived repository':'Public repository';
-  const metadata=x.kind==='issue'||x.kind==='discussion'
+   x.kind==='discussion'?'Community discussion':x.kind==='web_reference'?'Indexed GitHub page':x.is_archived?'Archived repository':'Public repository';
+  const metadata=x.kind==='issue'||x.kind==='discussion'||x.kind==='web_reference'
    ? esc(x.repository||'GitHub')+' · '+num(x.comments)+' comments · '+esc((x.updated_at||'').slice(0,10))
    : esc(x.owner||'GitHub')+' · '+esc(x.language||'Language unknown')+' · '+num(x.stars)+' stars · '+esc((x.updated_at||'').slice(0,10));
   return '<article class="gh-entry"><div class="gh-entry-top"><span class="gh-pill">'+esc(state)+'</span><span class="gh-pill gh-score">Signal strength '+num(x.score)+'/10</span></div>'+
    '<h3>'+esc(x.title||'Untitled GitHub result')+'</h3><p>'+esc(x.description||'No description available.')+'</p>'+
    '<p class="gh-reason"><b>Why matched:</b> '+esc(x.reason||'Topic relevance')+'</p><div class="gh-entry-foot"><span>'+metadata+'</span>'+
    (target?'<a href="'+esc(target)+'" target="_blank" rel="noopener noreferrer">Open on GitHub ↗</a>':'')+'</div></article>';
- }).join(''):'<div class="empty"><h3>'+(issueSearchUnavailable?'Issue search did not complete':'No matching '+(ghTab==='issues'?'developer issues':ghTab==='discussions'?'community discussions':'repositories'))+'</h3><p>'+(issueSearchUnavailable?'Check Diagnostics or supply GITHUB_TOKEN before searching again.':'Try clearing the filter or searching for a broader topic.')+'</p></div>');
+ }).join(''):'<div class="empty"><h3>'+(issueSearchUnavailable?'Issue search did not complete':'No matching '+(ghTab==='issues'?'developer issues':ghTab==='discussions'?'community discussions':ghTab==='web_results'?'other GitHub pages':'repositories'))+'</h3><p>'+(issueSearchUnavailable?'Check Diagnostics or supply GITHUB_TOKEN before searching again.':'Try clearing the filter or searching for a broader topic.')+'</p></div>');
 }
 
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
