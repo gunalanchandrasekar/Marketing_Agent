@@ -27,7 +27,7 @@ from technical_requirements import extract_technical_requirements
 from relevance import qualify_analysis
 from document_review import find_document, page_evidence
 from link_inspector import inspect_links, load_inspection, validate_public_url
-from github_intelligence import search_github, load_github_run, safe_topic as safe_github_topic
+from github_intelligence import search_github, load_github_run, check_github_connection, safe_topic as safe_github_topic
 
 BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
@@ -378,6 +378,14 @@ def github_search(params: GitHubScanInput):
                 "issues": len(result["issues"]),
                 "needs_attention": bool(result["errors"])}
     return start_job("github_intelligence", action)
+
+
+@app.get("/api/github/health")
+def github_connection_check(topic: str = "DigiLocker"):
+    try:
+        return check_github_connection(safe_github_topic(topic))
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
 
 
 @app.get("/api/github/history")
