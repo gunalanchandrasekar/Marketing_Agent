@@ -193,13 +193,18 @@ def search_github(
                     done = n * 2 + (1 if kind == "repository" else 2)
                     progress("github_search", f"Checked {done}/{len(terms)*2} GitHub searches",
                              15 + int(75 * done / (len(terms)*2)))
-    def order(row):
-        return (-row["score"], row.get("is_archived", False),
-                -(row.get("stars") or 0), row.get("updated_at") or "")
-    data["repositories"] = sorted(seen_repos.values(), key=order)[:max_results]
-    data["issues"] = sorted(seen_issues.values(), key=lambda x: (
-        -x["score"], x.get("state") != "open", x.get("updated_at") or ""
-    ))[:max_results]
+    # Strongest evidence first; among similar hits surface recently updated,
+    # non-archived projects and actively discussed open issues.
+    repo_order = sorted(seen_repos.values(), key=lambda x: x.get("updated_at") or "", reverse=True)
+    repo_order = sorted(repo_order, key=lambda x: (
+        -x["score"], x.get("is_archived", False), -(x.get("stars") or 0)
+    ))
+    issue_order = sorted(seen_issues.values(), key=lambda x: x.get("updated_at") or "", reverse=True)
+    issue_order = sorted(issue_order, key=lambda x: (
+        -x["score"], x.get("state") != "open"
+    ))
+    data["repositories"] = repo_order[:max_results]
+    data["issues"] = issue_order[:max_results]
     data["counts"] = {
         "repositories": len(data["repositories"]), "issues": len(data["issues"]),
         "open_issues": sum(x.get("state") == "open" for x in data["issues"]),
