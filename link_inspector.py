@@ -147,7 +147,9 @@ def relevant_detail_pages(page: dict, parent_url: str, limit: int = 4) -> list[d
         parsed = urlparse(target)
         if parsed.hostname != origin or parsed.path.lower().endswith((".pdf", ".doc", ".docx")):
             continue
-        label = " ".join([link.get("anchor_text", ""), link.get("context", ""), parsed.path])
+        # Never use broad enclosing-page text for navigation links: a footer
+        # "Contact" link can inherit a neighboring "Tender" label.
+        label = " ".join([link.get("anchor_text", ""), parsed.path])
         if re.search(r"(?i)\b(?:tender detail|tender notice|rfp|rfq|eoi|view tender|bid notice|procurement notice|download tender documents)\b", label):
             results.append(link)
         if len(results) >= limit:
