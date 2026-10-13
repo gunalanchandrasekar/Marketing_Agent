@@ -7,6 +7,7 @@ The optional GITHUB_TOKEN environment variable raises REST API rate limits.
 from __future__ import annotations
 
 import json
+import base64
 import os
 import re
 from datetime import datetime, timezone
@@ -125,11 +126,31 @@ def _priority(topic: str, title: str, body: str, *, kind: str) -> tuple[int, str
     return min(10, points), label
 
 
-def _record_repo(topic: str, item: dict) -> dict | None:
+def _readme_text(client: httpx.Client, fullname: str) -> str:
+    """Read README evidence for repositories found through GitHub README search."""
+    if not re.fullmatch(r"[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+", fullname or ""):
+        return ""
+    try:
+        response = client.get(API + "/repos/" + fullname + "/readme")
+        if not response.is_success:
+            return ""
+        payload = response.json()
+        encoded = payload.get("content") or ""
+        if payload.get("encoding") != "base64" or len(encoded) > 160_000:
+            return ""
+        return base64.b64decode(encoded).decode("utf-8", "replace")[:18000]
+    except (httpx.HTTPError, ValueError, TypeError):
+        return ""
+
+
+def _record_repo(topic: str, item: dict, readme: str = "") -> dict | None:
     title = item.get("full_name") or item.get("name") or ""
     description = item.get("description") or ""
     tags = [str(t) for t in (item.get("topics") or [])]
     score, reason = _priority(topic, " ".join([title, *tags]), description, kind="repo")
+    if not score and readme and matches(topic, readme):
+        score = 5 + (2 if IT_TERMS.search(readme) else 0)
+        reason = "Technical topic found in repository README"
     if not score:
         return None
     return {
@@ -141,7 +162,8 @@ def _record_repo(topic: str, item: dict) -> dict | None:
         "updated_at": item.get("updated_at"), "created_at": item.get("created_at"),
         "is_archived": bool(item.get("archived")), "score": score, "reason": reason,
         "topics": tags[:12],
-        "evidence": "Repository name, topics or description matched the query.",
+        "evidence": ("README directly mentions the topic." if "README" in reason else
+                     "Repository name, topics or description matched the query."),
     }
 
 
@@ -240,6 +262,9 @@ def search_github(
                     data["repositories_found"] += total_count
                     for raw in payload["items"]:
                         row = _record_repo(topic, raw)
+                        if row is None and len(seen_repos) < max_results:
+                            row = _record_repo(topic, raw, readme=_readme_text(
+                                client, raw.get("full_name") or ""))
                         if row and row["url"]:
                             seen_repos[row["url"]] = row
             except (httpx.HTTPError, ValueError, RuntimeError) as exc:
