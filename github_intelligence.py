@@ -315,8 +315,41 @@ def search_github(
             if progress:
                 progress("github_search", f"Checked {index}/{len(searches)} GitHub searches",
                          15 + int(75 * index / len(searches)))
+    # A failed GitHub Issues API must not suppress relevant public issue pages.
+    # Recover separately through the web index, without treating those pages
+    # as verified REST API issue records or changing the API success count.
+    coverage["web_issue_fallback_attempted"] = False
+    coverage["web_issue_fallback_saved"] = 0
+    if coverage["issue_queries_succeeded"] == 0:
+        coverage["web_issue_fallback_attempted"] = True
+        try:
+            from github_web_intelligence import search_web
+            secondary = search_web(topic, output_root.parent / "github_web_fallback",
+                                   max_results=max_results)
+            for web_issue in secondary.get("issues", []):
+                url = web_issue.get("url")
+                if url and url not in seen_issues:
+                    web_issue["source"] = "Indexed web search (GitHub API unavailable)"
+                    web_issue["state"] = "unknown"
+                    seen_issues[url] = web_issue
+                    coverage["web_issue_fallback_saved"] += 1
+            data["fallback_issues"] = coverage["web_issue_fallback_saved"]
+            if secondary.get("search_health") != "complete":
+                data["errors"].append({
+                    "kind": "web_fallback",
+                    "query": topic,
+                    "message": "Secondary web index incomplete: " +
+                               str(secondary.get("search_health")) +
+                               "; " + str(len(secondary.get("errors", []))) + " query failures.",
+                })
+        except Exception as exc:
+            data["errors"].append({
+                "kind": "web_fallback", "query": topic,
+                "message": type(exc).__name__ + ": " + str(exc)[:240],
+            })
     data["coverage"] = coverage
     data["search_health"] = (
+        "fallback" if coverage["web_issue_fallback_saved"] else
         "issues_unavailable" if coverage["issue_queries_succeeded"] == 0
         else "partial" if data["errors"] else "complete"
     )
