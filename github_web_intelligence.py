@@ -12,12 +12,23 @@ from github_intelligence import _priority, matches, query_terms, safe_topic
 LIMIT = 30
 
 def queries_for_web(topic: str) -> list[str]:
-    primary = query_terms(topic)[0]
+    """Diversified discovery: broad topic coverage before specialist facets.
+
+    Over-constrained queries like "API SDK repository" miss most discussions
+    and source repositories. Restrict hosts but not every possible intent.
+    """
+    variants = query_terms(topic)
+    main = variants[0]
+    focused = variants[1] if len(variants) > 1 else main
     return [
-        f"site:github.com {primary} API SDK repository",
-        f"site:github.com {primary} issues integration help",
-        f"site:github.com {primary} discussions developer",
-        f"site:github.com {primary} implementation documentation",
+        f"site:github.com {main}",
+        f"site:github.com {main} integration",
+        f"site:github.com {main} API OAuth",
+        f"site:github.com {main} SDK",
+        f"site:github.com {main} issues",
+        f"site:github.com {main} bug feature request",
+        f"site:github.com {main} discussions",
+        f"site:github.com {focused} developer implementation",
     ]
 
 def normalize_hit(item: dict) -> dict | None:
@@ -34,6 +45,8 @@ def normalize_hit(item: dict) -> dict | None:
         kind = "discussion"
     elif len(parts) > 3 and parts[0] == "orgs" and parts[2] == "discussions":
         kind = "discussion"
+    elif len(parts) == 2 and parts[0].lower() == "orgs":
+        kind = "community"
     elif len(parts) == 2:
         kind = "repository"
     else:
@@ -76,6 +89,11 @@ def search_web(topic: str, output_root: Path, *, max_results: int = 20,
     }
     seen = {}
     succeeded = 0
+    raw_hits = 0
+    non_github = 0
+    topic_unmatched = 0
+    duplicated = 0
+    search_yield = []
     with httpx.Client(timeout=20) as client:
         for i, query in enumerate(queries, 1):
             result["search_queries"].append({"kind": "web", "q": query})
@@ -92,18 +110,28 @@ def search_web(topic: str, output_root: Path, *, max_results: int = 20,
                 else:
                     hits = ddgs_search(query, max_results)
                 succeeded += 1
+                accepted_here = 0
                 for raw in hits:
+                    raw_hits += 1
                     row = normalize_hit(raw)
                     if row is None:
+                        non_github += 1
                         continue
                     evidence = " ".join((row["url"], row["title"], row["description"]))
                     if not matches(topic, evidence):
+                        topic_unmatched += 1
                         continue
                     score, reason = _priority(topic, row["title"], evidence,
                                               kind="issue" if row["kind"] in ("issue", "discussion") else "repo")
                     row.update(score=score, reason=reason)
-                    if score and (row["url"] not in seen or seen[row["url"]]["score"] < score):
-                        seen[row["url"]] = row
+                    if score:
+                        if row["url"] in seen:
+                            duplicated += 1
+                        else:
+                            accepted_here += 1
+                        if row["url"] not in seen or seen[row["url"]]["score"] < score:
+                            seen[row["url"]] = row
+                search_yield.append({"query": query, "unique_new": accepted_here})
             except Exception as exc:
                 result["errors"].append({"kind": "web", "query": query,
                                          "message": f"{type(exc).__name__}: {str(exc)[:230]}"})
@@ -112,8 +140,13 @@ def search_web(topic: str, output_root: Path, *, max_results: int = 20,
                "discussion": "discussions"}.get(row["kind"], "web_results")
         if len(result[key]) < max_results:
             result[key].append(row)
-    result["coverage"] = {"queries_attempted": len(queries), "queries_succeeded": succeeded,
-                           "indexed_github_urls": len(seen)}
+    result["coverage"] = {
+        "queries_attempted": len(queries), "queries_succeeded": succeeded,
+        "indexed_github_urls": len(seen), "raw_search_hits": raw_hits,
+        "non_github_or_invalid": non_github, "topic_unmatched": topic_unmatched,
+        "duplicate_hits": duplicated, "query_yield": search_yield,
+        "result_limit_per_category": max_results,
+    }
     result["search_health"] = "unavailable" if succeeded == 0 else "partial" if result["errors"] else "complete"
     result["counts"] = {
         "repositories": len(result["repositories"]), "issues": len(result["issues"]),
