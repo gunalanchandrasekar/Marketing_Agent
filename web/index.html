@@ -929,7 +929,7 @@ function renderGitHubItems(){
  E('gh-results').innerHTML=failedSearchNote+'<p class="gh-explanation">'+esc(header)+' Showing '+num(matching.length)+' of '+num(items.length)+' saved results.</p>'+
  (matching.length?matching.map(x=>{
   const target=link(x.url);
-  const state=x.kind==='issue'?(x.state==='open'?'Open issue':'Closed issue'):
+  const state=x.kind==='issue'?(x.state==='open'?'Open issue':x.state==='closed'?'Closed issue':'GitHub issue · state unverified'):
    x.kind==='discussion'?'Community discussion':x.kind==='web_reference'?'Indexed GitHub page':x.is_archived?'Archived repository':'Public repository';
   const metadata=x.kind==='issue'||x.kind==='discussion'||x.kind==='web_reference'
    ? esc(x.repository||'GitHub')+' · '+num(x.comments)+' comments · '+esc((x.updated_at||'').slice(0,10))
