@@ -43,6 +43,8 @@ def test_topic_api_requires_exact_confirmation(monkeypatch, tmp_path):
     data = tmp_path / "data"
     make_run(data, "digilocker", "20261010T010000000000Z", "DigiLocker")
     monkeypatch.setattr(web_dashboard, "BASE", tmp_path)
+    # Other API tests launch background jobs; isolate the mutable registry here.
+    monkeypatch.setattr(web_dashboard, "jobs", {})
     client = TestClient(web_dashboard.app)
     preview = client.post("/api/data/topic/preview", json={"topic": "DigiLocker"})
     assert preview.status_code == 200
@@ -56,3 +58,17 @@ def test_topic_api_requires_exact_confirmation(monkeypatch, tmp_path):
     })
     assert result.status_code == 200
     assert result.json()["run_count"] == 1
+
+
+def test_topic_archive_refuses_cleanup_while_scan_is_running(monkeypatch, tmp_path):
+    data = tmp_path / "data"
+    make_run(data, "digilocker", "20261010T010000000000Z", "DigiLocker")
+    monkeypatch.setattr(web_dashboard, "BASE", tmp_path)
+    monkeypatch.setattr(web_dashboard, "jobs", {
+        "active_scan": {"status": "running", "kind": "scan"}
+    })
+    response = TestClient(web_dashboard.app).post("/api/data/topic/archive", json={
+        "topic": "DigiLocker", "confirm_topic": "DigiLocker"
+    })
+    assert response.status_code == 409
+    assert (data / "runs" / "digilocker").exists()
