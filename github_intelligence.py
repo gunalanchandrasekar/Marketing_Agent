@@ -378,6 +378,44 @@ def search_github(
     return data
 
 
+def check_github_connection(topic: str = "DigiLocker") -> dict:
+    """Test one real public issue search; never include token or response headers."""
+    topic = safe_topic(topic)
+    load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
+    token = os.getenv("GITHUB_TOKEN")
+    headers = {
+        "Accept": "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": USER_AGENT,
+    }
+    if token:
+        headers["Authorization"] = "Bearer " + token
+    query = query_terms(topic)[0] + " is:issue in:title,body"
+    try:
+        with httpx.Client(headers=headers, timeout=httpx.Timeout(18, connect=8),
+                          follow_redirects=False) as client:
+            result = _request(client, "/search/issues",
+                              {"q": query, "per_page": 5})
+        samples = [
+            {"title": item.get("title"), "url": item.get("html_url")}
+            for item in result.get("items", [])[:5] if item.get("html_url")
+        ]
+        return {
+            "status": "ok", "topic": topic,
+            "authentication": "token_configured" if token else "anonymous",
+            "public_fallback_used": bool(result.get("_public_fallback")),
+            "github_issue_matches": result.get("total_count", 0),
+            "sample_issues": samples,
+            "note": "Matches are public issue search results, not verified customer leads.",
+        }
+    except (httpx.HTTPError, ValueError, RuntimeError) as exc:
+        return {
+            "status": "failed", "topic": topic,
+            "authentication": "token_configured" if token else "anonymous",
+            "error": str(exc)[:300], "github_issue_matches": None,
+        }
+
+
 def load_github_run(root: Path, run_id: str) -> dict:
     if not re.fullmatch(r"\d{8}T\d{12}Z", run_id):
         raise ValueError("Invalid GitHub scan ID")
