@@ -61,7 +61,10 @@ def test_github_search_saves_deduplicated_results(monkeypatch, tmp_path):
     assert len(result["repositories"]) == 1
     assert len(result["issues"]) == 1
     assert result["counts"]["open_issues"] == 1
-    assert len(calls) == 6
+    assert len(calls) == 4
+    assert calls[0] == '/search/issues'
+    assert result['coverage']['issue_queries_succeeded'] == 2
+    assert result['search_health'] == 'complete'
     assert gi.load_github_run(tmp_path, result["id"])["topic"] == "DigiLocker"
 
 
@@ -99,3 +102,37 @@ def test_github_screen_and_progress_binding():
     assert 'id="view-github"' in ui
     assert "function renderGitHubItems()" in ui
     assert "j.kind==='github_intelligence'" in ui
+
+
+def test_failed_issue_search_is_not_misreported_as_zero_matches(monkeypatch, tmp_path):
+    def unavailable(client, endpoint, params):
+        if endpoint == "/search/issues":
+            raise RuntimeError("GitHub search rate limit reached; configure GITHUB_TOKEN")
+        return {"total_count": 0, "items": []}
+    monkeypatch.setattr(gi, "_request", unavailable)
+    result = gi.search_github("DigiLocker", tmp_path, max_results=10, token="fake")
+    assert result["issues"] == []
+    assert result["coverage"]["issue_queries_attempted"] == 2
+    assert result["coverage"]["issue_queries_succeeded"] == 0
+    assert result["search_health"] == "issues_unavailable"
+    assert len([x for x in result["errors"] if x["kind"] == "issue"]) == 2
+
+
+def test_partial_issue_search_retains_matching_issue(monkeypatch, tmp_path):
+    issue = {"id": 5, "title": "DigiLocker integration problem",
+             "body": "Need help with OAuth API", "state": "open",
+             "html_url": "https://github.com/acme/project/issues/5"}
+    calls = {"issue": 0}
+    def mixed(client, endpoint, params):
+        if endpoint == "/search/issues":
+            calls["issue"] += 1
+            if calls["issue"] == 2:
+                raise RuntimeError("API limit reached")
+            return {"total_count": 269, "items": [issue]}
+        return {"total_count": 0, "items": []}
+    monkeypatch.setattr(gi, "_request", mixed)
+    result = gi.search_github("DigiLocker", tmp_path, max_results=10, token="fake")
+    assert len(result["issues"]) == 1
+    assert result["search_health"] == "partial"
+    assert result["coverage"]["api_total_issue_matches"] == 269
+    assert result["counts"]["issues"] == 1
