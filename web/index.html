@@ -499,7 +499,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
   <div class="panel gh-main"><div class="panel-head"><div><h2 id="gh-result-title">Topic research results</h2><p id="gh-result-detail">Run a GitHub search or open a previous search.</p></div></div>
     <div id="gh-summary" class="gh-summary"></div>
     <div id="gh-health" class="gh-health hidden"></div>
-    <div id="gh-controls" class="gh-controls hidden"><div class="gh-tabs"><button type="button" data-gh-tab="issues" class="active" onclick="setGhTab('issues')">Developer requests <span id="gh-issue-count">0</span></button><button type="button" data-gh-tab="repositories" onclick="setGhTab('repositories')">Repositories <span id="gh-repo-count">0</span></button><button type="button" data-gh-tab="discussions" onclick="setGhTab('discussions')">Discussions <span id="gh-discussion-count">0</span></button><button type="button" id="gh-web-tab" data-gh-tab="web_results" class="hidden" onclick="setGhTab('web_results')">Other GitHub pages <span id="gh-web-count">0</span></button><button type="button" data-gh-tab="diagnostics" onclick="setGhTab('diagnostics')">Diagnostics <span id="gh-error-count">0</span></button></div>
+    <div id="gh-controls" class="gh-controls hidden"><div class="gh-tabs"><button type="button" data-gh-tab="all" onclick="setGhTab('all')">All findings <span id="gh-all-count">0</span></button><button type="button" data-gh-tab="issues" class="active" onclick="setGhTab('issues')">Developer requests <span id="gh-issue-count">0</span></button><button type="button" data-gh-tab="repositories" onclick="setGhTab('repositories')">Repositories <span id="gh-repo-count">0</span></button><button type="button" data-gh-tab="discussions" onclick="setGhTab('discussions')">Discussions <span id="gh-discussion-count">0</span></button><button type="button" id="gh-web-tab" data-gh-tab="web_results" class="hidden" onclick="setGhTab('web_results')">Other GitHub pages <span id="gh-web-count">0</span></button><button type="button" data-gh-tab="diagnostics" onclick="setGhTab('diagnostics')">Diagnostics <span id="gh-error-count">0</span></button></div>
       <input class="input" type="search" id="gh-filter" oninput="renderGitHubItems()" placeholder="Filter repository, issue, description, language"></div>
     <div id="gh-results"><div class="empty"><h3>No research selected</h3><p>Search for DigiLocker, PAN verification, Ration Card API, or another technology.</p></div></div>
   </div>
@@ -848,7 +848,7 @@ async function loadGithubHistory(){
 }
 async function openGithubScan(id){
  try{
-  ghData=await api('/api/github/'+encodeURIComponent(id));ghRun=id;ghTab='issues';
+  ghData=await api('/api/github/'+encodeURIComponent(id));ghRun=id;ghTab=ghData.mode==='web'?'all':'issues';
   E('gh-topic').value=ghData.topic||'';
   setGithubMode(ghData.mode||'direct');
   E('gh-result-title').textContent='GitHub research: '+(ghData.topic||'Topic');
@@ -857,7 +857,7 @@ async function openGithubScan(id){
    ['Relevant repositories',counts.repositories||0],
    ['Matching issues',counts.issues||0],
    ['Open issues',counts.open_issues||0],
-   ['Strong technical signals',counts.developer_requests||0]
+   ['All GitHub findings',(ghData.issues||[]).length+(ghData.repositories||[]).length+(ghData.discussions||[]).length+(ghData.web_results||[]).length]
   ];
   E('gh-summary').innerHTML=fields.map(x=>'<div class="gh-stat"><span>'+esc(x[0])+'</span><b>'+num(x[1])+'</b></div>').join('');
   const coverage=ghData.coverage||{};
@@ -886,6 +886,8 @@ async function openGithubScan(id){
    : '');
   E('gh-issue-count').textContent=issueUnavailable?'!':num(counts.issues||0);
   E('gh-web-count').textContent=num(counts.web_results||0);
+  E('gh-all-count').textContent=num((ghData.issues||[]).length+(ghData.repositories||[]).length+
+      (ghData.discussions||[]).length+(ghData.web_results||[]).length);
   E('gh-web-tab').classList.toggle('hidden',!webMode);
   E('gh-repo-count').textContent=num(counts.repositories||0);
   E('gh-error-count').textContent=num(counts.errors||0);
@@ -905,7 +907,11 @@ function renderGitHubItems(){
  const filter=(E('gh-filter').value||'').trim().toLowerCase();
  if(ghTab==='diagnostics'){
   const errors=(ghData.errors||[]).filter(x=>[x.kind,x.query,x.message].join(' ').toLowerCase().includes(filter));
-  E('gh-results').innerHTML='<div class="gh-explanation">Searches: '+num((ghData.search_queries||[]).length)+' · GitHub API matches may be limited by permissions and rate limits. Repository and issue result totals are bounded; they do not represent all matching GitHub activity.</div>'+
+  const c=ghData.coverage||{};
+  E('gh-results').innerHTML='<div class="gh-explanation">Queries: '+num(c.queries_succeeded??0)+'/'+num(c.queries_attempted??(ghData.search_queries||[]).length)+' succeeded'+
+    (ghData.mode==='web'?' · Indexed hits: '+num(c.raw_search_hits??0)+' · Relevant unique URLs: '+num(c.indexed_github_urls??0)+
+      ' · Duplicate hits: '+num(c.duplicate_hits??0)+' · Topic-mismatched: '+num(c.topic_unmatched??0):'')+
+    '. Results are bounded and may not include all GitHub activity.</div>'+
    (errors.length?errors.map(x=>'<article class="gh-entry gh-error"><b>'+esc(x.kind||'Search error')+'</b><p>'+esc(x.message||'Unknown error')+'</p><small>'+esc(x.query||'')+'</small></article>').join(''):'<div class="empty"><h3>No matching search errors</h3><p>Some public repositories or issue threads may still be missing from the results.</p></div>');
   return;
  }
@@ -913,9 +919,11 @@ function renderGitHubItems(){
     E('gh-results').innerHTML='<div class="gh-search-warning">GitHub Discussions require a usable GitHub token for GraphQL. Verify GITHUB_TOKEN in your local .env file and restart the server.</div>';
     return;
   }
- const items=(ghTab==='issues'?ghData.issues:ghTab==='discussions'?ghData.discussions:ghTab==='web_results'?ghData.web_results:ghData.repositories)||[];
+ const allResults=[...(ghData.issues||[]),...(ghData.discussions||[]),...(ghData.repositories||[]),...(ghData.web_results||[])];
+ const items=(ghTab==='all'?allResults:ghTab==='issues'?ghData.issues:ghTab==='discussions'?ghData.discussions:ghTab==='web_results'?ghData.web_results:ghData.repositories)||[];
  const matching=items.filter(x=>[x.title,x.description,x.language,x.repository,x.reason,x.owner].join(' ').toLowerCase().includes(filter));
- const header=ghTab==='issues'?'Public developer issues and technical requests, not verified customer leads.':
+ const header=ghTab==='all'?'All source-backed GitHub findings from this scan, across repositories, technical issues, discussions and indexed code/documentation pages.':
+  ghTab==='issues'?'Public developer issues and technical requests, not verified customer leads.':
   ghTab==='discussions'?'Public GitHub Discussions indexed or sampled from relevant repositories. Not confirmed buying intent.':
   ghTab==='web_results'?'Other indexed GitHub pages, including documentation or code paths. Follow source links to validate relevance.':
   'Public repositories that may offer implementations, integrations, competitors or potential collaborators.';
