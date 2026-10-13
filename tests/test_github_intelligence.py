@@ -215,3 +215,38 @@ def test_github_env_token_loaded_from_dotenv(monkeypatch, tmp_path):
                         lambda client, endpoint, params: {"total_count": 0, "items": []})
     gi.search_github("DigiLocker", tmp_path, max_results=1)
     assert captured["path"].endswith(".env")
+
+def test_github_connection_diagnostic_returns_real_issue_count(monkeypatch):
+    monkeypatch.setattr(gi, "load_dotenv", lambda *a, **k: None)
+    monkeypatch.delenv("GITHUB_TOKEN", raising=False)
+    def fake_request(client, endpoint, params):
+        assert endpoint == "/search/issues"
+        assert "DigiLocker" in params["q"]
+        return {"total_count": 269, "items": [{
+            "title": "Implement DigiLocker connector for verified user documents",
+            "html_url": "https://github.com/hushh-labs/hushh-research/issues/7829",
+        }]}
+    monkeypatch.setattr(gi, "_request", fake_request)
+    result = gi.check_github_connection("DigiLocker")
+    assert result["status"] == "ok"
+    assert result["github_issue_matches"] == 269
+    assert len(result["sample_issues"]) == 1
+    assert "token" not in str(result).lower() or result["authentication"] == "anonymous"
+
+
+def test_github_health_api_routes_are_distinct(monkeypatch):
+    monkeypatch.setattr(web_dashboard, "check_github_connection",
+                        lambda topic: {"status": "ok", "topic": topic,
+                                       "github_issue_matches": 20})
+    client = TestClient(web_dashboard.app)
+    result = client.get("/api/github/health", params={"topic": "DigiLocker"})
+    assert result.status_code == 200
+    assert result.json()["github_issue_matches"] == 20
+    assert client.get("/api/github/health", params={"topic": "../../secret"}).status_code == 422
+
+
+def test_github_community_ui_and_live_connection_control():
+    ui = web_dashboard.WEB.read_text(encoding="utf-8")
+    assert 'data-gh-tab="discussions"' in ui
+    assert 'id="gh-connection-result"' in ui
+    assert "function checkGithubConnection()" in ui
