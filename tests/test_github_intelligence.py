@@ -1,0 +1,101 @@
+import json
+
+import httpx
+from fastapi.testclient import TestClient
+
+import github_intelligence as gi
+import web_dashboard
+
+
+def test_topic_variations_avoid_bare_pan_acronym():
+    assert gi.query_terms("PAN") == [
+        '"PAN verification"', '"PAN card"', '"Permanent Account Number"'
+    ]
+    assert gi.matches("DigiLocker", "Digi Locker API OAuth integration")
+    assert not gi.matches("PAN", "PAN India furniture supplier")
+    assert gi.matches("PAN", "How to implement PAN verification API?")
+
+
+def test_repo_record_requires_evidence():
+    base = {"id": 8, "full_name": "alice/digilocker-python",
+            "description": "DigiLocker requester API integration in Python",
+            "topics": ["digilocker", "api"], "owner": {"login": "alice"},
+            "html_url": "https://github.com/alice/digilocker-python",
+            "stargazers_count": 4, "forks_count": 2}
+    result = gi._record_repo("DigiLocker", base)
+    assert result["kind"] == "repository"
+    assert result["url"] == base["html_url"]
+    assert result["score"] >= 6
+    assert gi._record_repo("Ration Card", base) is None
+
+
+def test_github_issue_is_demand_signal_not_a_tender():
+    issue = {"id": 41, "title": "Need help integrating DigiLocker OAuth",
+             "body": "Our app fails with API callback error; looking for a fix.",
+             "state": "open", "comments": 3, "number": 17,
+             "html_url": "https://github.com/acme/citizen/issues/17",
+             "repository_url": "https://api.github.com/repos/acme/citizen"}
+    row = gi._record_issue("DigiLocker", issue)
+    assert row["kind"] == "issue"
+    assert row["state"] == "open"
+    assert row["score"] >= 8
+    assert "procurement" not in row["reason"].lower()
+    assert gi._record_issue("DigiLocker", {**issue, "pull_request": {}}) is None
+
+
+def test_github_search_saves_deduplicated_results(monkeypatch, tmp_path):
+    repo = {"id": 8, "full_name": "alice/digilocker-python",
+            "description": "DigiLocker API integration in Python",
+            "topics": ["digilocker"], "owner": {"login": "alice"},
+            "html_url": "https://github.com/alice/digilocker-python"}
+    issue = {"id": 41, "title": "DigiLocker API integration error",
+             "body": "Need help fixing OAuth integration", "state": "open",
+             "html_url": "https://github.com/acme/citizen/issues/17"}
+    calls = []
+    def fake_request(client, endpoint, params):
+        calls.append(endpoint)
+        return {"total_count": 1,
+                "items": [repo] if endpoint.endswith("repositories") else [issue]}
+    monkeypatch.setattr(gi, "_request", fake_request)
+    result = gi.search_github("DigiLocker", tmp_path, max_results=10, token="test-token")
+    assert len(result["repositories"]) == 1
+    assert len(result["issues"]) == 1
+    assert result["counts"]["open_issues"] == 1
+    assert len(calls) == 6
+    assert gi.load_github_run(tmp_path, result["id"])["topic"] == "DigiLocker"
+
+
+def test_api_rate_limit_explained_to_user():
+    def responder(request):
+        return httpx.Response(403, headers={"X-RateLimit-Remaining": "0",
+                                            "X-RateLimit-Reset": "123"})
+    with httpx.Client(transport=httpx.MockTransport(responder)) as client:
+        try:
+            gi._request(client, "/search/issues", {"q": "DigiLocker"})
+            assert False, "Expected rate limit error"
+        except RuntimeError as exc:
+            assert "GITHUB_TOKEN" in str(exc)
+
+
+def test_github_api_history_and_invalid_id(monkeypatch, tmp_path):
+    monkeypatch.setattr(web_dashboard, "BASE", tmp_path)
+    run_id = "20261013T101122123456Z"
+    output = tmp_path / "data" / "github_scans" / run_id
+    output.mkdir(parents=True)
+    (output / "results.json").write_text(json.dumps({
+        "id": run_id, "topic": "DigiLocker", "repositories": [],
+        "issues": [], "created_at": "2026-10-13T10:11:22Z"
+    }), encoding="utf-8")
+    client = TestClient(web_dashboard.app)
+    assert client.get("/api/github/history").json()["scans"][0]["topic"] == "DigiLocker"
+    assert client.get("/api/github/" + run_id).json()["id"] == run_id
+    assert client.get("/api/github/not-an-id").status_code == 404
+    assert client.post("/api/github/search", json={"topic": "../../etc/passwd"}).status_code == 422
+
+
+def test_github_screen_and_progress_binding():
+    ui = web_dashboard.WEB.read_text(encoding="utf-8")
+    assert 'data-page="github"' in ui
+    assert 'id="view-github"' in ui
+    assert "function renderGitHubItems()" in ui
+    assert "j.kind==='github_intelligence'" in ui
