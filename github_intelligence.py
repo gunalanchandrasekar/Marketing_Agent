@@ -14,6 +14,7 @@ from pathlib import Path
 from urllib.parse import quote
 
 import httpx
+from dotenv import load_dotenv
 
 from relevance import topic_present
 
@@ -185,7 +186,11 @@ def search_github(
     headers = {"Accept": "application/vnd.github+json",
                "X-GitHub-Api-Version": "2022-11-28",
                "User-Agent": USER_AGENT}
+    # Dashboard startup does not automatically load .env; resolve here so the
+    # GitHub token is available even when Python is launched from Git Bash.
+    load_dotenv(Path(__file__).resolve().parent / ".env", override=False)
     secret = token or os.getenv("GITHUB_TOKEN")
+    data["authentication"] = "token" if secret else "anonymous"
     if secret:
         headers["Authorization"] = "Bearer " + secret
     if progress:
