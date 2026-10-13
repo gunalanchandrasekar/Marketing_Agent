@@ -5,8 +5,9 @@ from fastapi.testclient import TestClient
 
 def test_github_web_queries_cover_repositories_issues_discussions():
     queries = queries_for_web("DigiLocker")
-    assert len(queries) == 4
+    assert len(queries) == 8
     assert all("site:github.com" in q for q in queries)
+    assert any(q.endswith('"DigiLocker"') for q in queries)
     assert any("issues" in q for q in queries)
     assert any("discussions" in q for q in queries)
 
@@ -39,7 +40,9 @@ def test_independent_web_search_deduplicates_and_persists(tmp_path):
     assert len(out["repositories"]) == 1
     assert len(out["issues"]) == 1
     assert len(out["discussions"]) == 1
-    assert out["coverage"]["queries_succeeded"] == 4
+    assert out["coverage"]["queries_succeeded"] == 8
+    assert out["coverage"]["raw_search_hits"] == 40
+    assert out["coverage"]["duplicate_hits"] >= 3
     assert (tmp_path / out["id"] / "results.json").exists()
 
 
@@ -49,7 +52,7 @@ def test_index_failure_is_not_confirmed_zero(tmp_path):
     result = search_web("DigiLocker", tmp_path, search_provider=fail)
     assert result["search_health"] == "unavailable"
     assert result["coverage"]["queries_succeeded"] == 0
-    assert len(result["errors"]) == 4
+    assert len(result["errors"]) == 8
 
 
 def test_api_rejects_unknown_search_mode():
@@ -67,3 +70,27 @@ def test_github_two_mode_screen():
     assert "function setGithubMode(mode)" in html
     assert "mode:ghMode" in html
     assert 'data-gh-tab="web_results"' in html
+    assert 'data-gh-tab="all"' in html
+    assert "ghTab=ghData.mode==='web'?'all':'issues'" in html
+
+
+def test_search_exposes_discovery_funnel_and_keeps_other_github_pages(tmp_path):
+    rows = [
+        {"href": "https://github.com/surepassio/surepass-digiboost-web-sdk",
+         "title": "DigiLocker web SDK for digital ID", "body": "API integration"},
+        {"href": "https://github.com/ProteaneGovTechnologies/Protean-RISE-APIs/blob/main/README.md",
+         "title": "Protean RISE APIs DigiLocker documentation", "body": "PAN and DigiLocker integration"},
+        {"href": "https://github.com/org/portal/issues/44",
+         "title": "DigiLocker API integration help", "body": "OAuth callback failing"},
+        {"href": "https://non-github.test/not-github", "title": "DigiLocker", "body": "Ignore"},
+        {"href": "https://github.com/org/other", "title": "Different project", "body": "Unrelated"},
+    ]
+    out = search_web("DigiLocker", tmp_path, max_results=10,
+                     search_provider=lambda query, count: rows)
+    assert len(out["repositories"]) == 1
+    assert len(out["issues"]) == 1
+    assert len(out["web_results"]) == 1
+    assert out["coverage"]["indexed_github_urls"] == 3
+    assert out["coverage"]["non_github_or_invalid"] == 8
+    assert out["coverage"]["topic_unmatched"] == 8
+    assert out["coverage"]["duplicate_hits"] >= 15
