@@ -168,35 +168,58 @@ def search_github(
         progress("github_search", "Searching public GitHub repositories and issues", 10)
     seen_repos: dict[str, dict] = {}
     seen_issues: dict[str, dict] = {}
+    # GitHub's unauthenticated SEARCH quota is small. Search developer issues
+    # first, then repositories, and use two focused variants per category.
+    # Never confuse a failed search with a confirmed zero-match search.
+    planned_terms = terms[:2]
+    searches = [
+        (kind, endpoint, term) for kind, endpoint in (
+            ("issue", "/search/issues"),
+            ("repository", "/search/repositories"),
+        ) for term in planned_terms
+    ]
+    coverage = {
+        "issue_queries_attempted": 0, "issue_queries_succeeded": 0,
+        "repository_queries_attempted": 0, "repository_queries_succeeded": 0,
+        "api_total_issue_matches": 0, "api_total_repository_matches": 0,
+    }
     with httpx.Client(headers=headers, timeout=httpx.Timeout(18, connect=8),
                       follow_redirects=False) as client:
-        for n, term in enumerate(terms):
-            for kind, endpoint in (("repository", "/search/repositories"),
-                                   ("issue", "/search/issues")):
-                query = term + (" in:name,description,readme" if kind == "repository"
-                                else " is:issue in:title,body")
-                params = {"q": query, "sort": "updated", "order": "desc", "per_page": max_results}
-                data["search_queries"].append({"kind": kind, "q": query})
-                try:
-                    payload = _request(client, endpoint, params)
-                    if kind == "repository":
-                        data["repositories_found"] += payload.get("total_count", 0)
-                        for raw in payload["items"]:
-                            row = _record_repo(topic, raw)
-                            if row and row["url"]:
-                                seen_repos[row["url"]] = row
-                    else:
-                        data["issues_found"] += payload.get("total_count", 0)
-                        for raw in payload["items"]:
-                            row = _record_issue(topic, raw)
-                            if row and row["url"]:
-                                seen_issues[row["url"]] = row
-                except (httpx.HTTPError, ValueError, RuntimeError) as exc:
-                    data["errors"].append({"kind": kind, "query": query, "message": str(exc)[:320]})
-                if progress:
-                    done = n * 2 + (1 if kind == "repository" else 2)
-                    progress("github_search", f"Checked {done}/{len(terms)*2} GitHub searches",
-                             15 + int(75 * done / (len(terms)*2)))
+        for index, (kind, endpoint, term) in enumerate(searches, 1):
+            group = "issue" if kind == "issue" else "repository"
+            coverage[group + "_queries_attempted"] += 1
+            query = term + (" is:issue in:title,body" if kind == "issue"
+                            else " in:name,description,readme")
+            params = {"q": query, "sort": "updated", "order": "desc", "per_page": max_results}
+            data["search_queries"].append({"kind": kind, "q": query})
+            try:
+                payload = _request(client, endpoint, params)
+                coverage[group + "_queries_succeeded"] += 1
+                total_count = int(payload.get("total_count") or 0)
+                if kind == "issue":
+                    coverage["api_total_issue_matches"] += total_count
+                    data["issues_found"] += total_count
+                    for raw in payload["items"]:
+                        row = _record_issue(topic, raw)
+                        if row and row["url"]:
+                            seen_issues[row["url"]] = row
+                else:
+                    coverage["api_total_repository_matches"] += total_count
+                    data["repositories_found"] += total_count
+                    for raw in payload["items"]:
+                        row = _record_repo(topic, raw)
+                        if row and row["url"]:
+                            seen_repos[row["url"]] = row
+            except (httpx.HTTPError, ValueError, RuntimeError) as exc:
+                data["errors"].append({"kind": kind, "query": query, "message": str(exc)[:320]})
+            if progress:
+                progress("github_search", f"Checked {index}/{len(searches)} GitHub searches",
+                         15 + int(75 * index / len(searches)))
+    data["coverage"] = coverage
+    data["search_health"] = (
+        "issues_unavailable" if coverage["issue_queries_succeeded"] == 0
+        else "partial" if data["errors"] else "complete"
+    )
     # Strongest evidence first; among similar hits surface recently updated,
     # non-archived projects and actively discussed open issues.
     repo_order = sorted(seen_repos.values(), key=lambda x: x.get("updated_at") or "", reverse=True)
