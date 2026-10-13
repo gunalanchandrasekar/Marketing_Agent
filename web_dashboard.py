@@ -28,6 +28,7 @@ from relevance import qualify_analysis
 from document_review import find_document, page_evidence
 from link_inspector import inspect_links, load_inspection, validate_public_url
 from github_intelligence import search_github, load_github_run, check_github_connection, safe_topic as safe_github_topic
+from github_web_intelligence import search_web
 
 BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
@@ -262,6 +263,7 @@ class ScanInput(BaseModel):
 class GitHubScanInput(BaseModel):
     topic: str = Field(min_length=2, max_length=100)
     max_results: int = Field(default=20, ge=1, le=30)
+    mode: str = Field(default="direct", pattern="^(direct|web)$")
 
 
 class LinkInspectInput(BaseModel):
@@ -371,9 +373,11 @@ def github_search(params: GitHubScanInput):
     except ValueError as exc:
         raise HTTPException(status_code=422, detail=str(exc))
     def action(progress):
-        result = search_github(topic, BASE / "data" / "github_scans",
-                               max_results=params.max_results, progress=progress)
+        collector = search_web if params.mode == "web" else search_github
+        result = collector(topic, BASE / "data" / "github_scans",
+                           max_results=params.max_results, progress=progress)
         return {"github_run_id": result["id"], "topic": topic,
+                "mode": params.mode,
                 "repositories": len(result["repositories"]),
                 "issues": len(result["issues"]),
                 "needs_attention": bool(result["errors"])}
@@ -400,7 +404,8 @@ def github_scan_history():
         results.append({"id": data.get("id"), "topic": data.get("topic"),
                         "created_at": data.get("created_at"),
                         "repositories": len(data.get("repositories") or []),
-                        "issues": len(data.get("issues") or [])})
+                        "issues": len(data.get("issues") or []),
+                        "mode": data.get("mode", "direct") })
     return {"scans": results}
 
 
