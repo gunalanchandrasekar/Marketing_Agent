@@ -454,6 +454,18 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .li-preview{width:100%;height:540px;border:1px solid #dee6f2;border-radius:12px}.li-issue{padding:10px 12px;background:#fff6f0;border-radius:9px;margin:9px 0;font-size:12px;color:#8e5630;overflow-wrap:anywhere}
 .li-issue p{margin:5px 0 0}.li-note{border-top:1px solid #e7ecf5;padding-top:14px}
 @media(max-width:850px){.li-workspace{grid-template-columns:1fr}.li-options button{margin-left:0}.li-document-top{flex-wrap:wrap}}
+
+/* GitHub Intelligence - VAF design system */
+.gh-intro{padding:24px 27px;margin:12px 0 18px}.gh-intro .eyebrow{color:#ed7926}.gh-intro h2{font-size:22px;line-height:1.3;margin:8px 0}.gh-intro p{font-size:13px;color:#627992;line-height:1.7;max-width:850px}
+.gh-form{display:flex;gap:12px;align-items:end;margin:21px 0 8px}.gh-field{flex:1;min-width:0}.gh-field label{display:block;font-size:11px;font-weight:750;color:#365474;margin-bottom:7px}.gh-field input{width:100%}.gh-field.gh-limit{flex:0 0 170px}.gh-field select{width:100%}
+.gh-notice{font-size:11px!important;color:#8190a4!important;margin-top:16px!important}
+.gh-workspace{display:grid;grid-template-columns:270px minmax(0,1fr);gap:15px;align-items:start}.gh-sidebar,.gh-main{min-width:0;overflow:hidden}.gh-sidebar .panel-head,.gh-main .panel-head{padding:18px 21px}.gh-sidebar .panel-head h2,.gh-main .panel-head h2{font-size:17px}
+.gh-history-item{display:block;width:100%;text-align:left;border:0;border-top:1px solid #edf0f6;padding:16px 18px;cursor:pointer;background:#fff}.gh-history-item.selected{background:#edf6fd;box-shadow:inset 3px 0 #f37c22}.gh-history-item b{display:block;font-size:13px;overflow-wrap:anywhere;color:#152f53}.gh-history-item small{display:block;font-size:11px;color:#738399;margin-top:6px}
+.gh-summary{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:11px;margin:16px 19px}.gh-summary:empty{display:none}.gh-stat{padding:12px;border:1px solid #e3eaf4;border-radius:12px;background:#fafdff}.gh-stat span{display:block;font-size:11px;color:#637791}.gh-stat b{display:block;font-size:25px;color:#152f53;margin-top:5px}
+.gh-controls{padding:0 20px 14px}.gh-tabs{display:flex;gap:5px;border-bottom:1px solid #e4eaf2;margin-bottom:12px;flex-wrap:wrap}.gh-tabs button{padding:11px 12px;background:transparent;border:0;border-bottom:3px solid transparent;color:#617891;font-size:12px;font-weight:700;cursor:pointer}.gh-tabs button.active{border-bottom-color:#ff7923;color:#144b80}.gh-tabs button span{padding:2px 5px;border-radius:5px;background:#edf2f8;margin-left:4px}.gh-controls input{width:100%;font-size:12px}
+.gh-explanation{padding:8px 20px 12px;font-size:12px;color:#74839a;line-height:1.7}.gh-entry{padding:18px 20px;border-top:1px solid #e6ebf3}.gh-entry h3{font-size:14px;color:#142e52;margin:9px 0 7px;line-height:1.4;overflow-wrap:anywhere}.gh-entry p{font-size:12px;line-height:1.6;color:#506b87;overflow-wrap:anywhere;margin:7px 0}.gh-entry-top{display:flex;gap:7px;flex-wrap:wrap}.gh-pill{display:inline-block;font-size:10px;font-weight:700;padding:4px 9px;border-radius:14px;background:#edf2f8;color:#4d6a8a}.gh-pill.gh-score{background:#e7f3ff;color:#1a6da0}.gh-reason{background:#f7faff;border-radius:8px;padding:9px 10px}.gh-entry-foot{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:11px;color:#8091a8;flex-wrap:wrap}.gh-entry-foot a{color:#1a70ac;font-size:12px;font-weight:700}.gh-error{background:#fff6f2}.gh-error small{color:#826750;overflow-wrap:anywhere}
+@media(max-width:1000px){.gh-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.gh-workspace{grid-template-columns:1fr}}
+@media(max-width:700px){.gh-form{flex-direction:column;align-items:stretch}.gh-field.gh-limit{flex:auto}.gh-form button{width:100%}}
 </style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
@@ -461,6 +473,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <button class="navbtn" data-page="opportunities" onclick="navigate('opportunities')">◈ &nbsp; Opportunities <span class="mini" id="side-count">0</span></button>
 <button class="navbtn" data-page="documents" onclick="navigate('documents')">▤ &nbsp; Documents</button>
 <button class="navbtn" data-page="links" onclick="navigate('links')">⌕ &nbsp; Link Intelligence</button>
+<button class="navbtn" data-page="github" onclick="navigate('github')">◇ &nbsp; GitHub Intelligence</button>
 <button class="navbtn" data-page="sources" onclick="navigate('sources')">⌁ &nbsp; Government sources</button>
 <button class="navbtn" data-page="activity" onclick="navigate('activity')">◷ &nbsp; Activity & diagnostics</button></div>
 <div class="sidetip"><b>Evidence-first intelligence</b><p>AI analysis is preliminary. Current tender availability always requires an official source check.</p></div></aside>
@@ -468,6 +481,24 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 <div class="intro"><div><div class="eyebrow">Opportunity discovery platform</div><h1 id="page-title">Intelligence Overview</h1><p class="subtitle" id="page-subtitle">Understand your latest tender research and discover the next opportunity.</p></div><button class="button primary" onclick="openScan()">＋ &nbsp; New intelligence scan</button></div>
 <div id="job-state" class="job hidden"></div>
 <div id="run-select" class="toolbar"><label class="muted" for="runPicker" style="font-weight:700">Viewing run</label><select id="runPicker" class="input" onchange="chooseRun(this.value)"></select><button class="button" onclick="refresh()">↻ &nbsp; Refresh data</button><button class="button" onclick="archiveSelectedTopic()" style="color:#a23d47">Remove topic data</button><button class="button" onclick="clearOldData()" style="color:#a23d47">Clear all generated runs</button></div>
+<section id="view-github" class="hidden">
+ <div class="gh-intro panel"><div class="eyebrow">DEVELOPER COMMUNITY / CHANNEL 03</div><h2>GitHub Intelligence</h2><p>Discover repositories and developer requests connected to a topic. Identify reusable open-source work and potential technical delivery needs—without confusing community discussions with formal tenders.</p>
+ <form class="gh-form" onsubmit="startGitHubSearch(event)">
+  <div class="gh-field"><label for="gh-topic">Technology or problem to investigate</label><input class="input" id="gh-topic" required placeholder="e.g. DigiLocker, API Setu, PAN verification" maxlength="100"></div>
+  <div class="gh-field gh-limit"><label for="gh-limit">Results per category</label><select class="input" id="gh-limit"><option value="10">10</option><option value="20" selected>20</option><option value="30">30</option></select></div>
+  <button class="button primary" type="submit" id="gh-search-button">Search GitHub →</button>
+ </form><p class="gh-notice">Only public GitHub repositories and issues are searched. Pull requests are excluded. GitHub Discussions, private repositories and messages requiring access are not included. A developer issue is an early technical signal—not evidence of purchasing intent.</p>
+ </div>
+ <div class="gh-workspace">
+  <div class="panel gh-sidebar"><div class="panel-head"><div><h2>Research history</h2><p>Saved topic searches</p></div></div><div id="gh-history"><div class="empty">No GitHub scans yet</div></div></div>
+  <div class="panel gh-main"><div class="panel-head"><div><h2 id="gh-result-title">Topic research results</h2><p id="gh-result-detail">Run a GitHub search or open a previous search.</p></div></div>
+    <div id="gh-summary" class="gh-summary"></div>
+    <div id="gh-controls" class="gh-controls hidden"><div class="gh-tabs"><button type="button" data-gh-tab="issues" class="active" onclick="setGhTab('issues')">Developer requests <span id="gh-issue-count">0</span></button><button type="button" data-gh-tab="repositories" onclick="setGhTab('repositories')">Repositories <span id="gh-repo-count">0</span></button><button type="button" data-gh-tab="diagnostics" onclick="setGhTab('diagnostics')">Diagnostics <span id="gh-error-count">0</span></button></div>
+      <input class="input" type="search" id="gh-filter" oninput="renderGitHubItems()" placeholder="Filter repository, issue, description, language"></div>
+    <div id="gh-results"><div class="empty"><h3>No research selected</h3><p>Search for DigiLocker, PAN verification, Ration Card API, or another technology.</p></div></div>
+  </div>
+ </div>
+</section>
 <section id="view-links" class="hidden">
  <div class="li-header panel"><div class="eyebrow">SOURCE-DRIVEN INTELLIGENCE</div><h2>Inspect a source link</h2><p>Paste public tender notices, government portal pages, article URLs or a direct RFP PDF. The agent will collect accessible linked documents and extract IT-relevant evidence.</p>
   <form class="li-form" onsubmit="submitLinkInspection(event)">
@@ -582,7 +613,7 @@ async function loadModels(){try{let r=await api('/api/models');availableModels=r
 function modelSelect(name='model'){let opts=availableModels.filter(m=>!m.includes(':cloud'));return opts.length?'<select class="input" name="'+name+'">'+opts.map(m=>'<option value="'+esc(m)+'" '+(m===(recommendedModel||'qwen3:30b')?'selected':'')+'>'+esc(m)+'</option>').join('')+'</select>':'<input class="input" name="'+name+'" value="qwen3:30b" placeholder="Ollama model" />'}
 async function refresh(prefer){try{const previousRun=selected;const d=await api('/api/runs');runs=d.runs||[];const saved=prefer||selected;selected=runs.some(x=>x.run_id===saved)?saved:(runs[0]?.run_id||null);const picker=E('runPicker');picker.innerHTML=runs.map(r=>'<option value="'+esc(r.run_id)+'">'+esc(r.topic)+' · '+esc(r.run_id.slice(0,8))+' · '+r.opportunities+' saved analyses</option>').join('');picker.value=selected||'';E('run-select').classList.toggle('hidden',!runs.length);current=selected?await api('/api/runs/'+encodeURIComponent(selected)):null;if(previousRun!==selected){activeTenderSha=null;activeTenderTitle=''}render();updateChatControls()}catch(e){E('health').textContent='Unable to load runs: '+e.message}}
 async function chooseRun(id){selected=id;resetTenderScope();try{current=await api('/api/runs/'+encodeURIComponent(id));render();updateChatControls()}catch(e){alert(e.message)}}
-function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['overview','opportunities','documents','links','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','IT-focused tenders: software, API integration, digital platforms and implementation services.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],links:['Link Intelligence','Investigate a supplied public URL and collect accessible related RFP documents.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render();if(p==='links')loadLinkHistory()}
+function navigate(p){document.body.classList.toggle('overview-active',p==='overview');currentPage=p;document.querySelectorAll('.navbtn').forEach(x=>x.classList.toggle('active',x.dataset.page===p));['overview','opportunities','documents','links','github','sources','activity'].forEach(x=>E('view-'+x).classList.toggle('hidden',x!==p));const titles={overview:['Intelligence Overview','Understand your latest tender research and discover the next opportunity.'],opportunities:['Tender Opportunities','IT-focused tenders: software, API integration, digital platforms and implementation services.'],documents:['Document Intelligence','Review extracted documents and recover incomplete AI runs.'],links:['Link Intelligence','Investigate a supplied public URL and collect accessible related RFP documents.'],github:['GitHub Intelligence','Discover public code, developer pain points and IT implementation demand signals.'],sources:['Government Sources','Monitor available public procurement signals and official links.'],activity:['Pipeline Activity','Audit each run and identify processing or connectivity issues.']};E('page-title').textContent=titles[p][0];E('page-subtitle').textContent=titles[p][1];E('breadcrumb').textContent=titles[p][0];render();if(p==='links')loadLinkHistory();if(p==='github')loadGithubHistory()}
 function render(){const ops=current?.opportunities||[],docs=current?.documents||[],issues=current?.issues||[],publics=current?.public_listing_candidates||[];const processed=(current?.steps?.analysis?.documents_analyzed||0);
  const prefiltered=(current?.steps?.prequalification?.documents_excluded_before_ai||0);
  const remaining=Math.max(0,docs.filter(d=>d.extraction_status==="ok").length-processed-prefiltered);if(!currentJob){if(remaining>0){E("job-state").classList.remove("hidden");E("job-state").classList.add("attention");E("job-state").innerHTML="<b>AI ANALYSIS INCOMPLETE</b><p style=\"color:#77501c;margin:8px 0\">"+remaining+" extracted document(s) have no completed AI analysis. This scan is not fully successful.</p><button class=\"button\" onclick=\"navigate(&#39;documents&#39;);retryOpen()\">Retry AI analysis →</button>"}else{E("job-state").classList.add("hidden");E("job-state").classList.remove("attention")}}E('side-count').textContent=ops.length;E('stats').innerHTML=[['Discovered URLs',data('discovery').unique_candidates,'⌕','Search candidates'],['Pages inspected',data('discovery').pages_fetched,'▤','Relevant pages'],['Documents extracted',data('extraction').documents_extracted,'▣','Readable PDFs'],['AI analyses',data('analysis').documents_analyzed,'✧','Structured records'],['Official matches',data('cppp_public_listings').matches,'◈','Public homepage only' ]].map((row,i)=>'<button type="button" class="stat stat-click" onclick="showMetricDetails('+i+')"><div class="head">'+row[0]+'<span class="glyph">'+row[2]+'</span></div><div class="value">'+num(row[1])+'</div><div class="meta">'+row[3]+'</div><div class="stat-explore">View records →</div></button>').join('');
@@ -759,6 +790,80 @@ async function openLinkInspection(id){
 }
 function showLinkedPdf(url){const frame=E('li-pdf-preview');frame.classList.remove('hidden');frame.src=url;frame.scrollIntoView({behavior:'smooth',block:'center'})}
 
+
+let ghRun=null,ghData=null,ghTab='issues';
+async function startGitHubSearch(ev){
+ ev.preventDefault();
+ const topic=E('gh-topic').value.trim();
+ if(topic.length<2)return;
+ E('gh-search-button').disabled=true;
+ try{
+  const r=await api('/api/github/search',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({topic,max_results:Number(E('gh-limit').value)})});
+  monitorJob(r.job_id);
+ }catch(e){alert('GitHub search failed: '+e.message)}
+ finally{E('gh-search-button').disabled=false}
+}
+async function loadGithubHistory(){
+ try{
+  const items=(await api('/api/github/history')).scans||[];
+  E('gh-history').innerHTML=items.length?items.map(x=>
+   '<button type="button" class="gh-history-item '+(ghRun===x.id?'selected':'')+'" onclick="openGithubScan(\''+esc(x.id)+'\')"><b>'+esc(x.topic||'Topic')+'</b><small>'+esc((x.created_at||'').slice(0,16).replace('T',' '))+' · '+num(x.issues)+' issues · '+num(x.repositories)+' repositories</small></button>'
+  ).join(''):'<div class="empty">No GitHub searches saved yet.</div>';
+ }catch(err){E('gh-history').textContent='Could not load GitHub search history: '+err.message}
+}
+async function openGithubScan(id){
+ try{
+  ghData=await api('/api/github/'+encodeURIComponent(id));ghRun=id;ghTab='issues';
+  E('gh-topic').value=ghData.topic||'';
+  E('gh-result-title').textContent='GitHub research: '+(ghData.topic||'Topic');
+  E('gh-result-detail').textContent='Public GitHub activity · '+(ghData.created_at||'').slice(0,16).replace('T',' ')+' · Not a tender availability check';
+  const counts=ghData.counts||{},fields=[
+   ['Relevant repositories',counts.repositories||0],
+   ['Matching issues',counts.issues||0],
+   ['Open issues',counts.open_issues||0],
+   ['Strong technical signals',counts.developer_requests||0]
+  ];
+  E('gh-summary').innerHTML=fields.map(x=>'<div class="gh-stat"><span>'+esc(x[0])+'</span><b>'+num(x[1])+'</b></div>').join('');
+  E('gh-issue-count').textContent=num(counts.issues||0);
+  E('gh-repo-count').textContent=num(counts.repositories||0);
+  E('gh-error-count').textContent=num(counts.errors||0);
+  E('gh-filter').value='';
+  E('gh-controls').classList.remove('hidden');
+  renderGitHubItems();await loadGithubHistory();
+ }catch(err){E('gh-results').textContent='Cannot load GitHub research: '+err.message}
+}
+function setGhTab(tab){
+ ghTab=tab;E('gh-filter').value='';
+ renderGitHubItems();
+}
+function renderGitHubItems(){
+ if(!ghData)return;
+ document.querySelectorAll('[data-gh-tab]').forEach(el=>el.classList.toggle('active',el.dataset.ghTab===ghTab));
+ const filter=(E('gh-filter').value||'').trim().toLowerCase();
+ if(ghTab==='diagnostics'){
+  const errors=(ghData.errors||[]).filter(x=>[x.kind,x.query,x.message].join(' ').toLowerCase().includes(filter));
+  E('gh-results').innerHTML='<div class="gh-explanation">Searches: '+num((ghData.search_queries||[]).length)+' · GitHub API matches may be limited by permissions and rate limits. Repository and issue result totals are bounded; they do not represent all matching GitHub activity.</div>'+
+   (errors.length?errors.map(x=>'<article class="gh-entry gh-error"><b>'+esc(x.kind||'Search error')+'</b><p>'+esc(x.message||'Unknown error')+'</p><small>'+esc(x.query||'')+'</small></article>').join(''):'<div class="empty"><h3>No matching search errors</h3><p>Some public repositories or issue threads may still be missing from the results.</p></div>');
+  return;
+ }
+ const items=(ghTab==='issues'?ghData.issues:ghData.repositories)||[];
+ const matching=items.filter(x=>[x.title,x.description,x.language,x.repository,x.reason,x.owner].join(' ').toLowerCase().includes(filter));
+ const header=ghTab==='issues'?'Public developer issues and technical requests, not verified customer leads.':'Public repositories that may offer implementations, integrations, competitors or potential collaborators.';
+ E('gh-results').innerHTML='<p class="gh-explanation">'+esc(header)+' Showing '+num(matching.length)+' of '+num(items.length)+' saved results.</p>'+
+ (matching.length?matching.map(x=>{
+  const target=link(x.url);
+  const state=x.kind==='issue'?(x.state==='open'?'Open issue':'Closed issue'):x.is_archived?'Archived repository':'Public repository';
+  const metadata=x.kind==='issue'
+   ? esc(x.repository||'GitHub')+' · '+num(x.comments)+' comments · '+esc((x.updated_at||'').slice(0,10))
+   : esc(x.owner||'GitHub')+' · '+esc(x.language||'Language unknown')+' · '+num(x.stars)+' stars · '+esc((x.updated_at||'').slice(0,10));
+  return '<article class="gh-entry"><div class="gh-entry-top"><span class="gh-pill">'+esc(state)+'</span><span class="gh-pill gh-score">Signal strength '+num(x.score)+'/10</span></div>'+
+   '<h3>'+esc(x.title||'Untitled GitHub result')+'</h3><p>'+esc(x.description||'No description available.')+'</p>'+
+   '<p class="gh-reason"><b>Why matched:</b> '+esc(x.reason||'Topic relevance')+'</p><div class="gh-entry-foot"><span>'+metadata+'</span>'+
+   (target?'<a href="'+esc(target)+'" target="_blank" rel="noopener noreferrer">Open on GitHub ↗</a>':'')+'</div></article>';
+ }).join(''):'<div class="empty"><h3>No matching '+(ghTab==='issues'?'developer issues':'repositories')+'</h3><p>Try clearing the filter or searching for a broader topic.</p></div>');
+}
+
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
 function renderRecords(){
  const term=(E('record-search').value||'').trim().toLowerCase(),filter=E('record-filter').value;
@@ -835,7 +940,7 @@ function showGlobalLoader(j){
 }
 function hideGlobalLoader(){E('global-loader').classList.add('hidden')}
 function monitorJob(id){currentJob=id;showGlobalLoader({stage:"starting",message:"Starting your request...",percent:1,status:"running"});E('job-state').classList.remove('hidden');pollJob(id)}
-async function pollJob(id){if(currentJob!==id)return;try{let j=await api('/api/jobs/'+id);showGlobalLoader(j);E('job-state').innerHTML='<div><span class="spinner" style="'+(j.status==='complete'||j.status==='failed'||j.status==='needs_attention'?'display:none':'')+'"></span><b>'+esc((j.stage||j.kind).replace(/_/g,' ').toUpperCase())+'</b> · '+esc(j.message)+'</div><div class="jobbar"><span style="width:'+Number(j.percent||0)+'%"></span></div><div style="font-size:12px;margin-top:6px">'+Number(j.percent||0)+'% · '+esc(j.status)+'</div>';if(j.status==='complete'||j.status==='needs_attention'){hideGlobalLoader();currentJob=null;if(j.kind==='link_inspection'){await loadLinkHistory(j.result?.inspection_id);if(j.result?.inspection_id)await openLinkInspection(j.result.inspection_id)}else{await refresh(j.result?.run_id)}return}if(j.status==='failed'){hideGlobalLoader();currentJob=null;alert('Process failed: '+j.message);return}setTimeout(()=>pollJob(id),3000)}catch(e){hideGlobalLoader();E('job-state').textContent='Job status unavailable: '+e.message}}
+async function pollJob(id){if(currentJob!==id)return;try{let j=await api('/api/jobs/'+id);showGlobalLoader(j);E('job-state').innerHTML='<div><span class="spinner" style="'+(j.status==='complete'||j.status==='failed'||j.status==='needs_attention'?'display:none':'')+'"></span><b>'+esc((j.stage||j.kind).replace(/_/g,' ').toUpperCase())+'</b> · '+esc(j.message)+'</div><div class="jobbar"><span style="width:'+Number(j.percent||0)+'%"></span></div><div style="font-size:12px;margin-top:6px">'+Number(j.percent||0)+'% · '+esc(j.status)+'</div>';if(j.status==='complete'||j.status==='needs_attention'){hideGlobalLoader();currentJob=null;if(j.kind==='link_inspection'){await loadLinkHistory(j.result?.inspection_id);if(j.result?.inspection_id)await openLinkInspection(j.result.inspection_id)}else if(j.kind==='github_intelligence'){await loadGithubHistory();if(j.result?.github_run_id)await openGithubScan(j.result.github_run_id)}else{await refresh(j.result?.run_id)}return}if(j.status==='failed'){hideGlobalLoader();currentJob=null;alert('Process failed: '+j.message);return}setTimeout(()=>pollJob(id),3000)}catch(e){hideGlobalLoader();E('job-state').textContent='Job status unavailable: '+e.message}}
 async function archiveSelectedTopic(){
  if(!selected||!current?.topic){alert('Select a topic run first.');return}
  const topic=current.topic;
