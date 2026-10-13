@@ -494,7 +494,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
   <div class="panel gh-main"><div class="panel-head"><div><h2 id="gh-result-title">Topic research results</h2><p id="gh-result-detail">Run a GitHub search or open a previous search.</p></div></div>
     <div id="gh-summary" class="gh-summary"></div>
     <div id="gh-health" class="gh-health hidden"></div>
-    <div id="gh-controls" class="gh-controls hidden"><div class="gh-tabs"><button type="button" data-gh-tab="issues" class="active" onclick="setGhTab('issues')">Developer requests <span id="gh-issue-count">0</span></button><button type="button" data-gh-tab="repositories" onclick="setGhTab('repositories')">Repositories <span id="gh-repo-count">0</span></button><button type="button" data-gh-tab="diagnostics" onclick="setGhTab('diagnostics')">Diagnostics <span id="gh-error-count">0</span></button></div>
+    <div id="gh-controls" class="gh-controls hidden"><div class="gh-tabs"><button type="button" data-gh-tab="issues" class="active" onclick="setGhTab('issues')">Developer requests <span id="gh-issue-count">0</span></button><button type="button" data-gh-tab="repositories" onclick="setGhTab('repositories')">Repositories <span id="gh-repo-count">0</span></button><button type="button" data-gh-tab="discussions" onclick="setGhTab('discussions')">Discussions <span id="gh-discussion-count">0</span></button><button type="button" data-gh-tab="diagnostics" onclick="setGhTab('diagnostics')">Diagnostics <span id="gh-error-count">0</span></button></div>
       <input class="input" type="search" id="gh-filter" oninput="renderGitHubItems()" placeholder="Filter repository, issue, description, language"></div>
     <div id="gh-results"><div class="empty"><h3>No research selected</h3><p>Search for DigiLocker, PAN verification, Ration Card API, or another technology.</p></div></div>
   </div>
@@ -847,6 +847,7 @@ async function openGithubScan(id){
   E('gh-issue-count').textContent=issueUnavailable?'!':num(counts.issues||0);
   E('gh-repo-count').textContent=num(counts.repositories||0);
   E('gh-error-count').textContent=num(counts.errors||0);
+  E('gh-discussion-count').textContent=num(counts.discussions||0);
   E('gh-filter').value='';
   E('gh-controls').classList.remove('hidden');
   renderGitHubItems();await loadGithubHistory();
@@ -866,9 +867,15 @@ function renderGitHubItems(){
    (errors.length?errors.map(x=>'<article class="gh-entry gh-error"><b>'+esc(x.kind||'Search error')+'</b><p>'+esc(x.message||'Unknown error')+'</p><small>'+esc(x.query||'')+'</small></article>').join(''):'<div class="empty"><h3>No matching search errors</h3><p>Some public repositories or issue threads may still be missing from the results.</p></div>');
   return;
  }
- const items=(ghTab==='issues'?ghData.issues:ghData.repositories)||[];
+  if(ghTab==='discussions' && ghData.discussion_health==='token_required'){
+    E('gh-results').innerHTML='<div class="gh-search-warning">GitHub Discussions require a usable GitHub token for GraphQL. Verify GITHUB_TOKEN in your local .env file and restart the server.</div>';
+    return;
+  }
+ const items=(ghTab==='issues'?ghData.issues:ghTab==='discussions'?ghData.discussions:ghData.repositories)||[];
  const matching=items.filter(x=>[x.title,x.description,x.language,x.repository,x.reason,x.owner].join(' ').toLowerCase().includes(filter));
- const header=ghTab==='issues'?'Public developer issues and technical requests, not verified customer leads.':'Public repositories that may offer implementations, integrations, competitors or potential collaborators.';
+ const header=ghTab==='issues'?'Public developer issues and technical requests, not verified customer leads.':
+  ghTab==='discussions'?'Public GitHub Discussions sampled from relevant repositories where GraphQL access permits. Not confirmed buying intent.':
+  'Public repositories that may offer implementations, integrations, competitors or potential collaborators.';
  const issueSearchUnavailable=ghTab==='issues' &&
   (ghData.search_health==='issues_unavailable'||
    (!ghData.search_health && !(ghData.issues||[]).length &&
@@ -879,15 +886,16 @@ function renderGitHubItems(){
  E('gh-results').innerHTML=failedSearchNote+'<p class="gh-explanation">'+esc(header)+' Showing '+num(matching.length)+' of '+num(items.length)+' saved results.</p>'+
  (matching.length?matching.map(x=>{
   const target=link(x.url);
-  const state=x.kind==='issue'?(x.state==='open'?'Open issue':'Closed issue'):x.is_archived?'Archived repository':'Public repository';
-  const metadata=x.kind==='issue'
+  const state=x.kind==='issue'?(x.state==='open'?'Open issue':'Closed issue'):
+   x.kind==='discussion'?'Community discussion':x.is_archived?'Archived repository':'Public repository';
+  const metadata=x.kind==='issue'||x.kind==='discussion'
    ? esc(x.repository||'GitHub')+' · '+num(x.comments)+' comments · '+esc((x.updated_at||'').slice(0,10))
    : esc(x.owner||'GitHub')+' · '+esc(x.language||'Language unknown')+' · '+num(x.stars)+' stars · '+esc((x.updated_at||'').slice(0,10));
   return '<article class="gh-entry"><div class="gh-entry-top"><span class="gh-pill">'+esc(state)+'</span><span class="gh-pill gh-score">Signal strength '+num(x.score)+'/10</span></div>'+
    '<h3>'+esc(x.title||'Untitled GitHub result')+'</h3><p>'+esc(x.description||'No description available.')+'</p>'+
    '<p class="gh-reason"><b>Why matched:</b> '+esc(x.reason||'Topic relevance')+'</p><div class="gh-entry-foot"><span>'+metadata+'</span>'+
    (target?'<a href="'+esc(target)+'" target="_blank" rel="noopener noreferrer">Open on GitHub ↗</a>':'')+'</div></article>';
- }).join(''):'<div class="empty"><h3>'+(issueSearchUnavailable?'Issue search did not complete':'No matching '+(ghTab==='issues'?'developer issues':'repositories'))+'</h3><p>'+(issueSearchUnavailable?'Check Diagnostics or supply GITHUB_TOKEN before searching again.':'Try clearing the filter or searching for a broader topic.')+'</p></div>');
+ }).join(''):'<div class="empty"><h3>'+(issueSearchUnavailable?'Issue search did not complete':'No matching '+(ghTab==='issues'?'developer issues':ghTab==='discussions'?'community discussions':'repositories'))+'</h3><p>'+(issueSearchUnavailable?'Check Diagnostics or supply GITHUB_TOKEN before searching again.':'Try clearing the filter or searching for a broader topic.')+'</p></div>');
 }
 
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
