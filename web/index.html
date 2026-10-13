@@ -486,8 +486,8 @@ a:hover,.stat-explore:hover{color:#0c4d88}
  <form class="gh-form" onsubmit="startGitHubSearch(event)">
   <div class="gh-field"><label for="gh-topic">Technology or problem to investigate</label><input class="input" id="gh-topic" required placeholder="e.g. DigiLocker, API Setu, PAN verification" maxlength="100"></div>
   <div class="gh-field gh-limit"><label for="gh-limit">Results per category</label><select class="input" id="gh-limit"><option value="10">10</option><option value="20" selected>20</option><option value="30">30</option></select></div>
-  <button class="button primary" type="submit" id="gh-search-button">Search GitHub →</button>
- </form><p class="gh-notice">Only public GitHub repositories and issues are searched. Pull requests are excluded. GitHub Discussions, private repositories and messages requiring access are not included. A developer issue is an early technical signal—not evidence of purchasing intent.</p>
+  <button class="button" type="button" onclick="checkGithubConnection()">Test GitHub connection</button><button class="button primary" type="submit" id="gh-search-button">Search GitHub →</button>
+ </form><div id="gh-connection-result" class="gh-health hidden"></div><p class="gh-notice">Only public GitHub repositories and issues are searched. Pull requests are excluded. GitHub Discussions, private repositories and messages requiring access are not included. A developer issue is an early technical signal—not evidence of purchasing intent.</p>
  </div>
  <div class="gh-workspace">
   <div class="panel gh-sidebar"><div class="panel-head"><div><h2>Research history</h2><p>Saved topic searches</p></div></div><div id="gh-history"><div class="empty">No GitHub scans yet</div></div></div>
@@ -792,6 +792,24 @@ async function openLinkInspection(id){
 function showLinkedPdf(url){const frame=E('li-pdf-preview');frame.classList.remove('hidden');frame.src=url;frame.scrollIntoView({behavior:'smooth',block:'center'})}
 
 
+async function checkGithubConnection(){
+ const topic=(E('gh-topic').value||'DigiLocker').trim();
+ const target=E('gh-connection-result');
+ target.classList.remove('hidden');target.textContent='Checking GitHub issue search for '+topic+'…';
+ try{
+  const info=await api('/api/github/health?topic='+encodeURIComponent(topic));
+  target.classList.toggle('gh-health-warning',info.status!=='ok');
+  if(info.status!=='ok'){
+   target.textContent='GitHub API test failed: '+(info.error||'Unknown issue')+'. Authentication: '+info.authentication;
+   return;
+  }
+  target.innerHTML='<b>GitHub issue search works:</b> '+num(info.github_issue_matches)+' public matching issues · '+esc(info.authentication)+
+   (info.public_fallback_used?' (public fallback used)':'')+
+   '<div class="gh-connection-list">'+(info.sample_issues||[]).map(x=>
+    '<p><a target="_blank" rel="noopener noreferrer" href="'+esc(link(x.url)||'#')+'">'+esc(x.title||x.url)+'</a></p>'
+   ).join('')+'</div>';
+ }catch(e){target.textContent='Connection test error: '+e.message}
+}
 let ghRun=null,ghData=null,ghTab='issues';
 async function startGitHubSearch(ev){
  ev.preventDefault();
