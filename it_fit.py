@@ -30,6 +30,7 @@ NON_IT = re.compile(
     r"(?i)\b(?:road works?|bridge construction|civil works?|"
     r"building renovation|concrete|bitumen|"
     r"printing (?:and |of )?(?:plastic |smart )?cards?|"
+    r"(?:print(?:ing)?|personaliz(?:ation|e|ing)) (?:and |of )?(?:plastic |smart )?(?:ration |pan )?cards?|"
     r"blank (?:plastic )?cards?|"
     r"stationery|paper supply|toner cartridges?|"
     r"furniture|food grains?|ration supplies|"
