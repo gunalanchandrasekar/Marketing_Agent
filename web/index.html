@@ -836,11 +836,13 @@ async function openGithubScan(id){
     ? 'Partial GitHub results: some API queries failed. Counts below cover only successful searches.'
     : 'GitHub searches completed. Matching results are limited by query wording and the selected result cap.';
   const matches=coverage.api_total_issue_matches||0;
+  const publicFallback=coverage.public_fallback_queries||0;
   E('gh-health').classList.remove('hidden');
   E('gh-health').classList.toggle('gh-health-warning',partial);
   E('gh-health').textContent=msg+(coverage.issue_queries_attempted!==undefined
    ? ' Issue searches: '+num(coverage.issue_queries_succeeded)+'/'+num(coverage.issue_queries_attempted)+
-     ' succeeded; '+num(matches)+' API issue matches reported across queries (may overlap).'
+     ' succeeded; '+num(matches)+' API issue matches reported across queries (may overlap).'+
+     (publicFallback?' Public access fallback used for '+num(publicFallback)+' restricted token request(s).':'')
    : '');
   E('gh-issue-count').textContent=issueUnavailable?'!':num(counts.issues||0);
   E('gh-repo-count').textContent=num(counts.repositories||0);
