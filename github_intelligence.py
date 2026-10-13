@@ -95,8 +95,8 @@ def _request(client: httpx.Client, endpoint: str, params: dict) -> dict:
         remaining = response.headers.get("x-ratelimit-remaining", "unknown")
         raise RuntimeError(
             f"GitHub search unavailable (HTTP {response.status_code}). "
-            f"Remaining quota: {remaining}. Verify token permissions, API search "
-            "limits or try the public search fallback. No results were confirmed."
+            f"Remaining quota: {remaining}. Verify GITHUB_TOKEN permissions, API search "
+            "limits or try again later. No results were confirmed."
         )
     response.raise_for_status()
     data = response.json()
