@@ -136,3 +136,31 @@ def test_partial_issue_search_retains_matching_issue(monkeypatch, tmp_path):
     assert result["search_health"] == "partial"
     assert result["coverage"]["api_total_issue_matches"] == 269
     assert result["counts"]["issues"] == 1
+
+
+def test_authenticated_issue_search_falls_back_to_public_without_leaking_token(monkeypatch):
+    original = httpx.Client(headers={"Authorization": "Bearer private_token"},
+                            transport=httpx.MockTransport(
+                                lambda request: httpx.Response(
+                                    403, headers={"X-RateLimit-Remaining": "10"}
+                                )))
+    seen = []
+    class PublicClient:
+        def __init__(self, headers, **kwargs):
+            assert "Authorization" not in headers
+            self.headers = headers
+        def __enter__(self): return self
+        def __exit__(self, *args): pass
+        def get(self, url, params):
+            seen.append(url)
+            return httpx.Response(200, json={"total_count": 269, "items": []},
+                                  request=httpx.Request("GET", url))
+    monkeypatch.setattr(gi.httpx, "Client", PublicClient)
+    try:
+        payload = gi._request(original, "/search/issues",
+                              {"q": '"DigiLocker" is:issue'})
+    finally:
+        original.close()
+    assert payload["_public_fallback"] is True
+    assert payload["total_count"] == 269
+    assert seen == ["https://api.github.com/search/issues"]
