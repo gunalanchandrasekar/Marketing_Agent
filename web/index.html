@@ -466,7 +466,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
 .gh-explanation{padding:8px 20px 12px;font-size:12px;color:#74839a;line-height:1.7}.gh-entry{padding:18px 20px;border-top:1px solid #e6ebf3}.gh-entry h3{font-size:14px;color:#142e52;margin:9px 0 7px;line-height:1.4;overflow-wrap:anywhere}.gh-entry p{font-size:12px;line-height:1.6;color:#506b87;overflow-wrap:anywhere;margin:7px 0}.gh-entry-top{display:flex;gap:7px;flex-wrap:wrap}.gh-pill{display:inline-block;font-size:10px;font-weight:700;padding:4px 9px;border-radius:14px;background:#edf2f8;color:#4d6a8a}.gh-pill.gh-score{background:#e7f3ff;color:#1a6da0}.gh-reason{background:#f7faff;border-radius:8px;padding:9px 10px}.gh-entry-foot{display:flex;justify-content:space-between;gap:12px;align-items:center;font-size:11px;color:#8091a8;flex-wrap:wrap}.gh-entry-foot a{color:#1a70ac;font-size:12px;font-weight:700}.gh-error{background:#fff6f2}.gh-error small{color:#826750;overflow-wrap:anywhere}
 @media(max-width:1000px){.gh-summary{grid-template-columns:repeat(2,minmax(0,1fr))}.gh-workspace{grid-template-columns:1fr}}
 @media(max-width:700px){.gh-form{flex-direction:column;align-items:stretch}.gh-field.gh-limit{flex:auto}.gh-form button{width:100%}}
-</style></head><body>
+.gh-health{margin:10px 19px;padding:12px 14px;border:1px solid #dbe9f3;background:#f1f7fc;border-radius:10px;color:#385f80;font-size:12px;line-height:1.6}.gh-health-warning,.gh-search-warning{background:#fff5eb;border-color:#f5d2af;color:#855126}.gh-search-warning{border:1px solid #f5d2af;padding:13px 17px;border-radius:10px;margin:10px 20px;font-size:12px;line-height:1.6}</style></head><body>
 <div class="shell"><aside><div class="brand"><div><strong>VAF <span class="brand-ai">AI</span></strong><small>MARKETING INTELLIGENCE</small></div></div>
 <div class="navlabel">Workspace</div><div class="navigation">
 <button class="navbtn active" data-page="overview" onclick="navigate('overview')">▦ &nbsp; Overview</button>
@@ -493,6 +493,7 @@ a:hover,.stat-explore:hover{color:#0c4d88}
   <div class="panel gh-sidebar"><div class="panel-head"><div><h2>Research history</h2><p>Saved topic searches</p></div></div><div id="gh-history"><div class="empty">No GitHub scans yet</div></div></div>
   <div class="panel gh-main"><div class="panel-head"><div><h2 id="gh-result-title">Topic research results</h2><p id="gh-result-detail">Run a GitHub search or open a previous search.</p></div></div>
     <div id="gh-summary" class="gh-summary"></div>
+    <div id="gh-health" class="gh-health hidden"></div>
     <div id="gh-controls" class="gh-controls hidden"><div class="gh-tabs"><button type="button" data-gh-tab="issues" class="active" onclick="setGhTab('issues')">Developer requests <span id="gh-issue-count">0</span></button><button type="button" data-gh-tab="repositories" onclick="setGhTab('repositories')">Repositories <span id="gh-repo-count">0</span></button><button type="button" data-gh-tab="diagnostics" onclick="setGhTab('diagnostics')">Diagnostics <span id="gh-error-count">0</span></button></div>
       <input class="input" type="search" id="gh-filter" oninput="renderGitHubItems()" placeholder="Filter repository, issue, description, language"></div>
     <div id="gh-results"><div class="empty"><h3>No research selected</h3><p>Search for DigiLocker, PAN verification, Ration Card API, or another technology.</p></div></div>
@@ -825,7 +826,23 @@ async function openGithubScan(id){
    ['Strong technical signals',counts.developer_requests||0]
   ];
   E('gh-summary').innerHTML=fields.map(x=>'<div class="gh-stat"><span>'+esc(x[0])+'</span><b>'+num(x[1])+'</b></div>').join('');
-  E('gh-issue-count').textContent=num(counts.issues||0);
+  const coverage=ghData.coverage||{};
+  const issueUnavailable=ghData.search_health==='issues_unavailable'||
+   (!ghData.search_health && counts.issues===0 && (ghData.errors||[]).some(x=>x.kind==='issue'));
+  const partial=issueUnavailable||ghData.search_health==='partial'||Boolean((ghData.errors||[]).length);
+  const msg=issueUnavailable
+   ? 'GitHub issue search did not complete. Zero saved issues is NOT a confirmed zero-match result. Inspect Diagnostics and configure GITHUB_TOKEN if rate-limited.'
+   : partial
+    ? 'Partial GitHub results: some API queries failed. Counts below cover only successful searches.'
+    : 'GitHub searches completed. Matching results are limited by query wording and the selected result cap.';
+  const matches=coverage.api_total_issue_matches||0;
+  E('gh-health').classList.remove('hidden');
+  E('gh-health').classList.toggle('gh-health-warning',partial);
+  E('gh-health').textContent=msg+(coverage.issue_queries_attempted!==undefined
+   ? ' Issue searches: '+num(coverage.issue_queries_succeeded)+'/'+num(coverage.issue_queries_attempted)+
+     ' succeeded; '+num(matches)+' API issue matches reported across queries (may overlap).'
+   : '');
+  E('gh-issue-count').textContent=issueUnavailable?'!':num(counts.issues||0);
   E('gh-repo-count').textContent=num(counts.repositories||0);
   E('gh-error-count').textContent=num(counts.errors||0);
   E('gh-filter').value='';
@@ -850,7 +867,14 @@ function renderGitHubItems(){
  const items=(ghTab==='issues'?ghData.issues:ghData.repositories)||[];
  const matching=items.filter(x=>[x.title,x.description,x.language,x.repository,x.reason,x.owner].join(' ').toLowerCase().includes(filter));
  const header=ghTab==='issues'?'Public developer issues and technical requests, not verified customer leads.':'Public repositories that may offer implementations, integrations, competitors or potential collaborators.';
- E('gh-results').innerHTML='<p class="gh-explanation">'+esc(header)+' Showing '+num(matching.length)+' of '+num(items.length)+' saved results.</p>'+
+ const issueSearchUnavailable=ghTab==='issues' &&
+  (ghData.search_health==='issues_unavailable'||
+   (!ghData.search_health && !(ghData.issues||[]).length &&
+    (ghData.errors||[]).some(e=>e.kind==='issue')));
+ const failedSearchNote=issueSearchUnavailable
+  ? '<div class="gh-search-warning"><b>Developer issue search unavailable.</b> GitHub did not return a usable issue-search response. See Diagnostics for rate limits or query errors. This is not evidence that no DigiLocker issues exist.</div>'
+  : '';
+ E('gh-results').innerHTML=failedSearchNote+'<p class="gh-explanation">'+esc(header)+' Showing '+num(matching.length)+' of '+num(items.length)+' saved results.</p>'+
  (matching.length?matching.map(x=>{
   const target=link(x.url);
   const state=x.kind==='issue'?(x.state==='open'?'Open issue':'Closed issue'):x.is_archived?'Archived repository':'Public repository';
@@ -861,7 +885,7 @@ function renderGitHubItems(){
    '<h3>'+esc(x.title||'Untitled GitHub result')+'</h3><p>'+esc(x.description||'No description available.')+'</p>'+
    '<p class="gh-reason"><b>Why matched:</b> '+esc(x.reason||'Topic relevance')+'</p><div class="gh-entry-foot"><span>'+metadata+'</span>'+
    (target?'<a href="'+esc(target)+'" target="_blank" rel="noopener noreferrer">Open on GitHub ↗</a>':'')+'</div></article>';
- }).join(''):'<div class="empty"><h3>No matching '+(ghTab==='issues'?'developer issues':'repositories')+'</h3><p>Try clearing the filter or searching for a broader topic.</p></div>');
+ }).join(''):'<div class="empty"><h3>'+(issueSearchUnavailable?'Issue search did not complete':'No matching '+(ghTab==='issues'?'developer issues':'repositories'))+'</h3><p>'+(issueSearchUnavailable?'Check Diagnostics or supply GITHUB_TOKEN before searching again.':'Try clearing the filter or searching for a broader topic.')+'</p></div>');
 }
 
 function recordCard(o){const s=status(o),idx=(current?.opportunities||[]).indexOf(o);return '<div class="record"><div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">'+pill(o.opportunity_type||'Procurement','grey')+pill(s[0],s[1])+'</div><h3>'+esc(o.title||'Untitled tender')+'</h3><p>'+esc(o.issuing_authority||'Issuer not identified')+'</p><div class="record-actions"><span class="tiny">Ref: '+esc(o.tender_reference||'—')+'</span><span class="tiny">Original deadline: '+fmtDate(o.submission_deadline)+'</span><button class="button" style="margin-left:auto" onclick="openRecord('+idx+')">View details →</button></div></div>'}
