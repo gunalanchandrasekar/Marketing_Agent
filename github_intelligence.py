@@ -39,7 +39,11 @@ VALID_TOPIC = re.compile(r"^[\w .+#/-]{2,100}$", re.UNICODE)
 
 def safe_topic(value: str) -> str:
     topic = value.strip()
-    if not VALID_TOPIC.fullmatch(topic) or topic.startswith(("-", "/")):
+    if (not VALID_TOPIC.fullmatch(topic)
+            or topic.startswith(("-", "/", "."))
+            or ".." in topic
+            or "/" in topic
+            or "\\" in topic):
         raise ValueError("Topic must be 2–100 characters and contain ordinary topic terms")
     return topic
 
