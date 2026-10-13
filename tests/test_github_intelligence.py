@@ -57,6 +57,7 @@ def test_github_search_saves_deduplicated_results(monkeypatch, tmp_path):
         return {"total_count": 1,
                 "items": [repo] if endpoint.endswith("repositories") else [issue]}
     monkeypatch.setattr(gi, "_request", fake_request)
+    monkeypatch.setattr(gi, "_fetch_discussions", lambda client, topic, repo: [])
     result = gi.search_github("DigiLocker", tmp_path, max_results=10, token="test-token")
     assert len(result["repositories"]) == 1
     assert len(result["issues"]) == 1
@@ -110,6 +111,7 @@ def test_failed_issue_search_is_not_misreported_as_zero_matches(monkeypatch, tmp
             raise RuntimeError("GitHub search rate limit reached; configure GITHUB_TOKEN")
         return {"total_count": 0, "items": []}
     monkeypatch.setattr(gi, "_request", unavailable)
+    monkeypatch.setattr(gi, "_fetch_discussions", lambda client, topic, repo: [])
     result = gi.search_github("DigiLocker", tmp_path, max_results=10, token="fake")
     assert result["issues"] == []
     assert result["coverage"]["issue_queries_attempted"] == 2
@@ -131,6 +133,7 @@ def test_partial_issue_search_retains_matching_issue(monkeypatch, tmp_path):
             return {"total_count": 269, "items": [issue]}
         return {"total_count": 0, "items": []}
     monkeypatch.setattr(gi, "_request", mixed)
+    monkeypatch.setattr(gi, "_fetch_discussions", lambda client, topic, repo: [])
     result = gi.search_github("DigiLocker", tmp_path, max_results=10, token="fake")
     assert len(result["issues"]) == 1
     assert result["search_health"] == "partial"
@@ -164,3 +167,51 @@ def test_authenticated_issue_search_falls_back_to_public_without_leaking_token(m
     assert payload["_public_fallback"] is True
     assert payload["total_count"] == 269
     assert seen == ["https://api.github.com/search/issues"]
+
+def test_readme_relevance_admits_matching_repo_without_title_match():
+    raw = {
+        "id": 31, "full_name": "example/digital-wallet-client",
+        "description": "Credential wallet reference implementation",
+        "owner": {"login": "example"},
+        "html_url": "https://github.com/example/digital-wallet-client",
+        "topics": ["identity"],
+    }
+    assert gi._record_repo("DigiLocker", raw) is None
+    row = gi._record_repo("DigiLocker", raw,
+                          readme="This project integrates DigiLocker OAuth API document retrieval.")
+    assert row is not None
+    assert row["url"] == raw["html_url"]
+    assert "README" in row["reason"]
+
+
+def test_github_discussions_extracted_only_when_topic_in_source(monkeypatch):
+    import httpx
+    payload = {"data": {"repository": {"discussions": {"nodes": [
+        {"title": "DigiLocker OAuth API integration help",
+         "bodyText": "How do I fetch user documents from DigiLocker?",
+         "url": "https://github.com/orgs/example/discussions/32",
+         "createdAt": "2026-09-01T00:00:00Z",
+         "updatedAt": "2026-10-01T00:00:00Z",
+         "comments": {"totalCount": 9}},
+        {"title": "Unrelated topic", "bodyText": "No overlap",
+         "url": "https://github.com/orgs/example/discussions/99",
+         "comments": {"totalCount": 1}},
+    ]}}}}
+    transport = httpx.MockTransport(lambda request: httpx.Response(200, json=payload))
+    with httpx.Client(transport=transport) as client:
+        rows = gi._fetch_discussions(client, "DigiLocker", "example/digital-wallet")
+    assert len(rows) == 1
+    assert rows[0]["kind"] == "discussion"
+    assert rows[0]["comments"] == 9
+
+
+def test_github_env_token_loaded_from_dotenv(monkeypatch, tmp_path):
+    from pathlib import Path
+    captured = {}
+    def remember(path, override=False):
+        captured["path"] = str(path)
+    monkeypatch.setattr(gi, "load_dotenv", remember)
+    monkeypatch.setattr(gi, "_request",
+                        lambda client, endpoint, params: {"total_count": 0, "items": []})
+    gi.search_github("DigiLocker", tmp_path, max_results=1)
+    assert captured["path"].endswith(".env")
