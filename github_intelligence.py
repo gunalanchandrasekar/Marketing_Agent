@@ -336,7 +336,7 @@ def search_github(
     # Search a bounded sample of identified topic-related repositories.
     if secret and data["repositories"]:
         discussions = {}
-        targets = [row["title"] for row in data["repositories"][:5]]
+        targets = [row["title"] for row in data["repositories"][:5]
                    if "/" in row.get("title", "")]
         data["discussion_health"] = "partial"
         with httpx.Client(headers=headers, timeout=httpx.Timeout(18, connect=8),
