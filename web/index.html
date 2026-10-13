@@ -862,10 +862,13 @@ async function openGithubScan(id){
   E('gh-summary').innerHTML=fields.map(x=>'<div class="gh-stat"><span>'+esc(x[0])+'</span><b>'+num(x[1])+'</b></div>').join('');
   const coverage=ghData.coverage||{};
   const webMode=ghData.mode==='web';
+  const recoveredIssues=!webMode && ghData.search_health==='fallback';
   const issueUnavailable=!webMode && (ghData.search_health==='issues_unavailable'||
    (!ghData.search_health && counts.issues===0 && (ghData.errors||[]).some(x=>x.kind==='issue')));
-  const partial=issueUnavailable||ghData.search_health==='partial'||Boolean((ghData.errors||[]).length);
-  const msg=webMode
+  const partial=issueUnavailable||recoveredIssues||ghData.search_health==='partial'||Boolean((ghData.errors||[]).length);
+  const msg=recoveredIssues
+   ? 'GitHub Issues API failed, but the independent web index recovered '+num(coverage.web_issue_fallback_saved||0)+' developer issue link(s). Review sources and Diagnostics; issue state and metadata may be unknown.'
+   : webMode
    ? ghData.search_health==='unavailable'?'Web index searches failed. Check Diagnostics; no GitHub results were confirmed.':'Indexed-web discovery is partial and may miss unindexed or recently updated GitHub activity.'
    : issueUnavailable
    ? 'GitHub issue search did not complete. Zero saved issues is NOT a confirmed zero-match result. Inspect Diagnostics and configure GITHUB_TOKEN if rate-limited.'
