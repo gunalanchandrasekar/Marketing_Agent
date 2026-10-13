@@ -66,21 +66,45 @@ def query_terms(topic: str) -> list[str]:
 
 
 def _request(client: httpx.Client, endpoint: str, params: dict) -> dict:
+    """Query public GitHub search, falling back to anonymous for token-scope errors.
+
+    Fine-grained PATs may authenticate successfully but have insufficient
+    permissions for searching issues in repositories outside their scope.
+    Public search works without a PAT, subject to stricter rate limits.
+    """
     response = client.get(API + endpoint, params=params)
-    if response.status_code in (403, 429):
-        reset = response.headers.get("x-ratelimit-reset", "")
-        remaining = response.headers.get("x-ratelimit-remaining", "")
+    if response.status_code in (401, 403, 404) and client.headers.get("Authorization"):
+        # Use a distinct anonymous request; never send the PAT to another host.
+        safe_headers = {
+            "Accept": "application/vnd.github+json",
+            "X-GitHub-Api-Version": "2022-11-28",
+            "User-Agent": USER_AGENT,
+        }
+        with httpx.Client(headers=safe_headers,
+                          timeout=httpx.Timeout(18, connect=8),
+                          follow_redirects=False) as public:
+            fallback = public.get(API + endpoint, params=params)
+        if fallback.is_success:
+            response = fallback
+            used_public_fallback = True
+        else:
+            used_public_fallback = False
+    else:
+        used_public_fallback = False
+    if response.status_code in (401, 403, 429):
+        remaining = response.headers.get("x-ratelimit-remaining", "unknown")
         raise RuntimeError(
-            "GitHub API rate limit or access restriction (HTTP "
-            + str(response.status_code) + "). Remaining=" + remaining
-            + ", reset=" + reset + ". Configure GITHUB_TOKEN for higher limits."
+            f"GitHub search unavailable (HTTP {response.status_code}). "
+            f"Remaining quota: {remaining}. Verify token permissions, API search "
+            "limits or try the public search fallback. No results were confirmed."
         )
     response.raise_for_status()
     data = response.json()
     if not isinstance(data, dict) or not isinstance(data.get("items"), list):
         raise ValueError("Unexpected GitHub search response")
+    if used_public_fallback:
+        data["_public_fallback"] = True
     return data
-
 
 def _priority(topic: str, title: str, body: str, *, kind: str) -> tuple[int, str]:
     title_match = matches(topic, title)
@@ -182,6 +206,7 @@ def search_github(
         "issue_queries_attempted": 0, "issue_queries_succeeded": 0,
         "repository_queries_attempted": 0, "repository_queries_succeeded": 0,
         "api_total_issue_matches": 0, "api_total_repository_matches": 0,
+        "public_fallback_queries": 0,
     }
     with httpx.Client(headers=headers, timeout=httpx.Timeout(18, connect=8),
                       follow_redirects=False) as client:
@@ -195,6 +220,8 @@ def search_github(
             try:
                 payload = _request(client, endpoint, params)
                 coverage[group + "_queries_succeeded"] += 1
+                if payload.get("_public_fallback"):
+                    coverage["public_fallback_queries"] += 1
                 total_count = int(payload.get("total_count") or 0)
                 if kind == "issue":
                     coverage["api_total_issue_matches"] += total_count
