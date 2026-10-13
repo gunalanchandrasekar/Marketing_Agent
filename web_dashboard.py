@@ -27,6 +27,7 @@ from technical_requirements import extract_technical_requirements
 from relevance import qualify_analysis
 from document_review import find_document, page_evidence
 from link_inspector import inspect_links, load_inspection, validate_public_url
+from github_intelligence import search_github, load_github_run, safe_topic as safe_github_topic
 
 BASE = Path(__file__).resolve().parent
 RUNS = BASE / "data" / "runs"
@@ -258,6 +259,11 @@ class ScanInput(BaseModel):
     max_documents: int = Field(default=10, ge=1, le=12)
 
 
+class GitHubScanInput(BaseModel):
+    topic: str = Field(min_length=2, max_length=100)
+    max_results: int = Field(default=20, ge=1, le=30)
+
+
 class LinkInspectInput(BaseModel):
     urls: list[str] = Field(min_length=1, max_length=5)
     model: str | None = Field(default=None, max_length=100)
@@ -356,6 +362,46 @@ def runs():
 @app.get("/api/runs/{run_id}")
 def details(run_id: str):
     return run_detail(get_run_dir(run_id))
+
+
+@app.post("/api/github/search")
+def github_search(params: GitHubScanInput):
+    try:
+        topic = safe_github_topic(params.topic)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc))
+    def action(progress):
+        result = search_github(topic, BASE / "data" / "github_scans",
+                               max_results=params.max_results, progress=progress)
+        return {"github_run_id": result["id"], "topic": topic,
+                "repositories": len(result["repositories"]),
+                "issues": len(result["issues"]),
+                "needs_attention": bool(result["errors"])}
+    return start_job("github_intelligence", action)
+
+
+@app.get("/api/github/history")
+def github_scan_history():
+    root = BASE / "data" / "github_scans"
+    results = []
+    for path in sorted(root.glob("*/results.json"), reverse=True)[:50]:
+        try:
+            data = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        results.append({"id": data.get("id"), "topic": data.get("topic"),
+                        "created_at": data.get("created_at"),
+                        "repositories": len(data.get("repositories") or []),
+                        "issues": len(data.get("issues") or [])})
+    return {"scans": results}
+
+
+@app.get("/api/github/{run_id}")
+def github_scan_detail(run_id: str):
+    try:
+        return load_github_run(BASE / "data" / "github_scans", run_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc))
 
 
 @app.post("/api/links/inspect")
